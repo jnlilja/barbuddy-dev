@@ -1,5 +1,4 @@
 from django.db import models
-from django.contrib.gis.db.models import PointField
 from apps.users.models import User
 
 class Bar(models.Model):
@@ -15,7 +14,7 @@ class Bar(models.Model):
     music_genre = models.CharField(max_length=100)
     average_price = models.CharField(max_length=50)
     event = models.CharField(max_length=100, blank=True)
-    location = PointField(null=True, blank=True, srid=4326) # Actual geographic point
+    location = models.CharField(max_length=255)
 
     current_crowd = models.CharField(max_length=50, choices=CROWD_CHOICES)
     current_wait_time = models.CharField(max_length=50)
