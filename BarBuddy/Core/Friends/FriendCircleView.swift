@@ -126,3 +126,7 @@ struct DealCard: View {
         .padding(.horizontal)
     }
 }
+
+#Preview("Deals and Events") {
+    FriendCircleView()
+}
