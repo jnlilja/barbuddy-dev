@@ -1,4 +1,3 @@
-import MapKit
 import SwiftUI
 
 struct MainFeedView: View {
