@@ -5,12 +5,37 @@
 //  Created by Andrew Betancourt on 2/26/25.
 //
 
+import MapKit
+import SwiftUI
 
-struct MapPreviewSection: View {
+struct BarMapView: View {
+    
+    // Camera automatically follows user's location
+    @State var userLocation: MapCameraPosition = .userLocation(
+        fallback: .automatic)
+    
+    // Temporary location manager
+    let locationManager = CLLocationManager()
+    
     var body: some View {
-        ZStack {
-            Color.gray.opacity(0.3) // Placeholder for map
-            Text("Map View")
+        Map(position: $userLocation) {
+            UserAnnotation()
         }
+        .onAppear {
+            
+            // Request user location
+            locationManager.requestWhenInUseAuthorization()
+        }
+        .mapControls {
+            
+            // Map control config
+            MapCompass()
+            MapUserLocationButton()
+        }
+        .tint(Color("Salmon"))
     }
+}
+
+#Preview {
+    BarMapView()
 }
