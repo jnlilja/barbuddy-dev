@@ -10,6 +10,7 @@ import SwiftUI
 
 struct PhotoPromptView: View {
     @State private var proceedToPhotoUpload = false
+    @Binding var path: NavigationPath
     
     var body: some View {
         ZStack {
@@ -45,6 +46,7 @@ struct PhotoPromptView: View {
                 
                 Button(action: {
                     proceedToPhotoUpload = true
+                    path.append(NavigationDestinations.photoUpload)
                 }) {
                     Text("Add Photos")
                         .font(.headline)
@@ -57,17 +59,10 @@ struct PhotoPromptView: View {
             }
             .padding()
         }
-        .navigationBarHidden(true)
-        
-        NavigationLink(isActive: $proceedToPhotoUpload) {
-            PhotoUploadView()
-        } label: {
-            EmptyView()
-        }
     }
 }
 
 // Photo Flow Previews
 #Preview("Photo Prompt") {
-    PhotoPromptView()
+    PhotoPromptView(path: .constant(NavigationPath()))
 }

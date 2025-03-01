@@ -12,9 +12,12 @@ struct DrinkPreferenceView: View {
     @State private var favoriteDrink = ""
     @State private var doesntDrink = false
     @State private var proceedToNextPage = false
+    @Binding var path: NavigationPath
     
     var body: some View {
+        
         ZStack {
+            
             Color("DarkBlue")
                 .ignoresSafeArea()
             
@@ -61,6 +64,7 @@ struct DrinkPreferenceView: View {
                     
                     Button(action: {
                         proceedToNextPage = true
+                        path.append(NavigationDestinations.smoking)
                     }) {
                         Text("Continue")
                             .font(.headline)
@@ -78,16 +82,10 @@ struct DrinkPreferenceView: View {
             .padding()
             .animation(.easeInOut, value: doesntDrink)
         }
-        .navigationBarHidden(true)
-        
-        NavigationLink(isActive: $proceedToNextPage) {
-            SmokingPreferenceView()
-        } label: {
-            EmptyView()
-        }
     }
 }
 
+
 #Preview("Drinks") {
-    DrinkPreferenceView()
+    DrinkPreferenceView(path: .constant(NavigationPath()))
 }

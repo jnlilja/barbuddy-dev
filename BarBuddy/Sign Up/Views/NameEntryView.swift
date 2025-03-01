@@ -12,6 +12,7 @@ struct NameEntryView: View {
     @State private var firstName = ""
     @State private var lastName = ""
     @State private var proceedToLocation = false
+    @Binding var path: NavigationPath
     
     var body: some View {
         ZStack {
@@ -38,6 +39,8 @@ struct NameEntryView: View {
                     
                     Button(action: {
                         proceedToLocation = true
+                        path.append(NavigationDestinations.location)
+                        
                     }) {
                         Text("Continue")
                             .font(.headline)
@@ -54,17 +57,10 @@ struct NameEntryView: View {
             }
             .padding()
         }
-        .navigationBarHidden(true)
-        
-        NavigationLink(isActive: $proceedToLocation) {
-            LocationView(currentStep: .constant(0))
-        } label: {
-            EmptyView()
-        }
     }
 }
 
 // Profile Info Previews
 #Preview("Name") {
-    NameEntryView()
+    NameEntryView(path: .constant(NavigationPath()))
 }

@@ -12,8 +12,10 @@ struct HometownView: View {
     @State private var hometown = ""
     @State private var showOnProfile = true
     @State private var proceedToNextPage = false
+    @Binding var path: NavigationPath
     
     var body: some View {
+        
         ZStack {
             Color("DarkBlue")
                 .ignoresSafeArea()
@@ -49,6 +51,7 @@ struct HometownView: View {
                     
                     Button(action: {
                         proceedToNextPage = true
+                        path.append(NavigationDestinations.school)
                     }) {
                         Text("Continue")
                             .font(.headline)
@@ -65,16 +68,10 @@ struct HometownView: View {
             }
             .padding()
         }
-        .navigationBarHidden(true)
-        
-        NavigationLink(isActive: $proceedToNextPage) {
-            SchoolView()
-        } label: {
-            EmptyView()
-        }
     }
 }
 
+
 #Preview("Hometown") {
-    HometownView()
+    HometownView(path: .constant(NavigationPath()))
 }

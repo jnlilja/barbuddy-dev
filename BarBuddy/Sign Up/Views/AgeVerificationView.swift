@@ -10,6 +10,7 @@ import SwiftUI
 struct AgeVerificationView: View {
     
     @StateObject private var viewModel = AgeVerificationViewModel()
+    @State private var path = NavigationPath()
     
     private var minimumDate: Date {
         Calendar.current.date(byAdding: .year, value: -120, to: Date()) ?? Date()
@@ -20,7 +21,11 @@ struct AgeVerificationView: View {
     }
     
     var body: some View {
-        NavigationView {
+        
+        /*  - NavigationView changed to NavigationStack due to deprication
+            - Our navigation path iterates through NavigationDestination enum
+         */
+        NavigationStack(path: $path) {
             ZStack {
                 Color("DarkBlue")
                     .ignoresSafeArea()
@@ -50,6 +55,11 @@ struct AgeVerificationView: View {
                     
                     Button(action: {
                         viewModel.verifyAge()
+                        if viewModel.proceedToName {
+                            
+                            // Add destination to the stack
+                            path.append(NavigationDestinations.nameEntry)
+                        }
                     }) {
                         Text("Verify Age")
                             .font(.headline)
@@ -58,10 +68,24 @@ struct AgeVerificationView: View {
                             .background(Color("DarkPurple"))
                             .cornerRadius(10)
                     }
+                }
+                // Iterate through the enum and show coresponding view
+                .navigationDestination(for: NavigationDestinations.self) { view in
                     
-                    NavigationLink(destination: NameEntryView(), isActive: $viewModel.proceedToName) {
-                        EmptyView()
+                    Group {
+                        switch view {
+                        case .nameEntry: NameEntryView(path: $path)
+                        case .location: LocationView(path: $path)
+                        case .gender: GenderView(path: $path)
+                        case .hometown: HometownView(path: $path)
+                        case .school: SchoolView(path: $path)
+                        case .drink: DrinkPreferenceView(path: $path)
+                        case .smoking: SmokingPreferenceView(path: $path)
+                        case .photoPrompt: PhotoPromptView(path: $path)
+                        case .photoUpload: PhotoUploadView()
+                        }
                     }
+                    .navigationBarBackButtonHidden()
                 }
                 .padding()
             }
@@ -70,7 +94,10 @@ struct AgeVerificationView: View {
             } message: {
                 Text("You must be 21 or older to use BarBuddy.")
             }
-            .navigationBarHidden(true)
         }
     }
+}
+
+#Preview {
+    AgeVerificationView()
 }

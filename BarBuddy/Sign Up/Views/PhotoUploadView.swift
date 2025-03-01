@@ -86,7 +86,6 @@ struct PhotoUploadView: View {
                 .padding(.bottom, 50)
             }
         }
-        .navigationBarHidden(true)
         .sheet(isPresented: $showingImagePicker) {
             ImagePicker(selectedImages: $selectedImages, maxPhotos: maxPhotos)
         }
@@ -99,4 +98,3 @@ struct PhotoUploadView: View {
 #Preview("Photo Upload") {
     PhotoUploadView()
 }
-

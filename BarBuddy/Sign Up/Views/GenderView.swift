@@ -11,10 +11,12 @@ import SwiftUI
 struct GenderView: View {
     @State private var selectedGender: String?
     @State private var proceedToNextPage = false
+    @Binding var path: NavigationPath
     
     let genderOptions = ["Man", "Woman", "Non-binary", "Prefer not to say"]
     
     var body: some View {
+         
         ZStack {
             Color("DarkBlue")
                 .ignoresSafeArea()
@@ -55,6 +57,7 @@ struct GenderView: View {
                     
                     Button(action: {
                         proceedToNextPage = true
+                        path.append(NavigationDestinations.hometown)
                     }) {
                         Text("Continue")
                             .font(.headline)
@@ -71,16 +74,10 @@ struct GenderView: View {
             }
             .padding()
         }
-        .navigationBarHidden(true)
-        
-        NavigationLink(isActive: $proceedToNextPage) {
-            HometownView()
-        } label: {
-            EmptyView()
-        }
     }
 }
 
+
 #Preview("Gender") {
-    GenderView()
+    GenderView(path: .constant(NavigationPath()))
 }

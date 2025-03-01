@@ -13,8 +13,10 @@ struct SmokingPreferenceView: View {
     @State private var smokesTobacco = false
     @State private var vapes = false
     @State private var proceedToNextPage = false
+    @Binding var path: NavigationPath
     
     var body: some View {
+        
         ZStack {
             Color("DarkBlue")
                 .ignoresSafeArea()
@@ -81,6 +83,7 @@ struct SmokingPreferenceView: View {
                     
                     Button(action: {
                         proceedToNextPage = true
+                        path.append(NavigationDestinations.photoPrompt)
                     }) {
                         Text("Continue")
                             .font(.headline)
@@ -95,16 +98,10 @@ struct SmokingPreferenceView: View {
             }
             .padding()
         }
-        .navigationBarHidden(true)
-        
-        NavigationLink(isActive: $proceedToNextPage) {
-            PhotoPromptView()
-        } label: {
-            EmptyView()
-        }
     }
 }
 
+
 #Preview("Smoking") {
-    SmokingPreferenceView()
+    SmokingPreferenceView(path: .constant(NavigationPath()))
 }

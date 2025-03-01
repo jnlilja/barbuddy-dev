@@ -14,8 +14,10 @@ struct SchoolView: View {
     @State private var major = ""
     @State private var showOnProfile = true
     @State private var proceedToNextPage = false
+    @Binding var path: NavigationPath
     
     var body: some View {
+        
         ZStack {
             Color("DarkBlue")
                 .ignoresSafeArea()
@@ -71,6 +73,7 @@ struct SchoolView: View {
                     
                     Button(action: {
                         proceedToNextPage = true
+                        path.append(NavigationDestinations.drink)
                     }) {
                         Text("Continue")
                             .font(.headline)
@@ -88,16 +91,9 @@ struct SchoolView: View {
             .padding()
             .animation(.easeInOut, value: currentlyAttending)
         }
-        .navigationBarHidden(true)
-        
-        NavigationLink(isActive: $proceedToNextPage) {
-            DrinkPreferenceView()
-        } label: {
-            EmptyView()
-        }
     }
 }
 
 #Preview("School") {
-    SchoolView()
+    SchoolView(path: .constant(NavigationPath()))
 }

@@ -1,67 +1,91 @@
-//
-//  MainFeedView.swift
-//  BarBuddy
-//
-//  Created by Andrew Betancourt on 2/25/25.
-//
-
-
+import MapKit
 import SwiftUI
 
 struct MainFeedView: View {
     @State private var scrollOffset: CGFloat = 0
     @Binding var selectedTab: Int
-    
+    @Namespace private var animation // For zoom transition into map
+
     var body: some View {
-        NavigationView {
-            ZStack {
-                Color("DarkBlue")
-                    .ignoresSafeArea()
-                
-                ScrollView {
-                    VStack(spacing: 0) {
-                        // Map View Section (stays at top)
-                        MapPreviewSection()
-                            .frame(height: 300)
-                            .zIndex(1)
-                        
-                        // Scrollable content
+        ZStack {
+            NavigationStack {
+                ZStack {
+                    
+                    // Background Color
+                    Color(.darkBlue)
+                        .ignoresSafeArea(.all)
+
+                    ScrollView {
                         VStack(spacing: 0) {
-                            // Search Bar
-                            SearchBar()
-                                .padding()
                             
-                            // Bar List
-                            VStack(spacing: 20) {
-                                ForEach(0..<5) { _ in
-                                    BarCard(selectedTab: $selectedTab)
-                                }
+                            // Track the scroll offset using a GeometryReader
+                            GeometryReader { proxy in
+                                Color.clear
+                                    .preference(
+                                        key: ScrollOffsetPreferenceKey.self,
+                                        value: proxy.frame(in: .global).minY)
                             }
-                            .padding()
+
+                            // Map View Section (stays at top)
+                            NavigationLink {
+                                BarMapView()
+                                    .navigationTransition(
+                                        .zoom(sourceID: "Map", in: animation)
+                                    )
+                                    .toolbarVisibility(
+                                        .hidden, for: .navigationBar)
+                            } label: {
+                                BarMapView()
+                                    .frame(height: 300)
+                                    .cornerRadius(15)
+                                    .padding(.top)
+                                    .matchedTransitionSource(
+                                        id: "Map", in: animation
+                                    )
+                                    
+                            }
+
+                            // Scrollable content
+                            VStack(spacing: 0) {
+                                SearchBar()
+                                    .padding()
+
+                                // Bar List
+                                VStack(spacing: 20) {
+                                    ForEach(0..<5) { _ in
+                                        BarCard(selectedTab: $selectedTab)
+                                    }
+                                }
+                                .padding()
+                            }
                         }
-                        .background(Color("DarkBlue"))
-                        .offset(y: -scrollOffset)
                     }
-                    .background(
-                        GeometryReader { proxy in
-                            Color.clear.preference(
-                                key: ScrollOffsetPreferenceKey.self,
-                                value: proxy.frame(in: .named("scroll")).minY
-                            )
-                        }
-                    )
+                    // Updates scroll position
+                    .onPreferenceChange(ScrollOffsetPreferenceKey.self) { value in
+                        scrollOffset = value
+                    }
                 }
-                .coordinateSpace(name: "scroll")
-                .onPreferenceChange(ScrollOffsetPreferenceKey.self) { value in
-                    scrollOffset = -min(value, 0)
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbarBackgroundVisibility(.automatic)
+                .toolbar {
+                    ToolbarItem(placement: .principal) {
+                        Text("Pacific Beach")
+                            .font(.title)
+                            .fontDesign(.rounded)
+                            .fontWeight(.heavy)
+
+                            // Changes color when scrolled down
+                            .foregroundStyle(
+                                scrollOffset < 90 ? .darkPurple : .nude
+                            )
+                            .animation(
+                                .easeInOut(duration: 0.3), value: scrollOffset)
+                    }
                 }
             }
-            .navigationTitle("Pacific Beach")
-            .navigationBarTitleDisplayMode(.inline)
         }
     }
 }
-
 
 #Preview("Main Feed") {
     MainFeedView(selectedTab: .constant(2))
