@@ -11,31 +11,30 @@ import SwiftUI
 struct BarMapView: View {
     
     // Camera automatically follows user's location
-    @State var userLocation: MapCameraPosition = .userLocation(
-        fallback: .automatic)
-    
-    // Temporary location manager
-    let locationManager = CLLocationManager()
+    @EnvironmentObject var mapCameraPosition: CameraModel
+    @State var state: ViewingMapState
     
     var body: some View {
-        Map(position: $userLocation) {
+        Map(position: $mapCameraPosition.cam,
+            interactionModes: state == .expanded ? [.pan, .zoom, .rotate] : .pan) {
             UserAnnotation()
         }
-        .onAppear {
-            
-            // Request user location
-            locationManager.requestWhenInUseAuthorization()
+        .onMapCameraChange {change in
+            if mapCameraPosition.cam.positionedByUser && !mapCameraPosition.cam.followsUserLocation {
+                mapCameraPosition.cam = .camera(change.camera)
+            }
         }
         .mapControls {
-            
             // Map control config
-            MapCompass()
             MapUserLocationButton()
+            MapCompass()
         }
+        //.mapControlVisibility(state == .expanded ? .visible : .hidden)
         .tint(Color("Salmon"))
     }
 }
 
 #Preview {
-    BarMapView()
+    BarMapView(state: .expanded)
+        .environmentObject(CameraModel())
 }
