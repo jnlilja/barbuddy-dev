@@ -7,6 +7,6 @@
 
 import Foundation
 enum ViewingMapState {
-    case home
+    case shrink
     case expanded
 }
