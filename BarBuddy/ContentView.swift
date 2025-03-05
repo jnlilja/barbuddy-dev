@@ -129,14 +129,6 @@ struct ContentView: View {
 }
 
 // Add these placeholder views after ActionButton
-
-struct MapView: View {
-    var body: some View {
-        Text("Map Coming Soon")
-            .font(.largeTitle)
-    }
-}
-
 struct GroupsView: View {
     var body: some View {
         Text("Groups Coming Soon")
