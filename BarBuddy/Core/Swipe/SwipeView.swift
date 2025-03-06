@@ -80,3 +80,9 @@ struct SwipeView: View {
         }
     }
 }
+
+struct SwipeView_Previews: PreviewProvider {
+    static var previews: some View {
+        SwipeView()
+    }
+}

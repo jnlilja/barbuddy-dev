@@ -15,7 +15,7 @@ struct ProfileView: View {
     
     let occupation: String = "Occupation"
     let hometown: String = "Hometown"
-    let sexualPreference: String = "Sexual Preference"
+    let sexualPreference: String = "Straight"
     let favoriteDrink: String = "Favorite Drink"
     let college: String? = "School" // Optional
     let height: String = "Height"   // Newly added
@@ -67,37 +67,40 @@ struct ProfileView: View {
                 .tabViewStyle(PageTabViewStyle())
                 .edgesIgnoringSafeArea(.top)
                 
-                // MARK: - White background for Name & Age
+                // MARK: - White background for Name
                 VStack(alignment: .leading, spacing: 0) {
-                    HStack(spacing: 6) {
-                        Text(name)
-                            .font(.title)
-                            .foregroundColor(.darkBlue)
-                            .bold()
-                        
-                        Text("\(age)")
-                            .font(.title2)
-                            .foregroundColor(.gray)
-                    }
-                    .padding(.top, 16)
-                    .padding(.bottom, 16)
-                    .padding(.horizontal)
+                    Text(name)
+                        .font(.title)
+                        .foregroundColor(.darkBlue)
+                        .bold()
+                        .padding(.top, 16)
+                        .padding(.bottom, 16)
+                        .padding(.horizontal)
                 }
                 .background(Color.white)
                 
                 Divider()
                 
-                // MARK: - Second & third rows
+                // MARK: - Info rows
                 VStack(alignment: .leading, spacing: 0) {
                     
-                    // Second Row: Height, Hometown, Sexual Preference
-                    HStack(spacing: 16) {
+                    // First Row: Age, Height, Hometown
+                    HStack {
+                        // Age
+                        HStack(spacing: 4) {
+                            Image(systemName: "birthday.cake")
+                                .foregroundColor(.secondary)
+                            Text("\(age)")
+                        }
+                        .frame(maxWidth: .infinity)
+                        
                         // Height
                         HStack(spacing: 4) {
                             Image(systemName: "ruler")
                                 .foregroundColor(.secondary)
                             Text(height)
                         }
+                        .frame(maxWidth: .infinity)
                         
                         // Hometown
                         HStack(spacing: 4) {
@@ -105,30 +108,20 @@ struct ProfileView: View {
                                 .foregroundColor(.secondary)
                             Text(hometown)
                         }
-                        
-                        // Sexual Preference
-                        HStack(spacing: 4) {
-                            Image(systemName: "person.2.fill")
-                                .foregroundColor(.secondary)
-                            Text(sexualPreference)
-                        }
+                        .frame(maxWidth: .infinity)
                     }
                     .font(.subheadline)
                     .padding(.vertical, 16)
                     .padding(.horizontal)
                     
-                    // Third Row: College & Favorite Drink
+                    // Second Row: School, Favorite Drink, Sexual Preference
                     HStack {
-                        Spacer()
-                        // College (only if non-empty)
-                        if let college = college, !college.isEmpty {
-                            HStack(spacing: 4) {
-                                Text("🎓")
-                                Text(college)
-                            }
+                        // School
+                        HStack(spacing: 4) {
+                            Text("🎓")
+                            Text(college ?? "")
                         }
-                        
-                        Spacer()
+                        .frame(maxWidth: .infinity)
                         
                         // Favorite Drink
                         HStack(spacing: 4) {
@@ -136,7 +129,15 @@ struct ProfileView: View {
                                 .foregroundColor(.secondary)
                             Text(favoriteDrink)
                         }
-                        Spacer()
+                        .frame(maxWidth: .infinity)
+                        
+                        // Sexual Preference
+                        HStack(spacing: 4) {
+                            Image(systemName: "person.2.fill")
+                                .foregroundColor(.secondary)
+                            Text(sexualPreference)
+                        }
+                        .frame(maxWidth: .infinity)
                     }
                     .font(.subheadline)
                     .padding(.vertical, 16)

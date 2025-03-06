@@ -97,3 +97,11 @@ struct SwipeCard: View {
         .padding()
     }
 }
+
+struct SwipeCard_Previews: PreviewProvider {
+    static var previews: some View {
+        SwipeCard()
+            .previewLayout(.device)
+            .previewDisplayName("SwipeCard")
+    }
+}
