@@ -1,9 +1,13 @@
-# venue/urls.py
-from django.urls import path
-from . import views
+from django.urls import path, include
+from .views import VenueListView, TransactionListView
+from rest_framework.routers import DefaultRouter
+
+router = DefaultRouter()
+router.register(r'venues', VenueListView)
+router.register(r'transactions', TransactionListView)
 
 urlpatterns = [
-    path('venues/', views.venue_list, name='venue_list'),  # Example view
-    path('transactions/', views.create_transaction, name='create_transaction'),  # Example transaction view
+    path('api/', include(router.urls)),
 ]
+
 

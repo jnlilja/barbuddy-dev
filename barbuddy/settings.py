@@ -17,16 +17,15 @@ LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
     'handlers': {
-        'file': {
-            'level': 'INFO',
-            'class': 'logging.FileHandler',
-            'filename': 'logs/debug.log',
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
         },
     },
     'loggers': {
         'django': {
-            'handlers': ['file'],
-            'level': 'INFO',
+            'handlers': ['console'],
+            'level': 'DEBUG',
             'propagate': True,
         },
     },
@@ -62,6 +61,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'venue',
+    'rest-framework',
 ]
 
 MIDDLEWARE = [
@@ -101,10 +101,15 @@ WSGI_APPLICATION = 'barbuddy.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'barbuddy_db',  # Your DB name
+        'USER': 'your_db_user',  # Your DB user
+        'PASSWORD': 'your_db_password',
+        'HOST': 'localhost',
+        'PORT': '5432',
     }
 }
+
 
 
 # Password validation
