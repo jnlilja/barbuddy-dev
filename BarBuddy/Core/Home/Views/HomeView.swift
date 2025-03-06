@@ -27,7 +27,7 @@ struct HomeView: View {
                 }
                 .tag(1)
             
-            MainFeedView(selectedTab: $selectedTab)
+            MainFeedView()
                 .tabItem {
                     Image(systemName: "map.fill")
                     Text("Map")
