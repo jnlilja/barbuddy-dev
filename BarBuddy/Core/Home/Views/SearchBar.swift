@@ -10,6 +10,7 @@ import SwiftUI
 
 struct SearchBar: View {
     @State private var searchText = ""
+    @FocusState private var focusedField
     
     var body: some View {
         HStack {
@@ -21,7 +22,7 @@ struct SearchBar: View {
         }
         .padding(.horizontal)
         .padding(.vertical, 8)
-        .background(Color.white)  // Changed to pure white
+        .background(Color(.secondarySystemBackground))  // Changed to pure white
         .cornerRadius(10)
         .shadow(radius: 2)
     }
