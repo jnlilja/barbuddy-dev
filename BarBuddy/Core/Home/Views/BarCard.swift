@@ -11,6 +11,7 @@ import SwiftUI
 struct BarCard: View {
     @State private var showingDetail = false
     @Binding var selectedTab: Int
+    @Environment(\.colorScheme) var colorScheme
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -19,7 +20,7 @@ struct BarCard: View {
                 Text("Hideaway")
                     .font(.system(size: 32, weight: .bold))
                     .bold()
-                    .foregroundColor(Color("DarkBlue"))
+                    .foregroundColor(colorScheme == .dark ? .neonPink : Color("DarkBlue"))
                 
                 Spacer()
                 
@@ -28,14 +29,14 @@ struct BarCard: View {
                         .foregroundColor(Color("NeonPink"))
                         .font(.system(size: 24))
                     Text("Trending")
-                        .foregroundColor(Color("DarkPurple"))
+                        .foregroundColor(colorScheme == .dark ? .nude : Color("DarkPurple"))
                         .font(.system(size: 20, weight: .semibold))
                 }
             }
             
             // Open Hours
             Text("Open 11am - 2am")
-                .foregroundColor(Color("DarkPurple"))
+                .foregroundColor(colorScheme == .dark ? .nude : Color("DarkPurple"))
             
             // Bar Image
             Rectangle()
@@ -66,7 +67,7 @@ struct BarCard: View {
             }
         }
         .padding()
-        .background(Color.white)
+        .background(colorScheme == .dark ? Color(.secondarySystemBackground) : .white)
         .cornerRadius(15)
         .shadow(radius: 5)
         .onTapGesture {
