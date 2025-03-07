@@ -7,15 +7,17 @@
 
 import SwiftUI
 
-// Update BarDetailPopup to replace the posting section with the graph
 struct BarDetailPopup: View {
-    //@Binding var isPresented: Bool
     @Environment(\.dismiss) var dismiss
+    
+    // State to hold the user's mood selection from the Feedback view
+    @State private var selectedMood: Mood? = nil
     
     var body: some View {
         NavigationView {
             ScrollView {
                 VStack(spacing: 25) {
+                    
                     // Header with bar name and hours
                     VStack(spacing: 8) {
                         Text("Hideaway")
@@ -55,7 +57,7 @@ struct BarDetailPopup: View {
                         InfoBubble(text: "$ 5 - 20")
                     }
                     
-                    // Wait time and crowd size
+                    // Wait time and crowd size sections
                     HStack(spacing: 30) {
                         VStack(spacing: 10) {
                             Text("Est. Wait Time:")
@@ -95,11 +97,16 @@ struct BarDetailPopup: View {
                         }
                     }
                     
-                    // Replace image and post button with crowd level graph
+                    // Crowd level graph
                     CrowdLevelGraph()
                     
+                    // Feedback view integrated here
+                    Feedback(selectedMood: $selectedMood)
+                    
                     // Single action button for Swipe
-                    Button(action: {}) {
+                    Button(action: {
+                        // Implement your swipe action here
+                    }) {
                         HStack {
                             Text("Swipe")
                             Image(systemName: "person.2.fill")
@@ -114,7 +121,6 @@ struct BarDetailPopup: View {
                 .padding()
             }
             .navigationBarItems(trailing: Button("Done") {
-                //isPresented = false
                 dismiss()
             })
             .navigationBarTitleDisplayMode(.inline)
@@ -124,7 +130,6 @@ struct BarDetailPopup: View {
     }
 }
 
-// Update the preview
 #Preview("Bar Detail Popup") {
     HomeView()
         .overlay {

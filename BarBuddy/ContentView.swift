@@ -136,9 +136,4 @@ struct GroupsView: View {
     }
 }
 
-struct ProfileView: View {
-    var body: some View {
-        Text("Profile Coming Soon")
-            .font(.largeTitle)
-    }
-}
+
