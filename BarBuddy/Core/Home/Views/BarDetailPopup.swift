@@ -12,6 +12,7 @@ struct BarDetailPopup: View {
     
     // State to hold the user's mood selection from the Feedback view
     @State private var selectedMood: Mood? = nil
+    @State private var showSwipeView = false
     
     var body: some View {
         NavigationView {
@@ -103,10 +104,8 @@ struct BarDetailPopup: View {
                     // Feedback view integrated here
                     Feedback(selectedMood: $selectedMood)
                     
-                    // Single action button for Swipe
-                    Button(action: {
-                        // Implement your swipe action here
-                    }) {
+                    // Navigation button to SwipeView
+                    NavigationLink(destination: SwipeView(), isActive: $showSwipeView) {
                         HStack {
                             Text("Swipe")
                             Image(systemName: "person.2.fill")
