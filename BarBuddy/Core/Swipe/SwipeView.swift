@@ -24,11 +24,12 @@ struct SwipeView: View {
                                 .bold()
                                 .foregroundColor(.white)
                                 .padding(.horizontal, 15)
-                                .padding(.vertical, 8)
+                                .padding(.vertical, 4) // Reduced vertical padding
                                 .background(Color("Salmon").opacity(0.3))
                                 .cornerRadius(25)
                         }
-                        .padding()
+                        .padding(.horizontal) // Reduced padding
+                        .padding(.vertical, 8) // Added smaller vertical padding
                         
                         Spacer()
                     }
@@ -43,11 +44,11 @@ struct SwipeView: View {
                                         Button(action: {}) {
                                             Circle()
                                                 .fill(Color.white)
-                                                .frame(width: 54, height: 54)
+                                                .frame(width: 48, height: 48) // Slightly smaller buttons
                                                 .shadow(radius: 5)
                                                 .overlay(
                                                     Image(systemName: "xmark")
-                                                        .font(.system(size: 30))
+                                                        .font(.system(size: 26))
                                                         .foregroundColor(.red)
                                                 )
                                         }
@@ -59,22 +60,23 @@ struct SwipeView: View {
                                         Button(action: {}) {
                                             Circle()
                                                 .fill(Color.white)
-                                                .frame(width: 54, height: 54)
+                                                .frame(width: 48, height: 48) // Slightly smaller buttons
                                                 .shadow(radius: 5)
                                                 .overlay(
                                                     Image(systemName: "checkmark")
-                                                        .font(.system(size: 30))
+                                                        .font(.system(size: 26))
                                                         .foregroundColor(Color("Salmon"))
                                                 )
                                         }
                                         .padding(.trailing, 30)
                                     }
-                                    .offset(y: UIScreen.main.bounds.height * 0.05)  // Changed from -0.05 to 0.05 to move buttons down
+                                    .offset(y: UIScreen.main.bounds.height * 0.085) // Reduced offset to move buttons up slightly
                                 )
                         }
                     }
+                    .padding(.top, -20) // Added negative padding to move cards up
                     
-                    Spacer()  // Remove bottom button section and use spacer
+                    Spacer()
                 }
             }
         }

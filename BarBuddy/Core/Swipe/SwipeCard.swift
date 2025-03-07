@@ -5,94 +5,137 @@
 //  Created by Andrew Betancourt on 2/25/25.
 //
 
-
 import SwiftUI
 
 struct SwipeCard: View {
+    // Use the same images as in Profile.swift
+    let images = [
+        "TestImage",
+        "guy1",
+        "guy2",
+        "guy3"
+    ]
+    
     var body: some View {
-        VStack {
-            // Profile Image - made taller
-            Rectangle()
-                .fill(Color.gray.opacity(0.3))
-                .frame(height: UIScreen.main.bounds.height * 0.7)  // Increased from 0.6 to 0.7
-                .cornerRadius(20)
-                .overlay(
-                    VStack {
-                        Spacer()
-                        
-                        // User Info Overlay
-                        VStack(alignment: .leading, spacing: 12) {
-                            // Name and Status
-                            HStack {
-                                Text("Ashley")
-                                    .font(.system(size: 32, weight: .bold))
-                                    .foregroundColor(Color("DarkPurple"))
-                                
-                                Image(systemName: "checkmark.seal.fill")
-                                    .foregroundColor(Color("NeonPink"))
-                                    .font(.system(size: 20))
-                                
-                                Spacer()
-                                
-                                HStack(spacing: 4) {
-                                    Circle()
-                                        .fill(Color.green)
-                                        .frame(width: 8, height: 8)
-                                    Text("Active")
-                                }
-                                .foregroundColor(Color("DarkPurple"))
-                            }
-                            
-                            // Location and Group
-                            HStack {
-                                HStack(spacing: 4) {
-                                    Image(systemName: "mappin.and.ellipse")
-                                    Text("Hideaway")
-                                }
-                                .foregroundColor(Color("DarkPurple"))
-                                
-                                Spacer()
-                                
-                                Text("Group: Golden Girls")
-                                    .font(.system(size: 16, weight: .medium))
-                                    .padding(.horizontal, 12)
-                                    .padding(.vertical, 6)
-                                    .background(Color("Salmon").opacity(0.2))
-                                    .cornerRadius(15)
-                            }
-                            
-                            // Stats
-                            HStack(spacing: 25) {
-                                Label("23", systemImage: "birthday.cake")
-                                Label("5'11", systemImage: "ruler")
-                                Label("San Diego", systemImage: "house")
-                            }
-                            .font(.system(size: 16))
-                            .foregroundColor(Color("DarkPurple"))
-                            
-                            // School and Drink
-                            HStack(spacing: 25) {
-                                HStack(spacing: 8) {
-                                    Circle()
-                                        .fill(Color("DarkPurple"))
-                                        .frame(width: 25, height: 25)
-                                    Text("SDSU")
-                                }
-                                
-                                HStack(spacing: 8) {
-                                    Image(systemName: "wineglass")
-                                    Text("Tequila")
-                                }
-                            }
-                            .font(.system(size: 16))
-                            .foregroundColor(Color("DarkPurple"))
-                        }
-                        .padding()
-                        .background(Color.white)
-                        .cornerRadius(20)
+        VStack(spacing: 0) {
+            // Photo gallery with swipable images
+            TabView {
+                ForEach(images, id: \.self) { imageName in
+                    Image(imageName)
+                        .resizable()
+                        .scaledToFill()
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 457)  // same as in Profile.swift
+                        .clipShape(RoundedRectangle(cornerRadius: 20))
+                }
+            }
+            .frame(height: 457)
+            .tabViewStyle(PageTabViewStyle())
+            
+            // User info card below photos
+            VStack(alignment: .leading, spacing: 12) {
+                // Name Row with location
+                HStack {
+                    Text("Ashley")
+                        .font(.system(size: 32, weight: .bold))
+                        .foregroundColor(Color("DarkPurple"))
+                    
+                    Image(systemName: "checkmark.seal.fill")
+                        .foregroundColor(Color("NeonPink"))
+                        .font(.system(size: 20))
+                    
+                    Spacer()
+                    
+                    HStack(spacing: 4) {
+                        Image(systemName: "heart.fill")
+                        Text("Hideaway")
                     }
-                    .padding()
-                )
+                    .foregroundColor(Color("DarkPurple"))
+                }
+                
+                Divider()
+                
+                // First info row: Age, Height, Hometown
+                HStack {
+                    HStack(spacing: 4) {
+                        Image(systemName: "birthday.cake")
+                            .foregroundColor(.secondary)
+                        Text("23")
+                    }
+                    .frame(maxWidth: .infinity)
+                    
+                    HStack(spacing: 4) {
+                        Image(systemName: "ruler")
+                            .foregroundColor(.secondary)
+                        Text("5'11")
+                    }
+                    .frame(maxWidth: .infinity)
+                    
+                    HStack(spacing: 4) {
+                        Image(systemName: "house.fill")
+                            .foregroundColor(.secondary)
+                        Text("San Diego")
+                    }
+                    .frame(maxWidth: .infinity)
+                }
+                .font(.system(size: 16))
+                .foregroundColor(Color("DarkPurple"))
+                
+                // Second info row: School, Favorite Drink, and Sexual Preference
+                HStack {
+                    HStack(spacing: 4) {
+                        Text("🎓")
+                        Text("SDSU")
+                    }
+                    .frame(maxWidth: .infinity)
+                    
+                    HStack(spacing: 4) {
+                        Image(systemName: "wineglass.fill")
+                            .foregroundColor(.secondary)
+                        Text("Tequila")
+                    }
+                    .frame(maxWidth: .infinity)
+                    
+                    HStack(spacing: 4) {
+                        Text("⚥")
+                        Text("Straight")
+                    }
+                    .frame(maxWidth: .infinity)
+                }
+                .font(.system(size: 16))
+                .foregroundColor(Color("DarkPurple"))
+                
+                // Bio/Description with scaled quote images
+                HStack(alignment: .center, spacing: 4) {
+                    Image("fowardQuote")
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 16, height: 24)
+                        .italic()
+                        .offset(y: -8)
+                    
+                    Text("Outgoing")
+                    
+                    Image("backwardQuote")
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 16, height: 24)
+                        .italic()
+                        .offset(y: -8)
+                }
+                .font(.system(size: 24, weight: .light).italic())
+                .foregroundColor(Color("Salmon"))
+                .padding(.top, 12)
+                .lineLimit(1)
+                .truncationMode(.tail)
+                .frame(maxWidth: .infinity, alignment: .center)
+                .multilineTextAlignment(.center)
+
+            }
+            .padding()
+            .background(Color.white)
+            .cornerRadius(20)
+            .padding()
         }
         .padding()
     }
