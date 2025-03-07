@@ -29,9 +29,17 @@ from rest_framework_simplejwt.views import (
 )
 from .views import SignupView, UserDetailView
 
+from django.contrib import admin
+from django.urls import path, include
+
 urlpatterns = [
     path('signup/', SignupView.as_view(), name='signup'),
     path('login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('user/<int:pk>/', UserDetailView.as_view(), name='user-detail'),
+
+    path('admin/', admin.site.urls),
+    path('api/users/', include('apps.users.urls')),
+
+    # no urls for other than users for now 
 ]

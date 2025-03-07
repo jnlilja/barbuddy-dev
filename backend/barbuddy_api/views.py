@@ -1,6 +1,8 @@
+from django.contrib.auth import get_user_model
 from rest_framework import generics, permissions
-from django.contrib.auth.models import User
 from .serializers import UserSerializer
+
+User = get_user_model()  # Use the custom user model
 
 # Signup View
 class SignupView(generics.CreateAPIView):
