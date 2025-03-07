@@ -8,35 +8,29 @@
 import SwiftUI
 
 struct SwipeCard: View {
-    // Use the same images as in Profile.swift
-    let images = [
-        "TestImage",
-        "guy1",
-        "guy2",
-        "guy3"
-    ]
-    
+    let user: User
+
     var body: some View {
         VStack(spacing: 0) {
-            // Photo gallery with swipable images
+            // Photo gallery with swipable images.
             TabView {
-                ForEach(images, id: \.self) { imageName in
+                ForEach(user.imageNames, id: \.self) { imageName in
                     Image(imageName)
                         .resizable()
                         .scaledToFill()
                         .frame(maxWidth: .infinity)
-                        .frame(height: 457)  // same as in Profile.swift
-                        .clipShape(RoundedRectangle(cornerRadius: 20))
+                        .frame(height: 457)
+                        .clipShape(RoundedRectangle(cornerRadius: 12)) // Reduced corner radius for softer look
                 }
             }
             .frame(height: 457)
             .tabViewStyle(PageTabViewStyle())
             
-            // User info card below photos
+            // User info card below photos.
             VStack(alignment: .leading, spacing: 12) {
-                // Name Row with location
+                // Name row with verification and hometown tag.
                 HStack {
-                    Text("Ashley")
+                    Text(user.name)
                         .font(.system(size: 32, weight: .bold))
                         .foregroundColor(Color("DarkPurple"))
                     
@@ -48,64 +42,64 @@ struct SwipeCard: View {
                     
                     HStack(spacing: 4) {
                         Image(systemName: "heart.fill")
-                        Text("Hideaway")
+                        Text(user.hometown)
                     }
                     .foregroundColor(Color("DarkPurple"))
                 }
                 
                 Divider()
                 
-                // First info row: Age, Height, Hometown
+                // First row: Age, Height, Hometown.
                 HStack {
                     HStack(spacing: 4) {
                         Image(systemName: "birthday.cake")
                             .foregroundColor(.secondary)
-                        Text("23")
+                        Text("\(user.age)")
                     }
                     .frame(maxWidth: .infinity)
                     
                     HStack(spacing: 4) {
                         Image(systemName: "ruler")
                             .foregroundColor(.secondary)
-                        Text("5'11")
+                        Text(user.height)
                     }
                     .frame(maxWidth: .infinity)
                     
                     HStack(spacing: 4) {
                         Image(systemName: "house.fill")
                             .foregroundColor(.secondary)
-                        Text("San Diego")
+                        Text(user.hometown)
                     }
                     .frame(maxWidth: .infinity)
                 }
                 .font(.system(size: 16))
                 .foregroundColor(Color("DarkPurple"))
                 
-                // Second info row: School, Favorite Drink, and Sexual Preference
+                // Second row: School, Favorite Drink, and Preference.
                 HStack {
                     HStack(spacing: 4) {
                         Text("🎓")
-                        Text("SDSU")
+                        Text(user.school)
                     }
                     .frame(maxWidth: .infinity)
                     
                     HStack(spacing: 4) {
                         Image(systemName: "wineglass.fill")
                             .foregroundColor(.secondary)
-                        Text("Tequila")
+                        Text(user.favoriteDrink)
                     }
                     .frame(maxWidth: .infinity)
                     
                     HStack(spacing: 4) {
                         Text("⚥")
-                        Text("Straight")
+                        Text(user.preference)
                     }
                     .frame(maxWidth: .infinity)
                 }
                 .font(.system(size: 16))
                 .foregroundColor(Color("DarkPurple"))
                 
-                // Bio/Description with scaled quote images
+                // Bio/Description with decorative quote images.
                 HStack(alignment: .center, spacing: 4) {
                     Image("fowardQuote")
                         .resizable()
@@ -114,7 +108,7 @@ struct SwipeCard: View {
                         .italic()
                         .offset(y: -8)
                     
-                    Text("Outgoing")
+                    Text(user.bio)
                     
                     Image("backwardQuote")
                         .resizable()
@@ -130,7 +124,6 @@ struct SwipeCard: View {
                 .truncationMode(.tail)
                 .frame(maxWidth: .infinity, alignment: .center)
                 .multilineTextAlignment(.center)
-
             }
             .padding()
             .background(Color.white)
@@ -143,7 +136,7 @@ struct SwipeCard: View {
 
 struct SwipeCard_Previews: PreviewProvider {
     static var previews: some View {
-        SwipeCard()
+        SwipeCard(user: User(name: "Preview", age: 25, height: "5'9\"", hometown: "Sample City", school: "Sample Uni", favoriteDrink: "Coffee", preference: "Open", bio: "Loves adventure", imageNames: ["TestImage"]))
             .previewLayout(.device)
             .previewDisplayName("SwipeCard")
     }
