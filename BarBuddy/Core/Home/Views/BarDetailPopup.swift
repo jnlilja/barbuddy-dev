@@ -9,6 +9,7 @@ import SwiftUI
 
 struct BarDetailPopup: View {
     @Environment(\.dismiss) var dismiss
+    @State var name: String
     
     // State to hold the user's mood selection from the Feedback view
     @State private var selectedMood: Mood? = nil
@@ -21,7 +22,7 @@ struct BarDetailPopup: View {
                     
                     // Header with bar name and hours
                     VStack(spacing: 8) {
-                        Text("Hideaway")
+                        Text(name)
                             .font(.system(size: 40, weight: .bold))
                             .foregroundColor(Color("DarkPurple"))
                         
@@ -132,6 +133,6 @@ struct BarDetailPopup: View {
 #Preview("Bar Detail Popup") {
     HomeView()
         .overlay {
-            BarDetailPopup()
+            BarDetailPopup(name: "Hideaway")
         }
 }

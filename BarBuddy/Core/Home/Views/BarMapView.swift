@@ -10,6 +10,12 @@ import MapKit
 import SwiftUI
 
 struct BarMapView: View {
+    
+    /* IMPORTANT:
+        Set the coordinates to Latiude: 32.794 Longitude: -117.253 to see bars
+        on the map in the simulator. There doesn't seem to be a way to do this
+        in the preview.
+     */
 
     // Camera automatically follows user's location
     @State var bottomSheetPosition: BottomSheetPosition = .relative(0.86)
@@ -17,9 +23,16 @@ struct BarMapView: View {
     @State private var searchText = ""
     @Environment(\.colorScheme) var colorScheme
     @Bindable var viewModel = MapViewModel()
+    @State private var selectedBar: Bool = false
 
     // Temporary location manager
     let locationManager = CLLocationManager()
+    
+    // Sample of bars
+    let bars = ["Hideaway",
+                "PB Shore Club",
+                "Firehouse",
+                "The Local Pacific Beach"]
 
     var body: some View {
         Map(position: $viewModel.cameraPosition, selection: $selectedPlace) {
@@ -32,6 +45,10 @@ struct BarMapView: View {
             
             // User's location marker on map
             UserAnnotation()
+        }
+        // Listening for changes for bar selection on map
+        .onChange(of: selectedPlace) { oldValue, newValue in
+            selectedBar = newValue != nil
         }
         .mapControls {
             // Map control config
@@ -51,6 +68,9 @@ struct BarMapView: View {
                 await viewModel.searchResults(for: "The Local Pacific Beach")
             }
         }
+        .sheet(isPresented: $selectedBar, content: {
+            BarDetailPopup(name: selectedPlace?.placemark.name ?? "")
+        })
         .tint(.salmon)
         
         // Bottom sheet view
@@ -66,7 +86,7 @@ struct BarMapView: View {
                     .padding([.horizontal, .bottom])
                     .onSubmit(of: .text) {
                         bottomSheetPosition = .relativeBottom(0.21)
-                        #warning("Incomplete search functionality")
+    
                         Task {
                             // Search for bars and update camera position
                             await viewModel.searchResults(for: searchText)
@@ -80,9 +100,9 @@ struct BarMapView: View {
                     
             }) {
             VStack {
-                // Search Resualts
-                ForEach(0..<4) { _ in
-                    BarCard(selectedTab: .constant(0))
+                // Search Results
+                ForEach(bars, id: \.self) { barName in
+                    BarCard(name: barName)
                         .padding([.horizontal, .bottom])
                 }
             }

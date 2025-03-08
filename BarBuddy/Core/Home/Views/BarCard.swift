@@ -10,14 +10,14 @@ import SwiftUI
 
 struct BarCard: View {
     @State private var showingDetail = false
-    @Binding var selectedTab: Int
     @Environment(\.colorScheme) var colorScheme
+    @State var name: String
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             // Bar Header
             HStack {
-                Text("Hideaway")
+                Text(name)
                     .font(.system(size: 32, weight: .bold))
                     .bold()
                     .foregroundColor(colorScheme == .dark ? .neonPink : Color("DarkBlue"))
@@ -57,7 +57,7 @@ struct BarCard: View {
                 ActionButton(
                     text: "See who's there",
                     icon: "person.2.fill",
-                    action: { selectedTab = 0 }
+                    action: {}
                 )
                 ActionButton(
                     text: "Check the line",
@@ -74,11 +74,12 @@ struct BarCard: View {
             showingDetail = true
         }
         .sheet(isPresented: $showingDetail) {
-            BarDetailPopup()
+            BarDetailPopup(name: name)
+                .tint(.salmon)
         }
     }
 }
 
 #Preview("Bar Card") {
-    BarCard(selectedTab: .constant(0))
+    BarCard(name: "Hideaway")
 }
