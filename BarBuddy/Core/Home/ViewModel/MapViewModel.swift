@@ -16,6 +16,16 @@ final class MapViewModel: ObservableObject {
     var lookAroundScene: MKLookAroundScene?
     var cameraPosition: MapCameraPosition = .userLocation(fallback: .automatic)
     
+    // Query bars
+    init() {
+        Task {
+            await searchResults(for: "PB Shore Club")
+            await searchResults(for: "Hideaway")
+            await searchResults(for: "Firehouse American Eatery & Lounge")
+            await searchResults(for: "The Local Pacific Beach")
+        }
+    }
+    
     func searchResults(for searchText: String) async {
         if let userLocation = await getUserLocation() {
             

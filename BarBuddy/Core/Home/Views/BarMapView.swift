@@ -59,14 +59,6 @@ struct BarMapView: View {
         .ignoresSafeArea(.keyboard)
         .onAppear {
             locationManager.requestWhenInUseAuthorization()
-            Task {
-                
-                // Querying bars
-                await viewModel.searchResults(for: "PB Shore Club")
-                await viewModel.searchResults(for: "Hideaway")
-                await viewModel.searchResults(for: "Firehouse American Eatery & Lounge")
-                await viewModel.searchResults(for: "The Local Pacific Beach")
-            }
         }
         .sheet(isPresented: $selectedBar, content: {
             BarDetailPopup(name: selectedPlace?.placemark.name ?? "")
