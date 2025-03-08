@@ -1,3 +1,13 @@
 # .gitignore
 
 backend/.env
+
+# Ignore the virtual environment
+env/
+venv/
+
+# Ignore other common Python files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
