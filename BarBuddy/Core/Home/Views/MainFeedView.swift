@@ -27,12 +27,6 @@ struct MainFeedView: View {
 
     // Temporary location manager
     let locationManager = CLLocationManager()
-    
-    // Sample of bars
-    let bars = ["Hideaway",
-                "PB Shore Club",
-                "Firehouse",
-                "The Local Pacific Beach"]
 
     var body: some View {
         NavigationStack {
