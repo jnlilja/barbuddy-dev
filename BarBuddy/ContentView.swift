@@ -126,6 +126,7 @@ struct ContentView: View {
 // Login Flow Preview
 #Preview("Login") {
     ContentView()
+        .environmentObject(MapViewModel())
 }
 
 // Add these placeholder views after ActionButton

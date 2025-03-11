@@ -106,7 +106,7 @@ struct BarDetailPopup: View {
                     Feedback(selectedMood: $selectedMood)
                     
                     // Navigation button to SwipeView
-                    NavigationLink(destination: SwipeView(), isActive: $showSwipeView) {
+                    NavigationLink(destination: SwipeView()) {
                         HStack {
                             Text("Swipe")
                             Image(systemName: "person.2.fill")
