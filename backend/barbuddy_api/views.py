@@ -10,6 +10,8 @@ class SignupView(generics.CreateAPIView):
     serializer_class = UserSerializer
     permission_classes = [permissions.AllowAny]
 
+
+
 # User Detail View
 class UserDetailView(generics.RetrieveAPIView):
     queryset = User.objects.all()

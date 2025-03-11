@@ -55,6 +55,7 @@ INSTALLED_APPS = [
     "apps.matches",
     "apps.messaging",
     "barbuddy_api",
+ 
 ]
 
 AUTH_USER_MODEL = "users.User"
