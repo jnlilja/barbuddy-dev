@@ -14,6 +14,10 @@ struct BarDetailPopup: View {
     // State to hold the user's mood selection from the Feedback view
     @State private var selectedMood: Mood? = nil
     @State private var showSwipeView = false
+    @State private var showWaitTimeView = false
+    @State private var showCrowdSizeView = false
+    @State private var selectedCrowd = false
+    @State var selectedTime: Bool = false
     
     var body: some View {
         NavigationView {
@@ -62,40 +66,99 @@ struct BarDetailPopup: View {
                     // Wait time and crowd size sections
                     HStack(spacing: 30) {
                         VStack(spacing: 10) {
-                            Text("Est. Wait Time:")
-                                .font(.headline)
-                                .foregroundColor(Color("DarkPurple"))
-                            
-                            Text("20 - 30 min")
-                                .padding()
-                                .background(Color("Salmon").opacity(0.2))
-                                .cornerRadius(15)
-                            
-                            Text("Vote wait time!")
-                                .bold()
-                                .underline()
-                                .foregroundColor(Color("DarkPurple"))
+                            if !selectedTime {
+                                
+                                Text("Est. Wait Time:")
+                                    .font(.headline)
+                                    .foregroundColor(Color("DarkPurple"))
+                                
+                                ZStack {
+                                    RoundedRectangle(cornerRadius: 15)
+                                        .foregroundStyle(.salmon.opacity(0.2))
+                                        .frame(width: 131, height: 50)
+                                    
+                                    Text("20 - 30 min")
+                                        .padding()
+                                    //.background(Color("Salmon").opacity(0.2))
+                                        .cornerRadius(15)
+                                }
+                                
+                                Button {
+                                    withAnimation {
+                                        showWaitTimeView = true
+                                    }
+                                } label: {
+                                    Text("Vote wait time!")
+                                        .bold()
+                                        .underline()
+                                        .foregroundColor(Color("DarkPurple"))
+                                    
+                                }
+                                .disabled(showWaitTimeView)
+                            }
+                            else {
+                                ZStack {
+                                    
+                                    RoundedRectangle(cornerRadius: 15)
+                                        .foregroundStyle(Gradient(colors: [.neonPink, .darkBlue]).opacity(0.7))
+                                        .frame(width: 131, height: 110)
+                                    
+                                    Text("Voted! 👍")
+                                        .foregroundStyle(.darkBlue)
+                                        .padding()
+                                        .cornerRadius(15)
+                                        .bold()
+                                }
+                                .transition(.scale)
+                            }
                         }
                         
-                        VStack(spacing: 10) {
-                            Text("Crowd Size is:")
-                                .font(.headline)
-                                .foregroundColor(Color("DarkPurple"))
-                            
-                            HStack {
-                                Image(systemName: "flame.fill")
+                        if !selectedCrowd {
+                            VStack(spacing: 10) {
+                                
+                                Text("Crowd Size is:")
+                                    .font(.headline)
                                     .foregroundColor(Color("DarkPurple"))
-                                Text("Packed")
+                                ZStack {
+                                    RoundedRectangle(cornerRadius: 15)
+                                        .foregroundStyle(.salmon.opacity(0.2))
+                                        .frame(width: 131, height: 50)
+                                    HStack {
+                                        Image(systemName: "flame.fill")
+                                            .foregroundColor(Color("DarkPurple"))
+                                        Text("Packed")
+                                    }
+                                    .padding()
+                                    .foregroundColor(Color("DarkPurple"))
+                                    .cornerRadius(15)
+                                }
+                                
+                                Button {
+                                    withAnimation {
+                                        showCrowdSizeView = true
+                                    }
+                                }label: {
+                                    Text("Vote crowd size!")
+                                        .bold()
+                                        .underline()
+                                        .foregroundColor(Color("DarkPurple"))
+                                }
+                                .disabled(showCrowdSizeView)
                             }
-                            .padding()
-                            .background(Color("Salmon").opacity(0.2))
-                            .foregroundColor(Color("DarkPurple"))
-                            .cornerRadius(15)
-                            
-                            Text("Vote crowd size!")
-                                .bold()
-                                .underline()
-                                .foregroundColor(Color("DarkPurple"))
+                        }
+                        else {
+                            ZStack {
+                                RoundedRectangle(cornerRadius: 15)
+                                    .foregroundStyle(Gradient(colors: [.neonPink, .darkBlue]).opacity(0.7))
+                                    .frame(width: 131, height: 110)
+                                
+                                Text("Voted! 👍")
+                                    .foregroundStyle(.darkBlue)
+                                    .padding()
+                                    .cornerRadius(15)
+                                    .bold()
+                            }
+                            .transition(.scale)
                         }
                     }
                     
@@ -127,6 +190,26 @@ struct BarDetailPopup: View {
         }
         .presentationDetents([.large])
         .presentationDragIndicator(.visible)
+        .overlay {
+            if showWaitTimeView {
+                HStack {
+                    VoteWaitTimeView(selectedTime: $selectedTime, showVoteWaitTime: $showWaitTimeView)
+                        .padding(.leading)
+                        
+                    Spacer()
+                }
+                .transition(.move(edge: .leading))
+            }
+            
+            if showCrowdSizeView {
+                HStack {
+                    Spacer()
+                    VoteCrowdSizeView(selectedCrowd: $selectedCrowd, showCrowdSizeView: $showCrowdSizeView)
+                        .padding(.trailing)
+                }
+                .transition(.move(edge: .trailing))
+            }
+        }
     }
 }
 
