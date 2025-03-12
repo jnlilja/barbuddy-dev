@@ -9,6 +9,8 @@
 import SwiftUI
 
 struct SwipeView: View {
+    @StateObject var viewModel = SwipeViewModel()
+    
     var body: some View {
         NavigationView {
             ZStack {
@@ -16,7 +18,7 @@ struct SwipeView: View {
                     .ignoresSafeArea()
                 
                 VStack {
-                    // Top Bar
+                    // Top Bar.
                     HStack {
                         HStack(spacing: 4) {
                             Text("@ Hideaway")
@@ -24,59 +26,84 @@ struct SwipeView: View {
                                 .bold()
                                 .foregroundColor(.white)
                                 .padding(.horizontal, 15)
-                                .padding(.vertical, 8)
+                                .padding(.vertical, 4)
                                 .background(Color("Salmon").opacity(0.3))
                                 .cornerRadius(25)
                         }
-                        .padding()
+                        .padding(.horizontal)
+                        .padding(.vertical, 8)
                         
                         Spacer()
                     }
                     
-                    // Card Stack with Side Buttons
+                    // Card Stack.
                     ZStack {
-                        ForEach(0..<3) { index in
-                            SwipeCard()
-                                .overlay(
-                                    HStack {
-                                        // Left X Button
-                                        Button(action: {}) {
-                                            Circle()
-                                                .fill(Color.white)
-                                                .frame(width: 54, height: 54)
-                                                .shadow(radius: 5)
-                                                .overlay(
-                                                    Image(systemName: "xmark")
-                                                        .font(.system(size: 30))
-                                                        .foregroundColor(.red)
-                                                )
+                        if viewModel.users.isEmpty {
+                            Text("No more users")
+                                .font(.title)
+                                .foregroundColor(.white)
+                        } else {
+                            ForEach(viewModel.users.reversed()) { user in
+                                SwipeCard(user: user)
+                                    .clipShape(RoundedRectangle(cornerRadius: 60))
+                                    .overlay(
+                                        HStack {
+                                            // Left X Button.
+                                            Button(action: {
+                                                withAnimation {
+                                                    viewModel.swipeLeft(user: user)
+                                                }
+                                            }) {
+                                                Circle()
+                                                    .fill(Color.white)
+                                                    .frame(width: 48, height: 48)
+                                                    .shadow(radius: 5)
+                                                    .overlay(
+                                                        Image(systemName: "xmark")
+                                                            .font(.system(size: 26))
+                                                            .foregroundColor(.red)
+                                                    )
+                                            }
+                                            .padding(.leading, 30)
+                                            
+                                            Spacer()
+                                            
+                                            // Right Heart Button.
+                                            Button(action: {
+                                                withAnimation {
+                                                    viewModel.swipeRight(user: user)
+                                                }
+                                            }) {
+                                                Circle()
+                                                    .fill(Color.white)
+                                                    .frame(width: 48, height: 48)
+                                                    .shadow(radius: 5)
+                                                    .overlay(
+                                                        Image(systemName: "heart.fill")
+                                                            .font(.system(size: 26))
+                                                            .foregroundColor(Color("Salmon"))
+                                                    )
+                                            }
+                                            .padding(.trailing, 30)
                                         }
-                                        .padding(.leading, 30)
-                                        
-                                        Spacer()
-                                        
-                                        // Right Check Button
-                                        Button(action: {}) {
-                                            Circle()
-                                                .fill(Color.white)
-                                                .frame(width: 54, height: 54)
-                                                .shadow(radius: 5)
-                                                .overlay(
-                                                    Image(systemName: "checkmark")
-                                                        .font(.system(size: 30))
-                                                        .foregroundColor(Color("Salmon"))
-                                                )
-                                        }
-                                        .padding(.trailing, 30)
-                                    }
-                                    .offset(y: UIScreen.main.bounds.height * 0.05)  // Changed from -0.05 to 0.05 to move buttons down
-                                )
+                                        // Position buttons slightly above the bottom.
+                                        .offset(y: UIScreen.main.bounds.height * 0.085)
+                                    )
+                            }
                         }
                     }
+                    .padding(.top, -20)
                     
-                    Spacer()  // Remove bottom button section and use spacer
+                    Spacer()
                 }
             }
+            .navigationBarHidden(true)
         }
+    }
+}
+
+struct SwipeView_Previews: PreviewProvider {
+    static var previews: some View {
+        SwipeView()
     }
 }

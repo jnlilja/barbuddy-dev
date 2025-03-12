@@ -10,16 +10,17 @@ import SwiftUI
 
 struct BarCard: View {
     @State private var showingDetail = false
-    @Binding var selectedTab: Int
+    @Environment(\.colorScheme) var colorScheme
+    @State var name: String
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             // Bar Header
             HStack {
-                Text("Hideaway")
+                Text(name)
                     .font(.system(size: 32, weight: .bold))
                     .bold()
-                    .foregroundColor(Color("DarkBlue"))
+                    .foregroundColor(colorScheme == .dark ? .neonPink : Color("DarkBlue"))
                 
                 Spacer()
                 
@@ -28,14 +29,14 @@ struct BarCard: View {
                         .foregroundColor(Color("NeonPink"))
                         .font(.system(size: 24))
                     Text("Trending")
-                        .foregroundColor(Color("DarkPurple"))
+                        .foregroundColor(colorScheme == .dark ? .nude : Color("DarkPurple"))
                         .font(.system(size: 20, weight: .semibold))
                 }
             }
             
             // Open Hours
             Text("Open 11am - 2am")
-                .foregroundColor(Color("DarkPurple"))
+                .foregroundColor(colorScheme == .dark ? .nude : Color("DarkPurple"))
             
             // Bar Image
             Rectangle()
@@ -56,7 +57,7 @@ struct BarCard: View {
                 ActionButton(
                     text: "See who's there",
                     icon: "person.2.fill",
-                    action: { selectedTab = 0 }
+                    action: {}
                 )
                 ActionButton(
                     text: "Check the line",
@@ -66,18 +67,19 @@ struct BarCard: View {
             }
         }
         .padding()
-        .background(Color.white)
+        .background(colorScheme == .dark ? Color(.secondarySystemBackground) : .white)
         .cornerRadius(15)
         .shadow(radius: 5)
         .onTapGesture {
             showingDetail = true
         }
         .sheet(isPresented: $showingDetail) {
-            BarDetailPopup()
+            BarDetailPopup(name: name)
+                .tint(.salmon)
         }
     }
 }
 
 #Preview("Bar Card") {
-    BarCard(selectedTab: .constant(0))
+    BarCard(name: "Hideaway")
 }

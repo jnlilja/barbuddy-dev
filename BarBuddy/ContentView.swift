@@ -126,17 +126,10 @@ struct ContentView: View {
 // Login Flow Preview
 #Preview("Login") {
     ContentView()
+        .environmentObject(MapViewModel())
 }
 
 // Add these placeholder views after ActionButton
-
-struct MapView: View {
-    var body: some View {
-        Text("Map Coming Soon")
-            .font(.largeTitle)
-    }
-}
-
 struct GroupsView: View {
     var body: some View {
         Text("Groups Coming Soon")
@@ -144,9 +137,4 @@ struct GroupsView: View {
     }
 }
 
-struct ProfileView: View {
-    var body: some View {
-        Text("Profile Coming Soon")
-            .font(.largeTitle)
-    }
-}
+
