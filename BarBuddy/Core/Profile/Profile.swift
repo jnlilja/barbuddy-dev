@@ -1,12 +1,9 @@
 //
-//  Profile.swift
-//  BarBuddy
+//  BarBuddyUITests.swift
+//  BarBuddyUITests
 //
-//  Modified to be dynamic using data from MockDatabase.
-//  Fixes:
-//  - Photos in the grid use a fixed size (calculated from screen width) so they display as small squares.
-//  - Tapping a photo shows an enlarged, full-screen preview.
-//  - The "Info" tab now fills the available width without narrowing the background.
+//  Created by Jessica Lilja on 2/5/25.
+//
 
 import SwiftUI
 
@@ -18,8 +15,7 @@ struct ProfileView: View {
     @State private var selectedImage: String? = nil
     @State private var isImageExpanded = false
     
-    // Compute grid cell width based on screen width.
-    // Assumes 16 pts horizontal padding on each side and 15 pts spacing between cells.
+    // Compute grid cell width for Photos.
     private var gridCellWidth: CGFloat {
         let screenWidth = UIScreen.main.bounds.width
         let totalHorizontalPadding: CGFloat = 16 * 2
@@ -58,13 +54,16 @@ struct ProfileView: View {
                             .font(.system(size: 24))
                     }
                     
-                    // Custom Segmented Control.
+                    // Custom Segmented Control with 3 buttons.
                     HStack(spacing: 0) {
                         TabButton(text: "Photos", isSelected: selectedTab == 0) {
                             withAnimation { selectedTab = 0 }
                         }
                         TabButton(text: "Info", isSelected: selectedTab == 1) {
                             withAnimation { selectedTab = 1 }
+                        }
+                        TabButton(text: "Friends", isSelected: selectedTab == 2) {
+                            withAnimation { selectedTab = 2 }
                         }
                     }
                     .background(Color.white.opacity(0.1))
@@ -74,7 +73,7 @@ struct ProfileView: View {
                     
                     // Content based on selected tab.
                     if selectedTab == 0 {
-                        // Photos Grid using fixed cell sizes.
+                        // Photos Grid.
                         LazyVGrid(columns: [
                             GridItem(.fixed(gridCellWidth), spacing: 15),
                             GridItem(.fixed(gridCellWidth), spacing: 15),
@@ -92,8 +91,6 @@ struct ProfileView: View {
                                             selectedImage = imageName
                                             isImageExpanded = true
                                         }
-                                    
-                                    // Edit Button for each photo.
                                     Button(action: {
                                         // Add photo edit action here.
                                     }) {
@@ -111,24 +108,21 @@ struct ProfileView: View {
                             }
                         }
                         .padding(.horizontal, 16)
-                    } else {
-                        // Info View: Dynamically display user's details.
+                    } else if selectedTab == 1 {
+                        // Info View.
                         VStack(alignment: .leading, spacing: 20) {
                             InfoSection(title: "Basic Info", items: [
                                 InfoItem(icon: "calendar", text: "\(primaryUser.age) years old"),
                                 InfoItem(icon: "ruler", text: primaryUser.height),
                                 InfoItem(icon: "mappin.circle.fill", text: primaryUser.hometown)
                             ])
-                            
                             InfoSection(title: "Work & Education", items: [
                                 InfoItem(icon: "graduationcap.fill", text: primaryUser.school)
                             ])
-                            
                             InfoSection(title: "Preferences", items: [
                                 InfoItem(icon: "wineglass.fill", text: "Favorite Drink: \(primaryUser.favoriteDrink)"),
                                 InfoItem(icon: "person.2.fill", text: "Preference: \(primaryUser.preference)")
                             ])
-                            
                             Text(primaryUser.bio)
                                 .font(.footnote)
                                 .foregroundColor(.white)
@@ -138,6 +132,37 @@ struct ProfileView: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(.horizontal, 16)
                         .padding(.top)
+                    } else if selectedTab == 2 {
+                        // Friends View: Display accepted friends from UserFriends.
+                        if UserFriends.shared.getFriends().isEmpty {
+                            Text("No friends yet.")
+                                .foregroundColor(.white)
+                                .padding()
+                                .frame(maxWidth: .infinity, alignment: .center)
+                        } else {
+                            ForEach(UserFriends.shared.getFriends()) { friend in
+                                NavigationLink(destination: FriendProfile(user: friend)) {
+                                    HStack {
+                                        Image(friend.imageNames.first ?? "TestImage")
+                                            .resizable()
+                                            .scaledToFill()
+                                            .frame(width: 60, height: 60)
+                                            .clipShape(Circle())
+                                        VStack(alignment: .leading) {
+                                            Text(friend.name)
+                                                .font(.headline)
+                                                .foregroundColor(.white)
+                                            Text(friend.hometown)
+                                                .font(.subheadline)
+                                                .foregroundColor(.white)
+                                        }
+                                        Spacer()
+                                    }
+                                    .padding(.vertical, 8)
+                                    .padding(.horizontal, 16)
+                                }
+                            }
+                        }
                     }
                 }
                 .padding(.bottom, 20)
@@ -156,22 +181,19 @@ struct ProfileView: View {
                     }
                 }
             }
-            // Full-Screen Photo Viewer (only triggered when a photo is tapped).
+            // Full-Screen Photo Viewer.
             .fullScreenCover(isPresented: $isImageExpanded) {
                 ZStack {
                     Color.black.edgesIgnoringSafeArea(.all)
-                    
                     if let selectedImage = selectedImage {
                         Image(selectedImage)
                             .resizable()
                             .scaledToFit()
                             .background(Color.black)
                             .onTapGesture {
-                                // Tapping the full-screen image dismisses it.
                                 isImageExpanded = false
                             }
                     }
-                    
                     VStack {
                         HStack {
                             Button(action: { isImageExpanded = false }) {
@@ -200,7 +222,7 @@ struct TabButton: View {
             Text(text)
                 .font(.system(size: 16, weight: .medium))
                 .foregroundColor(isSelected ? .white : .gray)
-                .frame(width: 120, height: 40)
+                .frame(width: 100, height: 40)
                 .background(isSelected ? Color("Salmon") : Color.clear)
                 .cornerRadius(25)
         }
