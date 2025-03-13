@@ -3,41 +3,44 @@
 //  BarBuddy
 //
 //  Created by Elliot Gambale on 3/5/25.
-//
+//  Modified to display the profile picture, info section, and a grid of images in 3 columns.
 
 import SwiftUI
 
 struct ProfileView: View {
-    // MARK: - Example Data
-    let username: String = "@user123"
-    let name: String = "John Smith"
-    let age: Int = 25
+    // Optional user parameter.
+    // If nil, the profile will use the primary user from the database.
+    var user: User? = nil
+
+    // Active user: either the provided user or the primary user.
+    var activeUser: User {
+        user ?? MockDatabase.getPrimaryUser()
+    }
     
-    let occupation: String = "Occupation"
-    let hometown: String = "Hometown"
-    let sexualPreference: String = "Straight"
-    let favoriteDrink: String = "Favorite Drink"
-    let college: String? = "School" // Optional
-    let height: String = "Height"   // Newly added
+    // Computed properties using activeUser.
+    var username: String {
+        "@\(activeUser.name.lowercased())"
+    }
+    var name: String { activeUser.name }
+    var age: Int { activeUser.age }
+    var hometown: String { activeUser.hometown }
+    var college: String? { activeUser.school }
+    var favoriteDrink: String { activeUser.favoriteDrink }
+    var sexualPreference: String { activeUser.preference }
+    var bio: String { activeUser.bio }
+    var height: String { activeUser.height }
+    var images: [String] { activeUser.imageNames }
     
-    let bio: String = "user bio"
-    
-    // Images for the user's gallery
-    let images = [
-        "TestImage",
-        "guy1",
-        "guy2",
-        "guy3"
-    ]
+    // Define three flexible grid columns.
+    let gridColumns: [GridItem] = Array(repeating: .init(.flexible(), spacing: 1), count: 3)
     
     @State private var selectedImage: String?
     @State private var isImageExpanded = false
     
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 0) {
-                
-                // Username above photos
+            VStack(alignment: .leading, spacing: 16) {
+                // Username at the top.
                 Text(username)
                     .font(.title)
                     .bold()
@@ -46,47 +49,27 @@ struct ProfileView: View {
                     .background(Color.white)
                     .foregroundColor(.salmon)
                 
-                // MARK: - Photo Gallery at Top
-                TabView {
-                    ForEach(images, id: \.self) { imageName in
-                        Image(imageName)
-                            .resizable()
-                            .scaledToFill()
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 457)
-                            .cornerRadius(20)
-                            .padding(.horizontal, 16)
-                            .clipped()
-                            .onTapGesture {
-                                selectedImage = imageName
-                                isImageExpanded = true
-                            }
-                    }
+                // Profile picture below username.
+                if let profilePic = images.first {
+                    Image(profilePic)
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: 200, height: 200)
+                        .clipShape(Circle())
+                        .overlay(Circle().stroke(Color.white, lineWidth: 4))
+                        .shadow(radius: 7)
+                        .frame(maxWidth: .infinity)
                 }
-                .frame(height: 457)
-                .tabViewStyle(PageTabViewStyle())
-                .edgesIgnoringSafeArea(.top)
                 
-                // MARK: - White background for Name
-                VStack(alignment: .leading, spacing: 0) {
+                // Info Section: user's name, info rows, and bio.
+                VStack(alignment: .leading, spacing: 8) {
                     Text(name)
                         .font(.title)
                         .foregroundColor(.darkBlue)
                         .bold()
-                        .padding(.top, 16)
-                        .padding(.bottom, 16)
-                        .padding(.horizontal)
-                }
-                .background(Color.white)
-                
-                Divider()
-                
-                // MARK: - Info rows
-                VStack(alignment: .leading, spacing: 0) {
                     
-                    // First Row: Age, Height, Hometown
+                    // First row: Age, Height, Hometown.
                     HStack {
-                        // Age
                         HStack(spacing: 4) {
                             Image(systemName: "birthday.cake")
                                 .foregroundColor(.secondary)
@@ -94,7 +77,6 @@ struct ProfileView: View {
                         }
                         .frame(maxWidth: .infinity)
                         
-                        // Height
                         HStack(spacing: 4) {
                             Image(systemName: "ruler")
                                 .foregroundColor(.secondary)
@@ -102,7 +84,6 @@ struct ProfileView: View {
                         }
                         .frame(maxWidth: .infinity)
                         
-                        // Hometown
                         HStack(spacing: 4) {
                             Image(systemName: "house.fill")
                                 .foregroundColor(.secondary)
@@ -111,19 +92,15 @@ struct ProfileView: View {
                         .frame(maxWidth: .infinity)
                     }
                     .font(.subheadline)
-                    .padding(.vertical, 16)
-                    .padding(.horizontal)
                     
-                    // Second Row: School, Favorite Drink, Sexual Preference
+                    // Second row: School, Favorite Drink, Sexual Preference.
                     HStack {
-                        // School
                         HStack(spacing: 4) {
                             Text("🎓")
                             Text(college ?? "")
                         }
                         .frame(maxWidth: .infinity)
                         
-                        // Favorite Drink
                         HStack(spacing: 4) {
                             Image(systemName: "wineglass.fill")
                                 .foregroundColor(.secondary)
@@ -131,7 +108,6 @@ struct ProfileView: View {
                         }
                         .frame(maxWidth: .infinity)
                         
-                        // Sexual Preference
                         HStack(spacing: 4) {
                             Image(systemName: "person.2.fill")
                                 .foregroundColor(.secondary)
@@ -140,33 +116,48 @@ struct ProfileView: View {
                         .frame(maxWidth: .infinity)
                     }
                     .font(.subheadline)
-                    .padding(.vertical, 16)
-                    .padding(.horizontal)
-                }
-                .background(Color.white)
-                
-                Divider()
-                
-                // MARK: - About Me (white background again)
-                VStack(alignment: .leading, spacing: 8) {
+                    
+                    // Bio.
                     Text("Bio")
                         .font(.title2)
                         .bold()
                         .foregroundColor(.darkBlue)
-                        .padding(.top, 16)
-                    
                     Text(bio)
                         .font(.title3)
                 }
-                .padding(.bottom, 16)
-                .padding(.horizontal)
+                .padding()
                 .background(Color.white)
+                .cornerRadius(10)
                 
-                Spacer()
+                // Grid of pictures (3 columns).
+                LazyVGrid(columns: gridColumns, spacing: 1) {
+                    ForEach(images, id: \.self) { imageName in
+                        Image(imageName)
+                            .resizable()
+                            .scaledToFill()
+                            // Each cell: 360 x 480 (3:4 ratio, as 1080/3 = 360)
+                            .frame(width: 360, height: 480)
+                            .clipped()
+                    }
+                }
             }
+            .padding()
         }
         .navigationBarTitleDisplayMode(.inline)
-        // MARK: - Full-Screen Cover for Expanded Image
+        // Toolbar button for Friend Requests remains unchanged.
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                NavigationLink(destination: RequestsView()) {
+                    HStack {
+                        Image(systemName: "person.crop.circle.badge.plus")
+                        Text("Friend Requests")
+                            .font(.subheadline)
+                    }
+                    .foregroundColor(.darkPurple)
+                }
+            }
+        }
+        // Full-screen image viewer.
         .fullScreenCover(isPresented: $isImageExpanded) {
             ZStack {
                 Color.black.edgesIgnoringSafeArea(.all)
@@ -180,9 +171,7 @@ struct ProfileView: View {
                 
                 VStack {
                     HStack {
-                        Button(action: {
-                            isImageExpanded = false
-                        }) {
+                        Button(action: { isImageExpanded = false }) {
                             Image(systemName: "chevron.left")
                                 .foregroundColor(.white)
                                 .font(.title2)
@@ -199,6 +188,8 @@ struct ProfileView: View {
 
 struct ProfileView_Previews: PreviewProvider {
     static var previews: some View {
-        ProfileView()
+        NavigationView {
+            ProfileView(user: MockDatabase.getPrimaryUser())
+        }
     }
 }

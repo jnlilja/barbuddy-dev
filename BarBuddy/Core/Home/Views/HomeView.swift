@@ -34,7 +34,7 @@ struct HomeView: View {
                 }
                 .tag(2)
             
-            FriendCircleView()
+            DealsAndEvents()
                 .tabItem {
                     Image(systemName: "person.line.dotted.person.fill")
                     Text("Friends")

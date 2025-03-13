@@ -8,7 +8,7 @@
 
 import SwiftUI
 
-struct FriendCircleView: View {
+struct DealsAndEvents: View {
     var body: some View {
         NavigationView {
             ZStack {
@@ -117,7 +117,6 @@ struct DealCard: View {
             
             Text(description)
                 .font(.headline)
-                .foregroundColor(Color("DarkPurple"))
         }
         .frame(maxWidth: .infinity)
         .padding()
@@ -128,5 +127,5 @@ struct DealCard: View {
 }
 
 #Preview("Deals and Events") {
-    FriendCircleView()
+    DealsAndEvents()
 }

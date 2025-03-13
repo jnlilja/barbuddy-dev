@@ -12,7 +12,7 @@ class SwipeViewModel: ObservableObject {
     @Published var users: [User] = []
     
     init() {
-        self.users = MockDatabase.getUsers()
+        self.users = MockDatabase.getFriends()
     }
     
     func swipeLeft(user: User) {
