@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Event
+from apps.events.models import Event, EventAttendee
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
@@ -10,3 +10,26 @@ class EventSerializer(serializers.ModelSerializer):
     class Meta:
         model = Event
         fields = "__all__"
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data["bar_name"] = instance.bar.name  # Include the bar name
+        data["attendee_count"] = instance.attendees.count()
+        return data
+
+
+# ✅ Serializer for Event Attendee
+class EventAttendeeSerializer(serializers.ModelSerializer):
+    event = serializers.PrimaryKeyRelatedField(queryset=Event.objects.all())
+    user = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
+
+    class Meta:
+        model = EventAttendee
+        fields = ["id", "event", "user"]
+
+    def to_representation(self, instance):
+        """Customize the response"""
+        data = super().to_representation(instance)
+        data["event_name"] = instance.event.event_name  # Include event name
+        data["user_name"] = instance.user.get_full_name() if instance.user.get_full_name() else instance.user.username
+        return data

@@ -1,8 +1,7 @@
 from django.db import models
-
-from django.db import models
 from apps.bars.models import Bar
 from apps.users.models import User
+from django.utils import timezone
 from django.core.exceptions import ValidationError
 
 class Event(models.Model):
@@ -12,8 +11,9 @@ class Event(models.Model):
     event_description = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
-    # Many-to-many relationship for users attending events
-    attendees = models.ManyToManyField(User, related_name='events_attending', blank=True)
+    class Meta:
+        app_label = 'events'
+        unique_together = ('bar', 'event_name', 'event_time')  # Prevent duplicate event names at the same bar
 
     def clean(self):
         super().clean()
@@ -21,9 +21,27 @@ class Event(models.Model):
         if not self.event_name or len(self.event_name.strip()) == 0:
             raise ValidationError({'event_name': 'Event name cannot be empty.'})
 
+        if self.event_time < timezone.now():
+            raise ValidationError("Event time must be in the future.")
+
     def save(self, *args, **kwargs):
         self.clean()
         super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.event_name} at {self.bar.name}"
+
+
+class EventAttendee(models.Model):
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='attendee_list')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='event_participation')
+
+    class Meta:
+        unique_together = ('event', 'user')
+        app_label = 'events'
+
+    def __str__(self):
+        return f"{self.user} attending {self.event}"
+
+
+Event.attendees = models.ManyToManyField(User, through='EventAttendee', related_name='events_attending', blank=True)

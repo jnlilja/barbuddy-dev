@@ -17,13 +17,10 @@ import environ, os, sys
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 sys.path.append(os.path.join(BASE_DIR, 'apps'))
-# GDAL_LIBRARY_PATH = os.getenv('GDAL_LIBRARY_PATH')
-# GEOS_LIBRARY_PATH = os.getenv('GEOS_LIBRARY_PATH', '/opt/homebrew/opt/geos/lib/libgeos.dylib')
-GEOS_LIBRARY_PATH = os.getenv('GEOS_LIBRARY_PATH', '/opt/homebrew/Cellar/geos/3.13.1/lib/libgeos.dylib')
-GDAL_LIBRARY_PATH = os.getenv('GDAL_LIBRARY_PATH', '/opt/homebrew/Cellar/gdal/3.10.2_2/lib/libgdal.dylib')
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
+GDAL_LIBRARY_PATH = "/opt/homebrew/lib/libgdal.dylib"
+os.environ["GDAL_LIBRARY_PATH"] = GDAL_LIBRARY_PATH
+os.environ["DYLD_LIBRARY_PATH"] = "/opt/homebrew/lib:" + os.environ.get("DYLD_LIBRARY_PATH", "")
 
 # SECURITY WARNING: keep the secret key used in production secret!
 env = environ.Env()
@@ -53,6 +50,7 @@ INSTALLED_APPS = [
     'apps.events',
     'apps.matches',
     'apps.messaging',
+    'apps.swipes',
 ]
 
 AUTH_USER_MODEL = 'users.User'
