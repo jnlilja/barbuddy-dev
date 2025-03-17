@@ -43,7 +43,7 @@ struct AgeVerificationView: View {
                         .foregroundColor(.white)
                     
                     DatePicker(
-                        "Date of Birth",
+                        "",
                         selection: $viewModel.dateOfBirth,
                         in: minimumDate...maximumDate,
                         displayedComponents: .date

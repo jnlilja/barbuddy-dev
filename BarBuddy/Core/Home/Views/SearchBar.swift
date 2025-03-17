@@ -10,7 +10,6 @@ import SwiftUI
 
 struct SearchBar: View {
     @Binding var searchText: String
-    @FocusState private var focusedField
     
     var body: some View {
         HStack {
