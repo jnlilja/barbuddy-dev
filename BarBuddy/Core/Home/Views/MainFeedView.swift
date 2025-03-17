@@ -20,13 +20,17 @@ struct MainFeedView: View {
     // Camera automatically follows user's location
     @State var bottomSheetPosition: BottomSheetPosition = .relative(0.86)
     @State var selectedPlace: MKMapItem?
-    @State private var searchText = ""
+    @State var searchText = ""
     @Environment(\.colorScheme) var colorScheme
     @State private var selectedBar: Bool = false
     @EnvironmentObject var viewModel: MapViewModel
 
     // Temporary location manager
     let locationManager = CLLocationManager()
+    
+    var filteredBars: [MKMapItem] {
+        viewModel.results.filter({ $0.placemark.name?.localizedCaseInsensitiveContains(searchText) ?? false || searchText.isEmpty })
+    }
 
     var body: some View {
         NavigationStack {
@@ -34,7 +38,7 @@ struct MainFeedView: View {
                 
                 // Display annotations for search results on map
                 ForEach(viewModel.results, id: \.self) { result in
-                    Marker(result.placemark.name ?? "", systemImage: "mug.fill", coordinate: result.placemark.coordinate)
+                    Marker(result.placemark.name ?? "", systemImage: "wineglass.fill", coordinate: result.placemark.coordinate)
                         .tint(.darkBlue)
                 }
                 
@@ -55,9 +59,9 @@ struct MainFeedView: View {
             .onAppear {
                 locationManager.requestWhenInUseAuthorization()
             }
-            .sheet(isPresented: $selectedBar, content: {
-                BarDetailPopup(name: selectedPlace?.placemark.name ?? "")
-            })
+            .sheet(isPresented: $selectedBar,
+                   onDismiss: { withAnimation { selectedPlace = nil } },
+                   content: { BarDetailPopup(name: selectedPlace?.placemark.name ?? "") })
             .tint(.salmon)
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackgroundVisibility(.hidden, for: .navigationBar)
@@ -77,9 +81,7 @@ struct MainFeedView: View {
                             bottomSheetPosition = .relativeBottom(0.21)
                             
                             Task {
-                                // Search for bars and update camera position
-                                await viewModel.searchResults(for: searchText)
-                                await viewModel.updateCameraPosition()
+                                await viewModel.updateCameraPosition(bar: searchText)
                             }
                         }
                         .simultaneousGesture(TapGesture()
@@ -88,12 +90,21 @@ struct MainFeedView: View {
                             }))
                     
                 }) {
-                    VStack {
-                        // Search Results
-                        ForEach(viewModel.results, id: \.self) { bar in
-                            BarCard(name: bar.placemark.name ?? "")
-                                .padding([.horizontal, .bottom])
+                    // Search Results
+                    if filteredBars.isEmpty {
+                        Text("No results found")
+                            .foregroundColor(.white)
+                            .font(.title3)
+                    }
+                    else {
+                        ForEach(filteredBars, id: \.self) { bar in
+                            if let name = bar.placemark.name {
+                                BarCard(name: name)
+                                    .padding([.horizontal, .bottom])
+                            }
                         }
+                        .transition(.opacity)
+                        .animation(.easeInOut, value: searchText)
                     }
                 }
                 .customBackground(.darkBlue.opacity(0.9))
