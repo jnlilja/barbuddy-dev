@@ -7,127 +7,277 @@
 
 import SwiftUI
 
-// Update BarDetailPopup to replace the posting section with the graph
 struct BarDetailPopup: View {
-    //@Binding var isPresented: Bool
     @Environment(\.dismiss) var dismiss
-    
+    @State var name: String
+
+    // State to hold the user's mood selection from the Feedback view
+    @State private var selectedMood: Mood? = nil
+    @State private var showSwipeView = false
+    @State private var showWaitTimeView = false
+    @State private var showCrowdSizeView = false
+    @State private var selectedCrowd = false
+    @State var selectedTime: Bool = false
+
+    // Track voting view position
+    @State private var position: CGFloat = 0
+
     var body: some View {
         NavigationView {
-            ScrollView {
-                VStack(spacing: 25) {
-                    // Header with bar name and hours
-                    VStack(spacing: 8) {
-                        Text("Hideaway")
-                            .font(.system(size: 40, weight: .bold))
+
+            VStack(spacing: 25) {
+
+                // Header with bar name and hours
+                VStack(spacing: 8) {
+                    Text(name)
+                        .font(.system(size: 40, weight: .bold))
+                        .foregroundColor(Color("DarkPurple"))
+
+                    HStack {
+                        Text("Open")
+                            .foregroundColor(.red)
+                        Text("11am - 2am")
                             .foregroundColor(Color("DarkPurple"))
-                        
-                        HStack {
-                            Text("Open")
-                                .foregroundColor(.red)
-                            Text("11am - 2am")
-                                .foregroundColor(Color("DarkPurple"))
-                        }
                     }
-                    
-                    // Friends avatars section
-                    VStack(spacing: 10) {
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            HStack(spacing: 12) {
-                                ForEach(0..<5) { _ in
-                                    Circle()
-                                        .fill(Color.gray.opacity(0.3))
-                                        .frame(width: 60, height: 60)
-                                }
+                }
+
+                // Friends avatars section
+                VStack(spacing: 10) {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 12) {
+                            ForEach(0..<5) { _ in
+                                Circle()
+                                    .fill(Color.gray.opacity(0.3))
+                                    .frame(width: 60, height: 60)
                             }
-                            .padding(.horizontal)
                         }
-                        
-                        Text("+6 of your friends are here!")
-                            .foregroundColor(Color("DarkPurple"))
-                            .font(.system(size: 16, weight: .medium))
+                        .padding(.horizontal)
                     }
-                    
-                    // Quick info tags
-                    HStack(spacing: 15) {
-                        InfoBubble(icon: "music.note", text: "House")
-                        InfoBubble(icon: "flame.fill", text: "Packed")
-                        InfoBubble(text: "$ 5 - 20")
-                    }
-                    
-                    // Wait time and crowd size
-                    HStack(spacing: 30) {
-                        VStack(spacing: 10) {
+
+                    Text("+6 of your friends are here!")
+                        .foregroundColor(Color("DarkPurple"))
+                        .font(.system(size: 16, weight: .medium))
+                }
+
+                // Quick info tags
+                HStack(spacing: 15) {
+                    InfoBubble(icon: "music.note", text: "House")
+                    InfoBubble(icon: "flame.fill", text: "Packed")
+                    InfoBubble(text: "$ 5 - 20")
+                }
+
+                // Wait time and crowd size sections
+                HStack(spacing: 30) {
+                    VStack(spacing: 10) {
+                        if !selectedTime {
+
                             Text("Est. Wait Time:")
                                 .font(.headline)
                                 .foregroundColor(Color("DarkPurple"))
-                            
-                            Text("20 - 30 min")
-                                .padding()
-                                .background(Color("Salmon").opacity(0.2))
-                                .cornerRadius(15)
-                            
-                            Text("Vote wait time!")
-                                .bold()
-                                .underline()
-                                .foregroundColor(Color("DarkPurple"))
+
+                            ZStack {
+                                RoundedRectangle(cornerRadius: 15)
+                                    .foregroundStyle(.salmon.opacity(0.2))
+                                    .frame(width: 131, height: 50)
+
+                                Text("20 - 30 min")
+                                    .padding()
+                                    .cornerRadius(15)
+                            }
+
+                            Button {
+                                withAnimation {
+                                    showWaitTimeView = true
+                                    showCrowdSizeView = false
+                                }
+                            } label: {
+                                Text("Vote wait time!")
+                                    .bold()
+                                    .underline()
+                                    .foregroundColor(Color("DarkPurple"))
+
+                            }
+                            .disabled(showWaitTimeView)
+                        } else {
+                            ZStack {
+
+                                RoundedRectangle(cornerRadius: 15)
+                                    .foregroundStyle(
+                                        Gradient(colors: [
+                                            .neonPink, .darkBlue,
+                                        ]).opacity(0.7)
+                                    )
+                                    .frame(width: 131, height: 110)
+
+                                Text("Voted! 👍")
+                                    .foregroundStyle(.darkBlue)
+                                    .padding()
+                                    .cornerRadius(15)
+                                    .bold()
+                            }
+                            .transition(.scale)
                         }
-                        
+                    }
+
+                    if !selectedCrowd {
                         VStack(spacing: 10) {
+
                             Text("Crowd Size is:")
                                 .font(.headline)
                                 .foregroundColor(Color("DarkPurple"))
-                            
-                            HStack {
-                                Image(systemName: "flame.fill")
-                                    .foregroundColor(Color("DarkPurple"))
-                                Text("Packed")
-                            }
-                            .padding()
-                            .background(Color("Salmon").opacity(0.2))
-                            .foregroundColor(Color("DarkPurple"))
-                            .cornerRadius(15)
-                            
-                            Text("Vote crowd size!")
-                                .bold()
-                                .underline()
+                            ZStack {
+                                RoundedRectangle(cornerRadius: 15)
+                                    .foregroundStyle(.salmon.opacity(0.2))
+                                    .frame(width: 131, height: 50)
+                                HStack {
+                                    Image(systemName: "flame.fill")
+                                        .foregroundColor(
+                                            Color("DarkPurple"))
+                                    Text("Packed")
+                                }
+                                .padding()
                                 .foregroundColor(Color("DarkPurple"))
+                                .cornerRadius(15)
+                            }
+
+                            Button {
+                                withAnimation {
+                                    showCrowdSizeView = true
+                                    showWaitTimeView = false
+                                }
+                            } label: {
+                                Text("Vote crowd size!")
+                                    .bold()
+                                    .underline()
+                                    .foregroundColor(Color("DarkPurple"))
+                            }
+                            .disabled(showCrowdSizeView)
                         }
-                    }
-                    
-                    // Replace image and post button with crowd level graph
-                    CrowdLevelGraph()
-                    
-                    // Single action button for Swipe
-                    Button(action: {}) {
-                        HStack {
-                            Text("Swipe")
-                            Image(systemName: "person.2.fill")
+                    } else {
+                        ZStack {
+                            RoundedRectangle(cornerRadius: 15)
+                                .foregroundStyle(
+                                    Gradient(colors: [.neonPink, .darkBlue])
+                                        .opacity(0.7)
+                                )
+                                .frame(width: 131, height: 110)
+
+                            Text("Voted! 👍")
+                                .foregroundStyle(.darkBlue)
+                                .padding()
+                                .cornerRadius(15)
+                                .bold()
                         }
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color("Salmon").opacity(0.2))
-                        .foregroundColor(Color("DarkPurple"))
-                        .cornerRadius(15)
+                        .transition(.scale)
                     }
                 }
-                .padding()
+                Spacer()
+                // Feedback view integrated here
+                Feedback(selectedMood: $selectedMood)
+
+                // Navigation button to SwipeView
+                NavigationLink(destination: SwipeView()) {
+                    HStack {
+                        Text("Swipe")
+                        Image(systemName: "person.2.fill")
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color("Salmon").opacity(0.2))
+                    .foregroundColor(Color("DarkPurple"))
+                    .cornerRadius(15)
+                }
             }
-            .navigationBarItems(trailing: Button("Done") {
-                //isPresented = false
-                dismiss()
-            })
+            .padding()
+
+            .navigationBarItems(
+                trailing: Button("Done") {
+                    dismiss()
+                }
+            )
             .navigationBarTitleDisplayMode(.inline)
         }
         .presentationDetents([.large])
         .presentationDragIndicator(.visible)
+        .overlay {
+            if showWaitTimeView {
+                HStack {
+                    VoteWaitTimeView(
+                        selectedTime: $selectedTime,
+                        showVoteWaitTime: $showWaitTimeView
+                    )
+                    .padding(.leading)
+                    .offset(x: position)
+                    .gesture(
+                        DragGesture(minimumDistance: 0, coordinateSpace: .local)
+                            .onChanged { value in
+                                // Only able to swipe to the left
+                                if value.translation.width <= 0 {
+                                    position = value.translation.width
+                                }
+                            }
+                            .onEnded({ _ in
+                                // View will close when swiped about halfways to the left
+                                if position < -100 {
+                                    withAnimation {
+                                        showWaitTimeView = false
+                                    }
+                                }
+                                // Resets position when not swiped far enough
+                                withAnimation {
+                                    position = 0
+                                }
+                            }
+                            )
+                    )
+
+                    Spacer()
+                }
+                .transition(.move(edge: .leading))
+            }
+
+            if showCrowdSizeView {
+                HStack {
+                    Spacer()
+                    VoteCrowdSizeView(
+                        selectedCrowd: $selectedCrowd,
+                        showCrowdSizeView: $showCrowdSizeView
+                    )
+                    .padding(.trailing)
+                    .offset(x: position)
+                    .gesture(
+                        DragGesture(minimumDistance: 0, coordinateSpace: .local)
+                            .onChanged { value in
+                                // Only able to swipe to the right
+                                if value.translation.width > 0 {
+                                    position = value.translation.width
+                                }
+                            }
+                            .onEnded({ _ in
+                                // View will close when swiped about halfways to the right
+                                if position > 100 {
+                                    withAnimation {
+                                        showCrowdSizeView = false
+                                    }
+                                }
+                                // Resets position when not swiped far enough
+                                withAnimation {
+                                    position = 0
+                                }
+                            }
+                            )
+                    )
+                }
+                .transition(.move(edge: .trailing))
+            }
+        }
     }
 }
 
-// Update the preview
 #Preview("Bar Detail Popup") {
     HomeView()
+        .environmentObject(MapViewModel())
         .overlay {
-            BarDetailPopup()
+            BarDetailPopup(name: "Hideaway")
         }
 }

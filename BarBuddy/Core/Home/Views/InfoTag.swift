@@ -19,7 +19,6 @@ struct InfoTag: View {
             Text(text)
                 .foregroundColor(.white)
                 .lineLimit(1)
-                .minimumScaleFactor(0.8)
         }
         .font(.system(size: 14))
         .padding(.horizontal, 10)

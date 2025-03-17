@@ -27,7 +27,7 @@ struct HomeView: View {
                 }
                 .tag(1)
             
-            MainFeedView(selectedTab: $selectedTab)
+            MainFeedView()
                 .tabItem {
                     Image(systemName: "map.fill")
                     Text("Map")
@@ -64,5 +64,6 @@ struct HomeView: View {
 // Add this new preview provider
 #Preview("Home Tab Bar") {
     HomeView()
+        .environmentObject(MapViewModel())
 }
 

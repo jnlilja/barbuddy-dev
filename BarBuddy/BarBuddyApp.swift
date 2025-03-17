@@ -9,9 +9,11 @@ import SwiftUI
 
 @main
 struct BarBuddyApp: App {
+    var mapViewModel = MapViewModel()
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .environmentObject(mapViewModel)
         }
     }
 }

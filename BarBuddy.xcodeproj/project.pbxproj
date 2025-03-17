@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		1BF7EF472D79161D001786D8 /* BottomSheet in Frameworks */ = {isa = PBXBuildFile; productRef = 1BF7EF462D79161D001786D8 /* BottomSheet */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		599153C22D540525004B2832 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -65,6 +69,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1BF7EF472D79161D001786D8 /* BottomSheet in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -125,6 +130,7 @@
 			);
 			name = BarBuddy;
 			packageProductDependencies = (
+				1BF7EF462D79161D001786D8 /* BottomSheet */,
 			);
 			productName = BarBuddy;
 			productReference = 599153B12D540523004B2832 /* BarBuddy.app */;
@@ -208,6 +214,9 @@
 			);
 			mainGroup = 599153A82D540523004B2832;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				1BF7EF452D79161D001786D8 /* XCRemoteSwiftPackageReference "BottomSheet" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 599153B22D540523004B2832 /* Products */;
 			projectDirPath = "";
@@ -426,7 +435,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.jessicalilja.BarBuddy;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
@@ -456,7 +465,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.jessicalilja.BarBuddy;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
+				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
@@ -569,6 +578,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		1BF7EF452D79161D001786D8 /* XCRemoteSwiftPackageReference "BottomSheet" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/lucaszischka/BottomSheet";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 3.1.1;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		1BF7EF462D79161D001786D8 /* BottomSheet */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 1BF7EF452D79161D001786D8 /* XCRemoteSwiftPackageReference "BottomSheet" */;
+			productName = BottomSheet;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 599153A92D540523004B2832 /* Project object */;
 }
