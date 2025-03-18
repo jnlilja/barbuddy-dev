@@ -1853,10 +1853,158 @@ struct GroupsView: View {
 }
 
 struct ProfileView: View {
+    @State private var showingEditProfile = false
+    @State private var selectedTab = 0
+    
     var body: some View {
-        Text("Profile Coming Soon")
-            .font(.largeTitle)
+        NavigationView {
+            ScrollView {
+                VStack(spacing: 25) {
+                    // Profile Header with Circle Image
+                    Circle()
+                        .fill(Color.gray.opacity(0.3))
+                        .frame(width: 120, height: 120)
+                        .padding(.top, 20)
+                    
+                    // Name and Verification
+                    HStack(spacing: 8) {
+                        Text("Ashley")
+                            .font(.system(size: 32, weight: .bold))
+                            .foregroundColor(.white)
+                        
+                        Image(systemName: "checkmark.seal.fill")
+                            .foregroundColor(Color("NeonPink"))
+                            .font(.system(size: 24))
+                    }
+                    
+                    // Custom Segmented Control
+                    HStack(spacing: 0) {
+                        TabButton(text: "Photos", isSelected: selectedTab == 0) {
+                            withAnimation { selectedTab = 0 }
+                        }
+                        
+                        TabButton(text: "Info", isSelected: selectedTab == 1) {
+                            withAnimation { selectedTab = 1 }
+                        }
+                    }
+                    .background(Color.white.opacity(0.1))
+                    .cornerRadius(25)
+                    .padding(.horizontal)
+                    .padding(.top, 20)
+                    
+                    // Content based on selected tab
+                    if selectedTab == 0 {
+                        // Photos Grid
+                        LazyVGrid(columns: [
+                            GridItem(.flexible()),
+                            GridItem(.flexible()),
+                            GridItem(.flexible())
+                        ], spacing: 15) {
+                            ForEach(0..<6) { index in
+                                ZStack(alignment: .topTrailing) {
+                                    Rectangle()
+                                        .fill(Color.gray.opacity(0.3))
+                                        .aspectRatio(1, contentMode: .fit)
+                                        .cornerRadius(10)
+                                    
+                                    // Edit Button for each photo
+                                    Button(action: {
+                                        // Add photo edit action here
+                                    }) {
+                                        Circle()
+                                            .fill(Color("Salmon"))
+                                            .frame(width: 30, height: 30)
+                                            .overlay(
+                                                Image(systemName: "pencil")
+                                                    .font(.system(size: 12))
+                                                    .foregroundColor(.white)
+                                            )
+                                    }
+                                    .padding(8)
+                                }
+                            }
+                        }
+                        .padding(.horizontal)
+                    } else {
+                        // Info View
+                        VStack(alignment: .leading, spacing: 20) {
+                            InfoSection(title: "Basic Info", items: [
+                                InfoItem(icon: "person.fill", text: "Woman"),
+                                InfoItem(icon: "calendar", text: "23 years old"),
+                                InfoItem(icon: "mappin.circle.fill", text: "San Diego, CA"),
+                                InfoItem(icon: "house.fill", text: "From: Chicago, IL")
+                            ])
+                            
+                            InfoSection(title: "Work & Education", items: [
+                                InfoItem(icon: "briefcase.fill", text: "Software Engineer @ Apple"),
+                                InfoItem(icon: "graduationcap.fill", text: "SDSU - Computer Science")
+                            ])
+                            
+                            InfoSection(title: "Preferences", items: [
+                                InfoItem(icon: "person.2.fill", text: "Show me: Everyone"),
+                                InfoItem(icon: "wineglass.fill", text: "Favorite drink: Tequila Sunrise")
+                            ])
+                            
+                            Text("BarBuddy is for making friends! We recommend seeing both guys and girls in your area to maximize your social circle.")
+                                .font(.footnote)
+                                .foregroundColor(.white)
+                                .padding(.horizontal)
+                                .padding(.top, 5)
+                        }
+                        .padding(.top)
+                    }
+                }
+            }
+            .background(Color("DarkBlue"))
+        }
     }
+}
+
+struct TabButton: View {
+    let text: String
+    let isSelected: Bool
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            Text(text)
+                .font(.system(size: 16, weight: .medium))
+                .foregroundColor(isSelected ? .white : .gray)
+                .frame(width: 120, height: 40)
+                .background(isSelected ? Color("Salmon") : Color.clear)
+                .cornerRadius(25)
+        }
+    }
+}
+
+struct InfoSection: View {
+    let title: String
+    let items: [InfoItem]
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 15) {
+            Text(title)
+                .font(.headline)
+                .foregroundColor(.white)
+                .padding(.horizontal)
+            
+            ForEach(items) { item in
+                HStack {
+                    Image(systemName: item.icon)
+                        .foregroundColor(Color("Salmon"))
+                    Text(item.text)
+                        .foregroundColor(.white)
+                }
+                .padding(.horizontal)
+            }
+        }
+    }
+}
+
+struct InfoItem: Identifiable {
+    let id = UUID()
+    let icon: String
+    let text: String
 }
 
 // Add this new preview provider
