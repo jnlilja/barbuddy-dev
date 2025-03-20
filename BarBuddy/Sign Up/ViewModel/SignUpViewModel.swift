@@ -7,6 +7,45 @@
 
 import Foundation
 
+
+
+// ########### TEMP ############
+
+
+
+
+//import FirebaseAuth
+//
+//func startPhoneNumberAuth(phoneNumber: String) {
+//    // Example: +1 555-555-1234
+//    PhoneAuthProvider.provider()
+//      .verifyPhoneNumber(phoneNumber, uiDelegate: nil) { verificationID, error in
+//        if let error = error {
+//            print("Verification error: \(error.localizedDescription)")
+//            return
+//        }
+//        // Store verificationID somewhere (e.g., in UserDefaults).
+//        // Then prompt user for the SMS verification code.
+//    }
+//}
+//
+//func verifySMSCode(verificationID: String, smsCode: String) {
+//    let credential = PhoneAuthProvider.provider().credential(
+//        withVerificationID: verificationID,
+//        verificationCode: smsCode
+//    )
+//
+//    Auth.auth().signIn(with: credential) { authResult, error in
+//        if let error = error {
+//            print("Sign in error: \(error.localizedDescription)")
+//            return
+//        }
+//        // The user is now signed in with Firebase via phone number.
+//        // Next step: get the ID token if you need to send it to your backend.
+//    }
+//}
+
+
 // This viewModel handles the logic of validation and posting changes to UI
 class SignUpViewModel: ObservableObject {
     @Published var email: String = ""
@@ -82,4 +121,8 @@ class SignUpViewModel: ObservableObject {
         let passwordPredicate = NSPredicate(format:"SELF MATCHES %@", passwordRegex)
         return passwordPredicate.evaluate(with: password)
     }
+    
+    
+    
+    
 }
