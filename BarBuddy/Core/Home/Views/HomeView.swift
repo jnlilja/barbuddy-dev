@@ -34,13 +34,6 @@ struct HomeView: View {
                 }
                 .tag(2)
             
-            FriendCircleView()
-                .tabItem {
-                    Image(systemName: "person.line.dotted.person.fill")
-                    Text("Friends")
-                }
-                .tag(3)
-            
             ProfileView()
                 .tabItem {
                     Image(systemName: "person.circle")
