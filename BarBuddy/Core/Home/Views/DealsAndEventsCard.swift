@@ -5,13 +5,6 @@
 //  Created by Elliot Gambale on 3/19/25.
 //
 
-//
-//  EventCard.swift
-//  BarBuddy
-//
-//  Created by [Your Name] on [Date].
-//
-
 import SwiftUI
 
 struct EventCard: View {

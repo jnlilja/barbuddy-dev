@@ -30,94 +30,101 @@ struct MainFeedView: View {
 
     var body: some View {
         NavigationStack {
-            Map(position: $viewModel.cameraPosition, selection: $selectedPlace) {
-                
-                // Display annotations for search results on map
-                ForEach(viewModel.results, id: \.self) { result in
-                    Marker(result.placemark.name ?? "", systemImage: "mug.fill", coordinate: result.placemark.coordinate)
-                        .tint(.darkBlue)
+            ZStack {
+                Map(position: $viewModel.cameraPosition, selection: $selectedPlace) {
+                    
+                    // Display annotations for search results on map
+                    ForEach(viewModel.results, id: \.self) { result in
+                        Marker(result.placemark.name ?? "", systemImage: "mug.fill", coordinate: result.placemark.coordinate)
+                            .tint(.darkBlue)
+                    }
+                    
+                    // User's location marker on map
+                    UserAnnotation()
                 }
+                // Listening for changes for bar selection on map
+                .onChange(of: selectedPlace) { oldValue, newValue in
+                    selectedBar = newValue != nil
+                }
+                .mapControls {
+                    // Map control config
+                    MapUserLocationButton()
+                    MapCompass()
+                    MapPitchToggle()
+                }
+                .ignoresSafeArea(.keyboard)
+                .onAppear {
+                    locationManager.requestWhenInUseAuthorization()
+                }
+                .sheet(isPresented: $selectedBar, content: {
+                    BarDetailPopup(name: selectedPlace?.placemark.name ?? "")
+                })
+                .tint(.salmon)
                 
-                // User's location marker on map
-                UserAnnotation()
-            }
-            // Listening for changes for bar selection on map
-            .onChange(of: selectedPlace) { oldValue, newValue in
-                selectedBar = newValue != nil
-            }
-            .mapControls {
-                // Map control config
-                MapUserLocationButton()
-                MapCompass()
-                MapPitchToggle()
-            }
-            .ignoresSafeArea(.keyboard)
-            .onAppear {
-                locationManager.requestWhenInUseAuthorization()
-            }
-            .sheet(isPresented: $selectedBar, content: {
-                BarDetailPopup(name: selectedPlace?.placemark.name ?? "")
-            })
-            .tint(.salmon)
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbarBackgroundVisibility(.hidden, for: .navigationBar)
-            
-            // Bottom sheet view
-            .bottomSheet(
-                bottomSheetPosition: $bottomSheetPosition,
-                switchablePositions: [
-                    .relativeBottom(0.21),
-                    .relative(0.86),
-                    .relativeTop(1),
-                ]
-                , headerContent: {
-                    SearchBar(searchText: $searchText)
-                        .padding([.horizontal, .bottom])
-                        .onSubmit(of: .text) {
-                            bottomSheetPosition = .relativeBottom(0.21)
+                // Bottom sheet view
+                .bottomSheet(
+                    bottomSheetPosition: $bottomSheetPosition,
+                    switchablePositions: [
+                        .relativeBottom(0.21),
+                        .relative(0.86),
+                        .relativeTop(1),
+                    ]
+                    , headerContent: {
+                        SearchBar(searchText: $searchText)
+                            .padding([.horizontal, .bottom])
+                            .onSubmit(of: .text) {
+                                bottomSheetPosition = .relativeBottom(0.21)
+                                
+                                Task {
+                                    // Search for bars and update camera position
+                                    await viewModel.searchResults(for: searchText)
+                                    await viewModel.updateCameraPosition()
+                                }
+                            }
+                            .simultaneousGesture(TapGesture()
+                                .onEnded({
+                                    bottomSheetPosition = .relative(0.86)
+                                }))
+                        
+                    }) {
+                        VStack {
+                            // Navigation to Deals and Events using a NavigationLink
+                            NavigationLink(destination: DealsAndEvents()) {
+                                EventCard()
+                                    .padding([.horizontal, .bottom])
+                            }
+                            .buttonStyle(PlainButtonStyle()) // Prevents default button styling
                             
-                            Task {
-                                // Search for bars and update camera position
-                                await viewModel.searchResults(for: searchText)
-                                await viewModel.updateCameraPosition()
+                            // Search Results
+                            ForEach(viewModel.results, id: \.self) { bar in
+                                BarCard(name: bar.placemark.name ?? "")
+                                    .padding([.horizontal, .bottom])
                             }
                         }
-                        .simultaneousGesture(TapGesture()
-                            .onEnded({
-                                bottomSheetPosition = .relative(0.86)
-                            }))
+                    }
+                    .customBackground(.darkBlue.opacity(0.9))
+                    .dragIndicatorColor(bottomSheetPosition == .relativeTop(1) ? .clear : .white)
+                    .enableAppleScrollBehavior()
+                    .customAnimation(.snappy)
+                    .ignoresSafeArea(.keyboard)
+            }
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbarBackgroundVisibility(.hidden, for: .navigationBar)
+            .toolbar {
+                ToolbarItem(placement: .principal) {
+                    Text("Pacific Beach")
+                        .font(.title)
+                        .fontDesign(.rounded)
+                        .fontWeight(.heavy)
                     
-                }) {
-                    VStack {
-                        EventCard()
-                                    .padding([.horizontal, .bottom])
-                        // Search Results
-                        ForEach(viewModel.results, id: \.self) { bar in
-                            BarCard(name: bar.placemark.name ?? "")
-                                .padding([.horizontal, .bottom])
-                        }
-                    }
+                    // Changes color of title when in dark mode or sheet view takes up full screen
+                        .foregroundStyle(
+                            colorScheme == .dark || bottomSheetPosition == .relativeTop(1)
+                            ? .salmon : .darkBlue
+                        )
+                        .animation(.easeInOut, value: bottomSheetPosition)
                 }
-                .customBackground(.darkBlue.opacity(0.9))
-                .dragIndicatorColor(bottomSheetPosition == .relativeTop(1) ? .clear : .white)
-                .enableAppleScrollBehavior()
-                .customAnimation(.snappy)
-                .ignoresSafeArea(.keyboard)
-                .toolbar {
-                    ToolbarItem(placement: .principal) {
-                        Text("Pacific Beach")
-                            .font(.title)
-                            .fontDesign(.rounded)
-                            .fontWeight(.heavy)
-                        
-                        // Changes color of title when in dark mode or sheet view takes up full screen
-                            .foregroundStyle(
-                                colorScheme == .dark || bottomSheetPosition == .relativeTop(1)
-                                ? .salmon : .darkBlue
-                            )
-                            .animation(.easeInOut, value: bottomSheetPosition)
-                    }
-                }
+            }
         }
     }
 }
