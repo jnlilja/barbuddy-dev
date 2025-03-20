@@ -89,6 +89,8 @@ struct MainFeedView: View {
                     
                 }) {
                     VStack {
+                        EventCard()
+                                    .padding([.horizontal, .bottom])
                         // Search Results
                         ForEach(viewModel.results, id: \.self) { bar in
                             BarCard(name: bar.placemark.name ?? "")
