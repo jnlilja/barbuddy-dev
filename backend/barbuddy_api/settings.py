@@ -24,6 +24,7 @@ os.environ["DYLD_LIBRARY_PATH"] = "/opt/homebrew/lib:" + os.environ.get("DYLD_LI
 
 # SECURITY WARNING: keep the secret key used in production secret!
 env = environ.Env()
+# reading .env file
 environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
 SECRET_KEY = env('SECRET_KEY')
 
@@ -52,6 +53,7 @@ INSTALLED_APPS = [
     'apps.messaging',
     'apps.swipes',
 ]
+
 
 AUTH_USER_MODEL = 'users.User'
 
@@ -146,3 +148,6 @@ STATIC_URL = "static/"
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+print("DEBUG from env:", env("DEBUG"))
+print("DB_HOST from env:", env("DB_HOST"))
