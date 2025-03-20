@@ -1,7 +1,7 @@
 # .gitignore
 
 backend/.env
-backend/barbuddy-d51b1-firebase-adminsdk-fbsvc-f627ffbcff.json
+
 # Ignore the virtual environment
 env/
 venv/
