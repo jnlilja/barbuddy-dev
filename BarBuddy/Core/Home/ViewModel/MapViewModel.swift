@@ -62,9 +62,10 @@ final class MapViewModel: ObservableObject {
             location: CLLocationCoordinate2D(
                 latitude: 32.7980179, longitude: -117.2484153)),
         Bar(
-            name: "Shore Club",
+            name: "PB Shore Club",
             location: CLLocationCoordinate2D(
                 latitude: 32.7942403, longitude: -117.2558471)),
+           
         Bar(
             name: "Society PB",
             location: CLLocationCoordinate2D(
@@ -94,7 +95,7 @@ final class MapViewModel: ObservableObject {
             location: CLLocationCoordinate2D(
                 latitude: 32.7985307, longitude: -117.2562483)),
         Bar(
-            name: "The Local",
+            name: "PB Local",
             location: CLLocationCoordinate2D(
                 latitude: 32.7936288, longitude: -117.2541387)),
         Bar(
@@ -102,21 +103,9 @@ final class MapViewModel: ObservableObject {
             location: CLLocationCoordinate2D(
                 latitude: 32.7947949, longitude: -117.2555755)),
     ]
-    
-//    func searchResults(for searchText: String) async {
-//
-//        let request = MKLocalSearch.Request()
-//        request.naturalLanguageQuery = searchText
-//        request.region = .init(
-//            center: pacificBeachCoordinate, latitudinalMeters: 2000,
-//            longitudinalMeters: 2000)
-//
-//        let results = try? await MKLocalSearch(request: request).start()
-//
-//    }
 
-    private func fetchBarLocation(_ bar: String) async -> CLLocationCoordinate2D?
-    {
+
+    private func fetchBarLocation(_ bar: String) async -> CLLocationCoordinate2D? {
         let request = MKLocalSearch.Request()
         request.naturalLanguageQuery = bar
         request.region = .init(
