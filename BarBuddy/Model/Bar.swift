@@ -11,5 +11,13 @@ struct Bar: Identifiable {
     let id = UUID()
     let name: String
     let location: CLLocationCoordinate2D
-    var events: [Event] = []
+    var events: [Event] {
+        eventData.filter { $0.location == name }
+    }
+    var deals: [Deal] {
+        dealData.filter { $0.location == name }
+    }
+    var promotions: [Promotion] {
+        promotionData.filter { $0.location == name }
+    }
 }
