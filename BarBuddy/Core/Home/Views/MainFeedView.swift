@@ -19,7 +19,7 @@ struct MainFeedView: View {
 
     // Camera automatically follows user's location
     @State var bottomSheetPosition: BottomSheetPosition = .relative(0.86)
-    @State var selectedPlace: MKMapItem?
+    @State var selectedItem: UUID?
     @State private var searchText = ""
     @Environment(\.colorScheme) var colorScheme
     @State private var selectedBar: Bool = false
@@ -27,15 +27,28 @@ struct MainFeedView: View {
 
     // Temporary location manager
     let locationManager = CLLocationManager()
+    
+    // Grabs selected bar on map
+    private var selectedPlace: Bar? {
+        if let selectedItem {
+            return viewModel.bars.first(where: { $0.id.hashValue == selectedItem.hashValue })
+        }
+        return nil
+    }
+    
+    // Filter search results
+    var filteredBars: [Bar] {
+        viewModel.bars.filter({ $0.name.localizedCaseInsensitiveContains(searchText) || searchText.isEmpty })
+    }
 
     var body: some View {
         NavigationStack {
             ZStack {
-                Map(position: $viewModel.cameraPosition, selection: $selectedPlace) {
+                Map(position: $viewModel.cameraPosition, selection: $selectedItem) {
                     
                     // Display annotations for search results on map
-                    ForEach(viewModel.results, id: \.self) { result in
-                        Marker(result.placemark.name ?? "", systemImage: "mug.fill", coordinate: result.placemark.coordinate)
+                    ForEach(viewModel.bars) {
+                        Marker($0.name, systemImage: "wineglass.fill", coordinate: $0.location)
                             .tint(.darkBlue)
                     }
                     
@@ -43,7 +56,7 @@ struct MainFeedView: View {
                     UserAnnotation()
                 }
                 // Listening for changes for bar selection on map
-                .onChange(of: selectedPlace) { oldValue, newValue in
+                .onChange(of: selectedItem) { oldValue, newValue in
                     selectedBar = newValue != nil
                 }
                 .mapControls {
@@ -56,9 +69,9 @@ struct MainFeedView: View {
                 .onAppear {
                     locationManager.requestWhenInUseAuthorization()
                 }
-                .sheet(isPresented: $selectedBar, content: {
-                    BarDetailPopup(name: selectedPlace?.placemark.name ?? "")
-                })
+                .sheet(isPresented: $selectedBar,
+                       onDismiss: { withAnimation { selectedItem = nil } },
+                       content: { BarDetailPopup(name: selectedPlace?.name ?? "") })
                 .tint(.salmon)
                 
                 // Bottom sheet view
@@ -74,12 +87,7 @@ struct MainFeedView: View {
                             .padding([.horizontal, .bottom])
                             .onSubmit(of: .text) {
                                 bottomSheetPosition = .relativeBottom(0.21)
-                                
-                                Task {
-                                    // Search for bars and update camera position
-                                    await viewModel.searchResults(for: searchText)
-                                    await viewModel.updateCameraPosition()
-                                }
+                                Task { await viewModel.updateCameraPosition(bar: searchText) }
                             }
                             .simultaneousGesture(TapGesture()
                                 .onEnded({
@@ -96,9 +104,18 @@ struct MainFeedView: View {
                             .buttonStyle(PlainButtonStyle()) // Prevents default button styling
                             
                             // Search Results
-                            ForEach(viewModel.results, id: \.self) { bar in
-                                BarCard(name: bar.placemark.name ?? "")
-                                    .padding([.horizontal, .bottom])
+                            if filteredBars.isEmpty {
+                                Text("No results found")
+                                    .foregroundColor(.white)
+                                    .font(.title3)
+                            }
+                            else {
+                                ForEach(filteredBars) {
+                                    BarCard(name: $0.name)
+                                        .padding([.horizontal, .bottom])
+                                }
+                                .transition(.opacity)
+                                .animation(.easeInOut, value: searchText)
                             }
                         }
                     }
