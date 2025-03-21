@@ -49,7 +49,7 @@ struct MainFeedView: View {
                     // Display annotations for search results on map
                     ForEach(viewModel.bars) {
                         Marker($0.name, systemImage: "wineglass.fill", coordinate: $0.location)
-                            .tint(.darkBlue)
+                            .tint($0.events.isEmpty ? .darkBlue : .salmon)
                     }
                     
                     // User's location marker on map
