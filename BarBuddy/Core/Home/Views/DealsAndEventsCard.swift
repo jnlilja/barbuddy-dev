@@ -22,6 +22,8 @@ struct EventCard: View {
                 Spacer()
                 
                 Image(systemName: "arrow.right")
+                    .symbolEffect(.wiggle.byLayer,
+                                  options: .repeat(.periodic(delay: 1.0)))
                     .foregroundColor(.salmon)
                 
                 Text("See what's happening")
