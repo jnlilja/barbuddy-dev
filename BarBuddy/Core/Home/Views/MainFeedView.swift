@@ -47,9 +47,27 @@ struct MainFeedView: View {
                 Map(position: $viewModel.cameraPosition, selection: $selectedItem) {
                     
                     // Display annotations for search results on map
-                    ForEach(viewModel.bars) {
-                        Marker($0.name, systemImage: "wineglass.fill", coordinate: $0.location)
-                            .tint($0.events.isEmpty ? .darkBlue : .salmon)
+                    ForEach(viewModel.bars) { bar in
+                        Annotation(bar.name, coordinate: bar.location) {
+                            ZStack {
+                                if bar.events.isEmpty {
+                                    Circle()
+                                        .frame(width: 30, height: 30)
+                                        .foregroundStyle(.darkBlue)
+                                } else {
+                                    Circle()
+                                        .stroke(style: StrokeStyle(lineWidth: 4))
+                                        .frame(width: 30, height: 30)
+                                        .background(.darkBlue)
+                                        .clipShape(Circle())
+                                        .foregroundStyle(Gradient(colors: [.salmon, .neonPink]))
+                                }
+                               
+                                Image(systemName: "wineglass.fill")
+                                    .foregroundColor(.white)
+                                    .font(.headline)
+                            }
+                        }
                     }
                     
                     // User's location marker on map
