@@ -45,7 +45,7 @@ class Message(models.Model):
         super().save(*args, **kwargs)
 
 class GroupChat(models.Model):
-    def generate_random_name():
+    def generate_random_name(self):
         return ''.join(random.choices(string.ascii_letters + string.digits, k=10))
 
     name = models.CharField(max_length=255, blank=True)
@@ -81,12 +81,13 @@ class GroupChat(models.Model):
             return names
 
     def save(self, *args, **kwargs):
-        super().save(*args, **kwargs)
         if self.users.count() < 2:
             raise ValidationError("A group chat must have at least 2 members.")
 
         if not self.name:
             self.name = self.generate_random_name()
+
+        super().save(*args, **kwargs)
 
     def __str__(self):
         if self.name:

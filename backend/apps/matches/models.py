@@ -1,6 +1,5 @@
 from django.db import models
 from apps.users.models import User
-from apps.swipes.models import Swipe
 from django.core.exceptions import ValidationError
 
 class Match(models.Model):
@@ -43,25 +42,6 @@ class Match(models.Model):
 
         if existing_match:
             raise ValidationError("A match between these users already exists.")
-
-    @staticmethod
-    def check_and_create_match(user1, user2):
-        """Check if a mutual like exists, and create a match if so."""
-        if Swipe.objects.filter(swiper=user1, swiped_on=user2, status='like').exists() and \
-                Swipe.objects.filter(swiper=user2, swiped_on=user1, status='like').exists():
-            # Create a match
-            match, created = Match.objects.get_or_create(user1=min(user1, user2, key=lambda x: x.id),
-                                                         user2=max(user1, user2, key=lambda x: x.id),
-                                                         defaults={'status': 'connected'})
-            return match if created else None
-
-    def save(self, *args, **kwargs):
-        self.clean()
-        super().save(*args, **kwargs)
-
-        # Check for a match only if the swipe was a "like"
-        if self.status == 'like':
-            Match.check_and_create_match(self.swiper, self.swiped_on)
 
     def __str__(self):
         return f"{self.user1} - {self.user2} ({self.status})"

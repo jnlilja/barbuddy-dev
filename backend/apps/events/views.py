@@ -10,6 +10,13 @@ class EventViewSet(viewsets.ModelViewSet):
     queryset = Event.objects.all()
     serializer_class = EventSerializer
 
+    def get_queryset(self):
+        queryset = Event.objects.all()
+        bar_id = self.request.query_params.get("bar")
+        if bar_id:
+            queryset = queryset.filter(bar__id=bar_id)
+        return queryset
+
 class EventAttendeeViewSet(viewsets.ModelViewSet):
     queryset = EventAttendee.objects.all()
     serializer_class = EventAttendeeSerializer

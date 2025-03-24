@@ -1,6 +1,7 @@
 from django.core.exceptions import ValidationError
 from django.db import models
 from apps.users.models import User
+from apps.matches.models import Match
 
 class Swipe(models.Model):
     SWIPE_CHOICES = [
@@ -27,6 +28,14 @@ class Swipe(models.Model):
     def save(self, *args, **kwargs):
         self.clean()
         super().save(*args, **kwargs)
+
+        # Only check for a match if this is a "like" swipe
+        if self.status == 'like':
+            # Check if the other user has also liked this user
+            if Swipe.objects.filter(swiper=self.swiped_on, swiped_on=self.swiper, status='like').exists():
+                # Create a match (ordering users by ID to prevent duplicates)
+                user1, user2 = sorted([self.swiper, self.swiped_on], key=lambda u: u.id)
+                Match.objects.get_or_create(user1=user1, user2=user2,defaults={'status': 'connected'})
 
     def __str__(self):
         return f"{self.swiper} swiped {self.status} on {self.swiped_on}"

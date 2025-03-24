@@ -42,7 +42,7 @@ class GroupChatSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = GroupChat
-        fields = ['id', 'name', 'bar', 'users', 'users_ids', 'creator', 'created_at', 'last_activity']
+        fields = ['id', 'name', 'bar', 'users', 'users_ids', 'creator', 'created_at']
 
     def validate_users_ids(self, value):
         """Ensure at least 2 members in group chat."""

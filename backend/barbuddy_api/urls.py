@@ -7,6 +7,7 @@ from apps.bars.views import BarViewSet, BarStatusViewSet
 from apps.events.views import EventViewSet
 from apps.matches.views import MatchViewSet
 from apps.messaging.views import MessageViewSet, GroupChatViewSet
+from apps.swipes.views import SwipeViewSet
 
 # Initialize the router
 router = DefaultRouter()
@@ -19,6 +20,7 @@ router.register(r'events', EventViewSet, basename="events")
 router.register(r'matches', MatchViewSet, basename="matches")
 router.register(r'messages', MessageViewSet, basename="messages")
 router.register(r'group-chats', GroupChatViewSet, basename="group-chats")
+router.register(r'swipes', SwipeViewSet, basename='swipe')
 
 urlpatterns = [
     path("admin/", admin.site.urls),

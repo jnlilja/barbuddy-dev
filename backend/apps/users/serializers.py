@@ -1,78 +1,89 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from django.contrib.gis.geos import Point
+from datetime import date
+
 from apps.matches.models import Match
+from apps.swipes.models import Swipe
+from apps.swipes.serializers import SwipeSerializer
 from apps.matches.serializers import MatchSerializer
 
 User = get_user_model()
 
 class UserSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True)  # Secure password handling
-    location = serializers.SerializerMethodField()  # Format location data
+    password = serializers.CharField(write_only=True)
+    location = serializers.SerializerMethodField()
     matches = serializers.SerializerMethodField()
+    swipes = serializers.SerializerMethodField()
 
     class Meta:
         model = User
         fields = [
-            "id", "username", "first_name", "last_name", "email", "password",
-            "date_of_birth", "height", "hometown", "job_or_university", "favorite_drink",
-            "location", "profile_pictures", "matches"
+            "id", "username", "first_name", "last_name", "email", "password", "date_of_birth",
+            "height", "hometown", "job_or_university", "favorite_drink", "location",
+            "profile_pictures", "matches", "swipes"
         ]
-
         extra_kwargs = {
             "password": {"write_only": True},
             "email": {"write_only": True}
         }
 
-    def get_matches(self, obj):
-        """ Fetch matches where the user is either user1 or user2. """
-        matches = Match.objects.filter(user1=obj, status='connected') | Match.objects.filter(user2=obj, status='connected')
-        return MatchSerializer(matches.distinct(), many=True).data  # .distinct() prevents duplicate results
-
     def get_location(self, obj):
-        """Serialize location as (latitude, longitude) instead of raw PointField."""
-        return {"latitude": obj.location.y, "longitude": obj.location.x} if obj.location else None
+        if obj.location:
+            return {
+                "latitude": obj.location.y,
+                "longitude": obj.location.x
+            }
+        return None
+
+    def get_matches(self, obj):
+        matches = Match.objects.filter(user1=obj, status='connected') | Match.objects.filter(user2=obj, status='connected')
+        return MatchSerializer(matches.distinct(), many=True).data
+
+    def get_swipes(self, obj):
+        swipes = Swipe.objects.filter(swiper=obj)
+        return SwipeSerializer(swipes, many=True).data
 
     def to_internal_value(self, data):
-        """Convert latitude/longitude input to a GIS PointField."""
-        data = super().to_internal_value(data)
-        location_data = data.pop('location', None)
+        validated_data = super().to_internal_value(data)
+        raw_location = self.initial_data.get('location')
 
-        if location_data:
-            latitude = location_data.get('latitude')
-            longitude = location_data.get('longitude')
-            if latitude is None or longitude is None:
-                raise serializers.ValidationError({"location": "Both latitude and longitude must be provided."})
-            data['location'] = Point(longitude, latitude, srid=4326)
+        if raw_location:
+            try:
+                lat = raw_location['latitude']
+                lon = raw_location['longitude']
+                validated_data['location'] = Point(lon, lat, srid=4326)
+            except (KeyError, TypeError):
+                raise serializers.ValidationError({"location": "Must include 'latitude' and 'longitude'"})
 
-        return data
+        return validated_data
 
-    def validate_age(self, value):
-        if value < 18 or value > 120:
-            raise serializers.ValidationError("Age must be between 18 and 120.")
+    def validate_date_of_birth(self, value):
+        today = date.today()
+        age = today.year - value.year - ((today.month, today.day) < (value.month, value.day))
+        if age < 18:
+            raise serializers.ValidationError("You must be at least 18 years old.")
+        if age > 120:
+            raise serializers.ValidationError("Age cannot exceed 120.")
         return value
 
-    def get_match_count(self, obj):
-        """Count only matches where status is 'connected'."""
-        return Match.objects.filter(user1=obj, status='connected').count() + \
-               Match.objects.filter(user2=obj, status='connected').count()
-
-    def update(self, instance, validated_data):
-        """Ensure password is hashed when updating."""
-        password = validated_data.pop("password", None)
-        instance = super().update(instance, validated_data)
-
-        if password:
-            instance.set_password(password)
-            instance.save()
-
-        return instance
-
     def create(self, validated_data):
-        """Handle user creation with hashed password."""
         password = validated_data.pop("password", None)
-        user = User.objects.create(**validated_data)
+        user = User(**validated_data)
         if password:
             user.set_password(password)
-            user.save()
+        user.save()
         return user
+
+    def update(self, instance, validated_data):
+        password = validated_data.pop("password", None)
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        if password:
+            instance.set_password(password)
+        instance.save()
+        return instance
+
+    def get_match_count(self, obj):
+        return Match.objects.filter(user1=obj, status='connected').count() + \
+               Match.objects.filter(user2=obj, status='connected').count()

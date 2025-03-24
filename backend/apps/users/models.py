@@ -11,7 +11,7 @@ class User(AbstractUser):
     hometown = models.CharField(max_length=255, blank=True)
     job_or_university = models.CharField(max_length=255, blank=True)
     favorite_drink = models.CharField(max_length=100, blank=True)
-    location = gis.PointField(geography=True, srid=4326)
+    location = gis.PointField(geography=True, srid=4326, null=True, blank=True) # geography=True, srid=4326, null=True, blank=True
     profile_pictures = models.JSONField(default=list, blank=True)
 
     def clean(self):

@@ -5,34 +5,34 @@ from rest_framework.response import Response
 from apps.matches.models import Match
 from apps.matches.serializers import MatchSerializer
 from .serializers import UserSerializer
+from .permissions import IsOwnerOrReadOnly
+from django.db.models import Q
+
 
 User = get_user_model()
+
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsOwnerOrReadOnly]
+
+    def get_queryset(self):
+        if self.request.user.is_superuser:
+            return User.objects.all()
+        return User.objects.filter(id=self.request.user.id)
 
     # Custom action: Retrieve matches for a user
     @action(detail=True, methods=["get"])
     def matches(self, request, pk=None):
         user = self.get_object()
-        matches = Match.objects.filter(user1=user, status="connected") | Match.objects.filter(user2=user, status="connected")
+        matches = Match.objects.filter(
+            (Q(user1=user) | Q(user2=user)) & Q(status="connected")
+        )
         serializer = MatchSerializer(matches, many=True)
         return Response(serializer.data)
 
-class UserViewSet(viewsets.ModelViewSet):
-    """
-    ViewSet for managing users.
-    Supports listing, retrieving, updating, and deleting users.
-    """
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
-
-    def get_queryset(self):
-        """
-        Optionally filter user details (e.g., restrict data for non-admins).
-        """
-        if self.request.user.is_authenticated:
-            return User.objects.all()
-        return User.objects.none()
+    def get_permissions(self):
+        if self.action in ['retrieve', 'update', 'partial_update', 'destroy']:
+            return [permissions.IsAuthenticated(), IsSelfOrAdmin()]
+        return [permissions.IsAuthenticated()]
 

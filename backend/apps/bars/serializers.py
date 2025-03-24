@@ -31,16 +31,35 @@ class BarSerializer(serializers.ModelSerializer):
 
     def to_internal_value(self, data):
         """Convert latitude/longitude dictionary into a GIS Point object."""
+        internal_value = super().to_internal_value(data)
+
         if "location" in data and isinstance(data["location"], dict):
             try:
                 lat = float(data["location"].get("latitude"))
                 lon = float(data["location"].get("longitude"))
                 if lat is None or lon is None:
                     raise ValueError()
-                data["location"] = Point(lon, lat, srid=4326)
+                # Store the Point object in internal_value
+                internal_value["location"] = Point(lon, lat, srid=4326)
             except (TypeError, ValueError):
                 raise serializers.ValidationError({"location": "Latitude and longitude must be valid numbers."})
-        return super().to_internal_value(data)
+
+        return internal_value
+
+    def update(self, instance, validated_data):
+        # Handle users_at_bar separately if present
+        users_data = validated_data.pop('users_at_bar', None)
+
+        # Update all other fields, including location
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+
+        # Update many-to-many relationship if users_data is provided
+        if users_data is not None:
+            instance.users_at_bar.set(users_data)
+
+        instance.save()
+        return instance
 
 
 class BarStatusSerializer(serializers.ModelSerializer):
