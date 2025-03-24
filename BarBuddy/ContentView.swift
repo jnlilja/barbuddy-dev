@@ -128,13 +128,3 @@ struct ContentView: View {
     ContentView()
         .environmentObject(MapViewModel())
 }
-
-// Add these placeholder views after ActionButton
-struct GroupsView: View {
-    var body: some View {
-        Text("Groups Coming Soon")
-            .font(.largeTitle)
-    }
-}
-
-

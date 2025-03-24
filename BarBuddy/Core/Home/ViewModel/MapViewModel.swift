@@ -65,7 +65,6 @@ final class MapViewModel: ObservableObject {
             name: "PB Shore Club",
             location: CLLocationCoordinate2D(
                 latitude: 32.7942403, longitude: -117.2558471)),
-           
         Bar(
             name: "Society PB",
             location: CLLocationCoordinate2D(
