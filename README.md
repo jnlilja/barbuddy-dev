@@ -7,7 +7,7 @@ Our project currently runs using a local database setup. This means that to run 
 - Set up a local PostgreSQL server for the front end.
 - Configure the necessary settings in the backend folder.
 
-*Note: We plan to implement Docker soon to streamline our setup and integrate the various components more efficiently.*
+*Note: We should plan to implement Docker soon to streamline our setup and integrate the various components more efficiently.*
 
 ## Temporary Documentation
 
