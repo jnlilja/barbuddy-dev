@@ -19,8 +19,8 @@ final class NetworkManager {
     
     //TODO: Make network calls
     
-    func getUser() async throws -> User {
-        let endpoint = "https:/localhost:8000/api/users/{id}"
+    func getUser(id: Int) async throws -> User {
+        let endpoint = "https:/localhost:8000/api/users/{\(id)}"
         guard let url = URL(string: endpoint) else { throw NetworkError.invalidURL }
         let (data, response) = try await session.data(from: url)
         guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else { throw NetworkError.invalidResponse }
