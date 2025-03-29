@@ -25,8 +25,8 @@ struct MainFeedView: View {
     @State private var selectedBar: Bool = false
     @EnvironmentObject var viewModel: MapViewModel
 
-    // Temporary location manager
-    let locationManager = CLLocationManager()
+    // Location manager
+    let locationViewModel = LocationManager()
     
     // Grabs selected bar on map
     private var selectedPlace: Bar? {
@@ -85,7 +85,7 @@ struct MainFeedView: View {
                 }
                 .ignoresSafeArea(.keyboard)
                 .onAppear {
-                    locationManager.requestWhenInUseAuthorization()
+                    locationViewModel.startLocationServices()
                 }
                 .sheet(isPresented: $selectedBar,
                        onDismiss: { withAnimation { selectedItem = nil } },
