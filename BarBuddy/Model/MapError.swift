@@ -6,3 +6,9 @@
 //
 
 import Foundation
+
+enum MapError: Error {
+    case noLocationServices
+    case unableToInitializeMapView
+    case barNotFound
+}
