@@ -11,6 +11,9 @@ struct Bar: Identifiable {
     let id = UUID()
     let name: String
     let location: CLLocationCoordinate2D
+    var musicGenre: String?
+    var usersAtBar: Int?
+    var averageRating: String?
     var events: [Event] {
         eventData.filter { $0.location == name }
     }
