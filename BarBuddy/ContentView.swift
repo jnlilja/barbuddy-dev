@@ -15,22 +15,25 @@ struct ContentView: View {
     @State private var showingLoginScreen = false
     @State private var showingSignUpSheet = false
     @StateObject private var creteUserViewModel = SignUpViewModel()
+    var authViewModel = AuthViewModel()
 
     // Skip the login/sign up views when set to true
-    private let skipToHome = true
+    private let skipToHome = false
 
     var body: some View {
         if !skipToHome {
             NavigationStack {
                 ZStack {
-                    Color("DarkBlue")
-                        .ignoresSafeArea()
+                    
+                    // Idea for new login page
+                    AnimatedBackgroundView()
+                    
                     Circle()
                         .scale(1.7)
                         .foregroundColor(Color("Nude")).opacity(0.15)
                     Circle()
                         .scale(1.35)
-                        .foregroundColor(.white).opacity(0.9)
+                        .foregroundColor(.nude).opacity(0.9)
 
                     VStack {
                         Image(systemName: "party.popper.fill")
@@ -74,6 +77,14 @@ struct ContentView: View {
                         Button(action: {
                             authenticateUser(
                                 username: username, password: password)
+                            
+                            Task {
+                                do {
+                                    try await authViewModel.signIn(email: username, password: password)
+                                } catch {
+                                    print(error.localizedDescription)
+                                }
+                            }
                         }) {
                             Text("Login")
                                 .font(.headline)
