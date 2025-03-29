@@ -5,6 +5,7 @@
 //  Created by Andrew Betancourt on 3/25/25.
 //
 
+import Foundation
 
 struct Deal: Identifiable, DayFilterable, Searchable {
     let id = UUID()

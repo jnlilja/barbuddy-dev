@@ -5,6 +5,7 @@
 //  Created by Andrew Betancourt on 3/25/25.
 //
 
+import Foundation
 
 // DATA MODELS
 struct Event: Identifiable, DayFilterable, Searchable {
