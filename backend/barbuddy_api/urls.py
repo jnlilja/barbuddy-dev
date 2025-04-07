@@ -27,8 +27,8 @@ from django.urls import path, re_path
 from rest_framework import permissions
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
-
-
+from django.urls import path
+from apps.messaging.views import send_pusher_message
 
 
 schema_view = get_schema_view(
@@ -59,4 +59,7 @@ urlpatterns = [
     path('api/', include(router.urls)),  # Make sure this is included
     path('api/auth/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/auth/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+
+    # Pusher Messaging API
+    path('trigger/', send_pusher_message, name='trigger-message'),
 ]

@@ -21,7 +21,7 @@ class Event(models.Model):
         if not self.event_name or len(self.event_name.strip()) == 0:
             raise ValidationError({'event_name': 'Event name cannot be empty.'})
 
-        if self.event_time < timezone.now():
+        if self.event_time > timezone.now():
             raise ValidationError("Event time must be in the future.")
 
     def save(self, *args, **kwargs):

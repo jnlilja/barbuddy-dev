@@ -2,6 +2,13 @@ from rest_framework import viewsets, permissions
 from .models import Message, GroupChat
 from .serializers import MessageSerializer, GroupChatSerializer
 from .permissions import IsGroupMember, IsSenderOrReceiver
+from django.http import JsonResponse
+from services.pusher_client import send_message
+
+def send_pusher_message(request):
+    data = {'message': 'hello world'}
+    send_message('my-channel', 'my-event', data)
+    return JsonResponse({'status': 'Message sent!'})
 
 class MessageViewSet(viewsets.ModelViewSet):
     """
