@@ -33,7 +33,7 @@ struct ContentView: View {
 }
 
 // Login Flow Preview
-#Preview("Login") {
+#Preview("Content View") {
     ContentView()
         .environmentObject(MapViewModel())
 }

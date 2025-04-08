@@ -118,6 +118,6 @@ struct LoginView: View {
     }
 }
 
-#Preview {
+#Preview("Login View") {
     LoginView(showingLoginScreen: .constant(false))
 }
