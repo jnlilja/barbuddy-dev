@@ -41,24 +41,6 @@ struct BarDetailPopup: View {
                     }
                 }
 
-                // Friends avatars section
-                VStack(spacing: 10) {
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 12) {
-                            ForEach(0..<5) { _ in
-                                Circle()
-                                    .fill(Color.gray.opacity(0.3))
-                                    .frame(width: 60, height: 60)
-                            }
-                        }
-                        .padding(.horizontal)
-                    }
-
-                    Text("+6 of your friends are here!")
-                        .foregroundColor(Color("DarkPurple"))
-                        .font(.system(size: 16, weight: .medium))
-                }
-
                 // Quick info tags
                 HStack(spacing: 15) {
                     InfoBubble(icon: "music.note", text: "House")

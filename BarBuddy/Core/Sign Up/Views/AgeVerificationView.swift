@@ -43,7 +43,7 @@ struct AgeVerificationView: View {
                         .foregroundColor(.white)
                     
                     DatePicker(
-                        "Date of Birth",
+                        "",
                         selection: $viewModel.dateOfBirth,
                         in: minimumDate...maximumDate,
                         displayedComponents: .date
@@ -71,21 +71,17 @@ struct AgeVerificationView: View {
                 }
                 // Iterate through the enum and show coresponding view
                 .navigationDestination(for: NavigationDestinations.self) { view in
-                    
-                    Group {
-                        switch view {
-                        case .nameEntry: NameEntryView(path: $path)
-                        case .location: LocationView(path: $path)
-                        case .gender: GenderView(path: $path)
-                        case .hometown: HometownView(path: $path)
-                        case .school: SchoolView(path: $path)
-                        case .drink: DrinkPreferenceView(path: $path)
-                        case .smoking: SmokingPreferenceView(path: $path)
-                        case .photoPrompt: PhotoPromptView(path: $path)
-                        case .photoUpload: PhotoUploadView()
-                        }
+                    switch view {
+                    case .nameEntry: NameEntryView(path: $path)
+                    case .location: LocationView(path: $path)
+                    case .gender: GenderView(path: $path)
+                    case .hometown: HometownView(path: $path)
+                    case .school: SchoolView(path: $path)
+                    case .drink: DrinkPreferenceView(path: $path)
+                    case .smoking: SmokingPreferenceView(path: $path)
+                    case .photoPrompt: PhotoPromptView(path: $path)
+                    case .photoUpload: PhotoUploadView()
                     }
-                    .navigationBarBackButtonHidden()
                 }
                 .padding()
             }
@@ -95,6 +91,7 @@ struct AgeVerificationView: View {
                 Text("You must be 21 or older to use BarBuddy.")
             }
         }
+        .tint(.salmon)
     }
 }
 

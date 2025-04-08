@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1BBB5B712D979D0400A5E2E8 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 1BBB5B702D979D0400A5E2E8 /* FirebaseAuth */; };
 		1BF7EF472D79161D001786D8 /* BottomSheet in Frameworks */ = {isa = PBXBuildFile; productRef = 1BF7EF462D79161D001786D8 /* BottomSheet */; };
 /* End PBXBuildFile section */
 
@@ -70,6 +71,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				1BF7EF472D79161D001786D8 /* BottomSheet in Frameworks */,
+				1BBB5B712D979D0400A5E2E8 /* FirebaseAuth in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -131,6 +133,7 @@
 			name = BarBuddy;
 			packageProductDependencies = (
 				1BF7EF462D79161D001786D8 /* BottomSheet */,
+				1BBB5B702D979D0400A5E2E8 /* FirebaseAuth */,
 			);
 			productName = BarBuddy;
 			productReference = 599153B12D540523004B2832 /* BarBuddy.app */;
@@ -216,6 +219,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				1BF7EF452D79161D001786D8 /* XCRemoteSwiftPackageReference "BottomSheet" */,
+				1BBB5B6F2D979D0400A5E2E8 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 599153B22D540523004B2832 /* Products */;
@@ -580,6 +584,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		1BBB5B6F2D979D0400A5E2E8 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 11.10.0;
+			};
+		};
 		1BF7EF452D79161D001786D8 /* XCRemoteSwiftPackageReference "BottomSheet" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/lucaszischka/BottomSheet";
@@ -591,6 +603,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		1BBB5B702D979D0400A5E2E8 /* FirebaseAuth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 1BBB5B6F2D979D0400A5E2E8 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAuth;
+		};
 		1BF7EF462D79161D001786D8 /* BottomSheet */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 1BF7EF452D79161D001786D8 /* XCRemoteSwiftPackageReference "BottomSheet" */;
