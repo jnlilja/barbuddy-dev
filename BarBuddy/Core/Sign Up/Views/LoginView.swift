@@ -71,14 +71,10 @@ struct LoginView: View {
 
                 Button(action: {
                     authenticateUser(username: email, password: password)
-//                    Task {
-//                        do {
-//                            try await authViewModel.signIn(
-//                                email: email, password: password)
-//                        } catch {
-//                            print(error.localizedDescription)
-//                        }
-//                    }
+                    Task {
+                        try await authViewModel.signIn(
+                                email: email, password: password)
+                    }
                 }) {
                     Text("Login")
                         .font(.headline)

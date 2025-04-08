@@ -23,6 +23,7 @@ final class AuthViewModel {
         do {
             let result = try await Auth.auth().signIn(withEmail: email, password: password)
             self.authUser = result.user
+            print("Sign in successful")
             
         }catch{
             print("Could not sign in with error \(error.localizedDescription)")
