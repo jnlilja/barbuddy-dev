@@ -110,7 +110,9 @@ struct LoginView: View {
             wrongUsername = 0
             if password.lowercased() == "abc123" {
                 wrongPassword = 0
-                showingLoginScreen = true
+                withAnimation {
+                    showingLoginScreen = true
+                }
             } else {
                 wrongPassword = 2
             }
