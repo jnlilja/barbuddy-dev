@@ -31,7 +31,7 @@ struct MainFeedView: View {
     // Grabs selected bar on map
     private var selectedPlace: Bar? {
         if let selectedItem {
-            return viewModel.bars.first(where: { $0.id.hashValue == selectedItem.hashValue })
+            return viewModel.bars.first(where: { $0.id == selectedItem })
         }
         return nil
     }
