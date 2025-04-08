@@ -10,17 +10,14 @@ import Firebase
 
 @main
 struct BarBuddyApp: App {
-    var mapViewModel = MapViewModel()
     
     init() {
         FirebaseApp.configure()
     }
-    
+
     var body: some Scene {
         WindowGroup {
             ContentView()
-                .environmentObject(mapViewModel)
-               
         }
     }
 }
