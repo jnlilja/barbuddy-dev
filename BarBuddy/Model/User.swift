@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct User: Identifiable, Decodable {
+struct User: Identifiable, Decodable, Hashable {
     let id: UUID = UUID()
     let name: String
     let age: Int
