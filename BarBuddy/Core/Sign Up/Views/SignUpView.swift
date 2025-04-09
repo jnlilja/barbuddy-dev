@@ -8,7 +8,7 @@ import SwiftUI
 
 struct SignUpView: View {
     @Binding var isPresented: Bool
-    @EnvironmentObject var viewModel: SignUpViewModel
+    @State var viewModel = SignUpViewModel()
     
     var body: some View {
         NavigationView {

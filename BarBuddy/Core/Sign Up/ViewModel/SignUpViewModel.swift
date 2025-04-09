@@ -8,16 +8,17 @@
 import Foundation
 
 // This viewModel handles the logic of validation and posting changes to UI
+@Observable
 class SignUpViewModel: ObservableObject {
-    @Published var email: String = ""
-    @Published var password: String = ""
-    @Published var newUsername: String = ""
-    @Published var newPassword: String = ""
-    @Published var confirmPassword: String = ""
-    @Published var isValidEmail: Bool = true
-    @Published var isValidPassword: Bool = true
-    @Published var showingAlert = false
-    @Published var alertMessage = ""
+    var email: String = ""
+    var password: String = ""
+    var newUsername: String = ""
+    var newPassword: String = ""
+    var confirmPassword: String = ""
+    var isValidEmail: Bool = true
+    var isValidPassword: Bool = true
+    var showingAlert = false
+    var alertMessage = ""
     
     // Add variables for validation
     var passwordsMatch = true

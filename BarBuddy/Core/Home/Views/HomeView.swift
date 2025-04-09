@@ -57,6 +57,4 @@ struct HomeView: View {
 // Add this new preview provider
 #Preview("Home Tab Bar") {
     HomeView()
-        .environmentObject(MapViewModel())
 }
-

@@ -12,10 +12,8 @@ struct LoginView: View {
     @State private var password = ""
     @State private var wrongUsername: Float = 0
     @State private var wrongPassword: Float = 0
-    @Binding var showingLoginScreen: Bool
     @State private var showingSignUpSheet = false
-    @StateObject private var creteUserViewModel = SignUpViewModel()
-    var authViewModel = AuthViewModel()
+    @EnvironmentObject var authViewModel: AuthViewModel
     
     var body: some View {
         ZStack {
@@ -70,7 +68,6 @@ struct LoginView: View {
                     .padding(.top, 10)
 
                 Button(action: {
-                    authenticateUser(username: email, password: password)
                     Task {
                         try await authViewModel.signIn(
                                 email: email, password: password)
@@ -98,26 +95,11 @@ struct LoginView: View {
         }
         .sheet(isPresented: $showingSignUpSheet) {
             SignUpView(isPresented: $showingSignUpSheet)
-                .environmentObject(creteUserViewModel)
-        }
-    }
-    func authenticateUser(username: String, password: String) {
-        if username.lowercased() == "mario2021" {
-            wrongUsername = 0
-            if password.lowercased() == "abc123" {
-                wrongPassword = 0
-                withAnimation {
-                    showingLoginScreen = true
-                }
-            } else {
-                wrongPassword = 2
-            }
-        } else {
-            wrongUsername = 2
         }
     }
 }
 
 #Preview("Login View") {
-    LoginView(showingLoginScreen: .constant(false))
+    LoginView()
+        .environmentObject(AuthViewModel())
 }

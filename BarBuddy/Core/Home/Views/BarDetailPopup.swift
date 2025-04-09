@@ -258,7 +258,6 @@ struct BarDetailPopup: View {
 
 #Preview("Bar Detail Popup") {
     HomeView()
-        .environmentObject(MapViewModel())
         .overlay {
             BarDetailPopup(name: "Hideaway")
         }
