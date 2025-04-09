@@ -1,4 +1,3 @@
-
 from django.contrib.gis.geos import Point
 from django.urls import reverse
 from rest_framework import status
@@ -23,16 +22,20 @@ class BarViewSetTestCase(APITestCase):
         self.bar = Bar.objects.create(
             name="Test Bar",
             address="123 Main St",
-            music_genre="Rock",
             average_price=10.50,
             location=Point(1.0, 2.0, srid=4326) 
         )
-        self.bar_status = BarStatus.objects.create(bar=self.bar, status="Open")
+
+        self.bar_status = BarStatus.objects.create(
+            bar=self.bar,
+            crowd_size="moderate",
+            wait_time="5-10 min"
+        )
 
         self.client.force_authenticate(user=self.user)  # Authenticate user for requests
 
-        self.list_url = reverse('bar-list')  # Adjust based on URL configuration
-        self.detail_url = reverse('bar-detail', kwargs={'pk': self.bar.id})
+        self.list_url = reverse('bars-list')  # Adjust based on URL configuration
+        self.detail_url = reverse('bars-detail', kwargs={'pk': self.bar.id})
 
     def test_list_bars(self):
         """Test retrieving a list of bars."""
@@ -51,8 +54,8 @@ class BarViewSetTestCase(APITestCase):
         data = {
             "name": "New Bar",
             "address": "456 Side St",
-            "music_genre": "Jazz",
-            "average_price": 15.00
+            "average_price": 15.00,
+            "location": {"latitude": 1.0, "longitude": 2.0}  # Add location data
         }
         response = self.client.post(self.list_url, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -63,7 +66,7 @@ class BarViewSetTestCase(APITestCase):
         data = {
             "name": "Updated Test Bar",
             "address": self.bar.address,
-            "music_genre": "Pop",
+            # "music_genre": "Pop",
             "average_price": self.bar.average_price
         }
         response = self.client.put(self.detail_url, data, format="json")
@@ -80,7 +83,7 @@ class BarViewSetTestCase(APITestCase):
     def test_filter_bars(self):
         """Test filtering bars by user preferences (if applicable)."""
         # Assuming filters are applied in `get_queryset`
-        response = self.client.get(self.list_url, {"music_genre": "Rock"})
+        response = self.client.get(self.list_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn("Test Bar", str(response.data))
 
@@ -88,7 +91,14 @@ class BarViewSetTestCase(APITestCase):
         """Test getting the latest status of a bar."""
         response = self.client.get(self.detail_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data.get('current_status'), self.bar_status.status)
+
+        # Extract the current_status field from the response
+        current_status = response.data.get('current_status')
+
+        # Assert that the current_status matches the expected values
+        self.assertEqual(current_status['crowd_size'], self.bar_status.crowd_size)
+        self.assertEqual(current_status['wait_time'], self.bar_status.wait_time)
+        self.assertIn('last_updated', current_status)  # Ensure last_updated is present
 
 
 class BarStatusViewSetTestCase(APITestCase):
@@ -98,34 +108,40 @@ class BarStatusViewSetTestCase(APITestCase):
         self.bar = Bar.objects.create(
             name="Test Bar",
             address="123 Main St",
-            music_genre="Rock",
             average_price=10.50,
-            location=Point(1.0, 2.0, srid=4326) 
+            location=Point(1.0, 2.0, srid=4326)
         )
-        self.bar_status = BarStatus.objects.create(bar=self.bar, status="Open")
+        self.bar_status = BarStatus.objects.create(
+            bar=self.bar,
+            crowd_size="moderate",
+            wait_time="5-10 min"
+        )
+        self.client.force_authenticate(user=self.user)
 
-        self.client.force_authenticate(user=self.user)  # Authenticate user for API requests
-
-        self.list_url = reverse('barstatus-list')  # Update with actual route name
-        self.detail_url = reverse('barstatus-detail', kwargs={'pk': self.bar_status.id})
+        self.list_url = reverse('bar-status-list')  # Matches the basename in urls.py
+        self.detail_url = reverse('bar-status-detail', kwargs={'pk': self.bar_status.id})
 
     def test_list_bar_statuses(self):
         """Test retrieving a list of bar statuses."""
         response = self.client.get(self.list_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIn("Open", str(response.data))
+        #self.assertIn("Open", str(response.data)) BROOO 
+        self.assertIn("moderate", str(response.data))
+        self.assertIn("5-10 min", str(response.data))
 
     def test_retrieve_bar_status(self):
         """Test retrieving a single bar status."""
         response = self.client.get(self.detail_url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['status'], self.bar_status.status)
+        self.assertEqual(response.data['crowd_size'], self.bar_status.crowd_size)  # Use the correct field
 
     def test_create_bar_status(self):
         """Test creating a new bar status."""
         data = {
             "bar": self.bar.id,
-            "status": "Closed"
+            #"status": "Closed" bro im hunting these down 
+            "crowd_size": "busy",
+            "wait_time": "10-20 min"
         }
         response = self.client.post(self.list_url, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -135,12 +151,15 @@ class BarStatusViewSetTestCase(APITestCase):
         """Test updating a bar status."""
         data = {
             "bar": self.bar.id,
-            "status": "Busy"
+            #"status": "Busy" bro im finna loose it this is NOT a field that the bars have 
+            "crowd_size": "crowded",
+            "wait_time": ">30 min"
         }
         response = self.client.put(self.detail_url, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.bar_status.refresh_from_db()
-        self.assertEqual(self.bar_status.status, "Busy")
+        self.assertEqual(self.bar_status.crowd_size, "crowded")
+        self.assertEqual(self.bar_status.wait_time, ">30 min")
 
     def test_delete_bar_status(self):
         """Test deleting a bar status."""

@@ -4,7 +4,7 @@ from django.contrib.gis.geos import Point
 from apps.bars.models import Bar, BarStatus, BarRating
 from apps.users.models import User
 
-
+#python manage.py test bars.tests.test_models
 class BarModelTests(TestCase):
     def setUp(self):
         # Create a test user
@@ -18,7 +18,7 @@ class BarModelTests(TestCase):
         self.bar = Bar.objects.create(
             name='Test Bar',
             address='123 Test Street',
-            music_genre='rock',
+            #music_genre='rock',
             average_price='$$',
             location=Point(1.0, 2.0, srid=4326)  # longitude, latitude
         )
@@ -27,7 +27,7 @@ class BarModelTests(TestCase):
         """Test creating a valid bar"""
         self.assertEqual(self.bar.name, 'Test Bar')
         self.assertEqual(self.bar.address, '123 Test Street')
-        self.assertEqual(self.bar.music_genre, 'rock')
+        #self.assertEqual(self.bar.music_genre, 'rock')
         self.assertEqual(self.bar.average_price, '$$')
         self.assertEqual(self.bar.location.x, 1.0)  # longitude
         self.assertEqual(self.bar.location.y, 2.0)  # latitude
@@ -37,7 +37,7 @@ class BarModelTests(TestCase):
         bar = Bar(
             name='',
             address='123 Test Street',
-            music_genre='rock',
+            #music_genre='rock',
             average_price='$$',
             location=Point(1.0, 2.0, srid=4326)
         )
@@ -91,7 +91,7 @@ class BarStatusModelTests(TestCase):
         self.bar = Bar.objects.create(
             name='Test Bar',
             address='123 Test Street',
-            music_genre='rock',
+            #music_genre='rock',
             average_price='$$',
             location=Point(1.0, 2.0, srid=4326)
         )
@@ -154,7 +154,7 @@ class BarRatingModelTests(TestCase):
         self.bar = Bar.objects.create(
             name='Test Bar',
             address='123 Test Street',
-            music_genre='rock',
+            #music_genre='rock',
             average_price='$$',
             location=Point(1.0, 2.0, srid=4326)
         )

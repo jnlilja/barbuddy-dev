@@ -75,11 +75,11 @@ class BarSerializer(serializers.ModelSerializer):
 
 
 class BarStatusSerializer(serializers.ModelSerializer):
-    bar = serializers.PrimaryKeyRelatedField(queryset=Bar.objects.all())
+    # bar = serializers.PrimaryKeyRelatedField(queryset=Bar.objects.all())
 
     class Meta:
         model = BarStatus
-        fields = "__all__"
+        fields = ['id', 'bar', 'crowd_size', 'wait_time', 'last_updated'] 
 
 #added a serializer for BarRating
 class BarRatingSerializer(serializers.ModelSerializer):
