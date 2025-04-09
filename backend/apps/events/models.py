@@ -33,6 +33,7 @@ class Event(models.Model):
 
 
 class EventAttendee(models.Model):
+    # Matter of fact lets remove the attendee list, it's not needed. We dont need to see number of elements
     event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='attendee_list')
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='event_participation')
 

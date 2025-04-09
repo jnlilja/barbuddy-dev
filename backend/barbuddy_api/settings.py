@@ -54,6 +54,8 @@ INSTALLED_APPS = [
     'apps.swipes',
     'corsheaders',
     'drf_yasg',
+    'pusher',
+
 ]
 
 
