@@ -1,5 +1,8 @@
 import pusher
+import os 
 
+
+#going to use .env file to store the pusher credentials
 pusher_client = pusher.Pusher(
   app_id='1963649',
   key='9f2ddf2b1d39e4a29fff',
@@ -7,6 +10,8 @@ pusher_client = pusher.Pusher(
   cluster='us3',
   ssl=True
 )
+
+
 
 def send_message(channel, event, data):
   pusher_client.trigger(channel, event, data)

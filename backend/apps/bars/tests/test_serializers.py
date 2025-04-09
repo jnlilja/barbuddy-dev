@@ -23,7 +23,6 @@ class BarSerializerTests(TestCase):
         self.bar = Bar.objects.create(
             name='Test Bar',
             address='123 Test Street',
-            music_genre='rock',
             average_price='$$',
             location=Point(1.0, 2.0, srid=4326)  # longitude, latitude
         )
@@ -55,7 +54,6 @@ class BarSerializerTests(TestCase):
         self.assertEqual(data['id'], self.bar.id)
         self.assertEqual(data['name'], 'Test Bar')
         self.assertEqual(data['address'], '123 Test Street')
-        self.assertEqual(data['music_genre'], 'rock')
         self.assertEqual(data['average_price'], '$$')
 
         # Check location
@@ -79,7 +77,6 @@ class BarSerializerTests(TestCase):
         data = {
             'name': 'New Bar',
             'address': '456 New Street',
-            'music_genre': 'jazz',
             'average_price': '$$$',
             'location': {'latitude': 3.0, 'longitude': 4.0},
             'users_at_bar': [self.user1.id, self.user2.id]
@@ -93,7 +90,6 @@ class BarSerializerTests(TestCase):
         # Check basic fields
         self.assertEqual(bar.name, 'New Bar')
         self.assertEqual(bar.address, '456 New Street')
-        self.assertEqual(bar.music_genre, 'jazz')
         self.assertEqual(bar.average_price, '$$$')
 
         # Check location
@@ -110,7 +106,6 @@ class BarSerializerTests(TestCase):
         data = {
             'name': 'Updated Bar',
             'address': '789 Updated Street',
-            'music_genre': 'pop',
             'average_price': '$$$$',
             'location': {'latitude': 5.0, 'longitude': 6.0},
             'users_at_bar': [self.user2.id]  # Only user2 now
@@ -124,7 +119,6 @@ class BarSerializerTests(TestCase):
         # Check basic fields
         self.assertEqual(updated_bar.name, 'Updated Bar')
         self.assertEqual(updated_bar.address, '789 Updated Street')
-        self.assertEqual(updated_bar.music_genre, 'pop')
         self.assertEqual(updated_bar.average_price, '$$$$')
 
         # Check location
@@ -141,7 +135,6 @@ class BarSerializerTests(TestCase):
         data = {
             'name': 'Invalid Bar',
             'address': '123 Test Street',
-            'music_genre': 'rock',
             'average_price': '$$',
             'location': {'latitude': 'not-a-number', 'longitude': 1.0}
         }
@@ -162,7 +155,6 @@ class BarSerializerTests(TestCase):
         bar_no_status = Bar.objects.create(
             name='No Status Bar',
             address='123 Empty Street',
-            music_genre='other',
             average_price='$',
             location=Point(7.0, 8.0, srid=4326)
         )
@@ -185,7 +177,6 @@ class BarStatusSerializerTests(TestCase):
         self.bar = Bar.objects.create(
             name='Test Bar',
             address='123 Test Street',
-            music_genre='rock',
             average_price='$$',
             location=Point(1.0, 2.0, srid=4326)
         )

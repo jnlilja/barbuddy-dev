@@ -4,18 +4,15 @@ from django.contrib.gis.db import models as gis
 from django.core.exceptions import ValidationError
 
 class Bar(models.Model):
-    GENRE_CHOICES = [
-        ('rock', 'Rock'),
-        ('jazz', 'Jazz'),
-        ('pop', 'Pop'),
-        ('hip-hop', 'Hip-Hop'),
-        ('electronic', 'Electronic'),
-        ('other', 'Other'),
-    ]
+
+    # Edit the music Choices, these are not valid 
+
+    # Music is managed by front end
+
 
     name = models.CharField(max_length=255)
     address = models.CharField(max_length=255)
-    music_genre = models.CharField(max_length=100, choices=GENRE_CHOICES, default='other')
+    #music_genre = models.CharField(max_length=100, choices=GENRE_CHOICES, default='other')
     average_price = models.CharField(max_length=50)
     location = gis.PointField(geography=True, srid=4326) # add more if possible
     users_at_bar = models.ManyToManyField(User, related_name='bars_attended', blank=True)
@@ -36,6 +33,7 @@ class Bar(models.Model):
             'wait_time': latest_status.wait_time if latest_status else None,
             'last_updated': latest_status.last_updated if latest_status else None
         }
+    
 
     def __str__(self):
         return self.name

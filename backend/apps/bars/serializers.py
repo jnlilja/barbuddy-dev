@@ -3,18 +3,23 @@ from .models import Bar, BarStatus
 from django.contrib.gis.geos import Point
 from django.db.models import Avg
 from django.contrib.auth import get_user_model
+from .models import BarRating
+
 
 User = get_user_model()
 
 class BarSerializer(serializers.ModelSerializer):
     location = serializers.SerializerMethodField()
+
+    #BarBuddy APP users that are currently at the bar
     users_at_bar = serializers.PrimaryKeyRelatedField(many=True, queryset=User.objects.all(), required=False)
     current_status = serializers.SerializerMethodField()
     average_rating = serializers.SerializerMethodField()
 
     class Meta:
         model = Bar
-        fields = ['id', 'name', 'address', 'music_genre', 'average_price',
+        #removed music_genre
+        fields = ['id', 'name', 'address', 'average_price',
                   'location', 'users_at_bar', 'current_status', 'average_rating']
 
     def get_location(self, obj):
@@ -24,10 +29,17 @@ class BarSerializer(serializers.ModelSerializer):
         status = obj.get_latest_status()
         return status if status else None
 
+    
+    #Moving this to BarRatingSerializer
     def get_average_rating(self, obj):
         """Optimize rating retrieval using aggregate()."""
         average = obj.ratings.aggregate(Avg("rating"))["rating__avg"]
-        return round(average, 2) if average else None
+        return round(average, 2) if average else None 
+    
+
+    #MOST LIKELY NOT NEEDED, CHECK WITH TEAM ON THIS 
+    def validate_users_at_bar(self, value):
+        return value
 
     def to_internal_value(self, data):
         """Convert latitude/longitude dictionary into a GIS Point object."""
@@ -68,3 +80,9 @@ class BarStatusSerializer(serializers.ModelSerializer):
     class Meta:
         model = BarStatus
         fields = "__all__"
+
+#added a serializer for BarRating
+class BarRatingSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BarRating
+        fields = ['id', 'bar', 'user', 'rating', 'review', 'timestamp']
