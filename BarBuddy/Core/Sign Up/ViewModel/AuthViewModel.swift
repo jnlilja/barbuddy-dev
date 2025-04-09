@@ -10,10 +10,9 @@ import Firebase
 import FirebaseAuth
 
 @MainActor
-@Observable
-final class AuthViewModel {
-    var authUser: FirebaseAuth.User?
-    var currentUser: User?
+final class AuthViewModel: ObservableObject {
+    @Published var authUser: FirebaseAuth.User?
+    @Published var currentUser: User?
     
     init() {
         self.authUser = Auth.auth().currentUser
@@ -35,6 +34,7 @@ final class AuthViewModel {
             try Auth.auth().signOut()
             self.authUser = nil
             self.currentUser = nil
+            print("Logged out")
         }catch{
             print("Could not logout with error \(error.localizedDescription)")
         }

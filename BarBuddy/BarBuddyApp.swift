@@ -10,6 +10,7 @@ import Firebase
 
 @main
 struct BarBuddyApp: App {
+    @StateObject private var authViewModel = AuthViewModel()
     
     init() {
         FirebaseApp.configure()
@@ -18,6 +19,7 @@ struct BarBuddyApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .environmentObject(authViewModel)
         }
     }
 }

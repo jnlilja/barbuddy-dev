@@ -23,7 +23,7 @@ struct MainFeedView: View {
     @State private var searchText = ""
     @Environment(\.colorScheme) var colorScheme
     @State private var selectedBar: Bool = false
-    @EnvironmentObject var viewModel: MapViewModel
+    @Bindable var viewModel = MapViewModel()
 
     // Location manager
     let locationViewModel = LocationManager()
@@ -166,5 +166,4 @@ struct MainFeedView: View {
 
 #Preview {
     MainFeedView(bottomSheetPosition: .relative(0.21))
-        .environmentObject(MapViewModel())
 }

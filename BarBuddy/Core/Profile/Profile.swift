@@ -15,6 +15,8 @@ struct ProfileView: View {
     @State private var selectedImage: String? = nil
     @State private var isImageExpanded = false
     
+    @EnvironmentObject var viewModel: AuthViewModel
+    
     // Compute grid cell width for Photos.
     private var gridCellWidth: CGFloat {
         let screenWidth = UIScreen.main.bounds.width
@@ -37,6 +39,14 @@ struct ProfileView: View {
                             .overlay(Circle().stroke(Color.white, lineWidth: 4))
                             .shadow(radius: 7)
                             .padding(.top, 20)
+                            .onTapGesture {
+                                // Temporary. Logout by pressing on profile picture
+                                do {
+                                    try viewModel.signOut()
+                                } catch {
+                                    print(error)
+                                }
+                            }
                     } else {
                         Circle()
                             .fill(Color.gray.opacity(0.3))
@@ -258,8 +268,7 @@ struct InfoItem: Identifiable {
     let text: String
 }
 
-struct ProfileView_Previews: PreviewProvider {
-    static var previews: some View {
-        ProfileView()
-    }
+#Preview {
+    ProfileView()
+        .environmentObject(AuthViewModel())
 }

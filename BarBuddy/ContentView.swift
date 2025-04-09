@@ -8,26 +8,13 @@
 import SwiftUI
 
 struct ContentView: View {
-  
-    @State private var showingLoginScreen = false
-    var mapViewModel = MapViewModel()
-    
-    // Skip the login/sign up views when set to true
-    private let skipToHome = false
+    @EnvironmentObject var authViewModel: AuthViewModel
 
     var body: some View {
-        if !skipToHome {
-            if !showingLoginScreen {
-                LoginView(showingLoginScreen: $showingLoginScreen)
-            }
-            else {
-                HomeView()
-                    .environmentObject(mapViewModel)
-                    .transition(.move(edge: .trailing))
-            }
+        if authViewModel.authUser == nil {
+            LoginView()
         } else {
             HomeView()
-                .environmentObject(mapViewModel)
         }
     }
 }
@@ -35,5 +22,5 @@ struct ContentView: View {
 // Login Flow Preview
 #Preview("Content View") {
     ContentView()
-        .environmentObject(MapViewModel())
+        .environmentObject(AuthViewModel())
 }
