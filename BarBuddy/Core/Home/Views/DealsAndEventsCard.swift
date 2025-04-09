@@ -14,25 +14,29 @@ struct EventCard: View {
                 .cornerRadius(8)
                 .shadow(radius: 3)
             
-            HStack {
-                Text("Upcoming Events")
-                    .font(.headline)
-                    .foregroundColor(.primary)
+            VStack(spacing: 8.0) {
+                Text("Deals and Events")
+                    .font(.system(size: 30))
+                    .fontWeight(.medium)
+                    .foregroundColor(Color("DarkBlue"))
+                    .multilineTextAlignment(.center)
                 
-                Spacer()
-                
-                Image(systemName: "arrow.right")
-                    .symbolEffect(.wiggle.byLayer,
-                                  options: .repeat(.periodic(delay: 1.0)))
-                    .foregroundColor(.salmon)
-                
-                Text("See what's happening")
-                    .font(.subheadline)
-                    .foregroundColor(.salmon)
+                HStack(spacing: 3.0) {
+                    Text("See what's happening")
+                        .font(.system(size: 14))
+                        .fontWeight(.bold)
+                        .foregroundColor(.salmon)
+                    
+                    Image(systemName: "arrow.right")
+                        .symbolEffect(.wiggle.byLayer,
+                                      options: .repeat(.periodic(delay: 1.0)))
+                        .foregroundColor(.salmon)
+                }
+                .frame(maxWidth: .infinity, alignment: .center)
             }
             .padding()
         }
-        .frame(height: 80)
+        .frame(height: 100.0)
     }
 }
 

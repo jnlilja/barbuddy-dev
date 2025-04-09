@@ -338,7 +338,6 @@ struct Promotion: Identifiable, DayFilterable, Searchable {
 let eventData: [Event] = [
     Event(title: "Fish Races", location: "PB Shoreclub", timeDescription: "9pm", days: [.wednesday]),
     Event(title: "College Night", location: "PB Shoreclub", timeDescription: "8pm-close", days: [.thursday]),
-    Event(title: "The Bachelor Viewing Party", location: "PB Shoreclub", timeDescription: "8pm-10pm", days: [.monday]),
     Event(title: "Trivia Night", location: "PB Shoreclub", timeDescription: "7pm-10pm", days: [.tuesday]),
     Event(title: "Trivia Night", location: "PB Local", timeDescription: "7pm-9pm", days: [.wednesday]),
     Event(title: "Wine Wednesday", location: "Firehouse", timeDescription: "7pm-close", days: [.wednesday]),
