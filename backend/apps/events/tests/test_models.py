@@ -7,13 +7,16 @@ from apps.events.models import Event, EventAttendee
 from django.utils import timezone
 from datetime import timedelta, datetime
 
+
+# Must delete the music_genre field from the bar model
+# because it is not used in the test 
 class EventModelTests(TestCase):
     def setUp(self):
         # Create a test bar
         self.bar = Bar.objects.create(
             name='Test Bar',
             address='123 Test Street',
-            music_genre='rock',
+            # music_genre='rock',
             average_price='$$',
             location=Point(1.0, 2.0, srid=4326)
         )
@@ -85,7 +88,7 @@ class EventAttendeeModelTests(TestCase):
         self.bar = Bar.objects.create(
             name='Test Bar',
             address='123 Test Street',
-            music_genre='rock',
+            # music_genre='rock',
             average_price='$$',
             location=Point(1.0, 2.0, srid=4326)
         )
