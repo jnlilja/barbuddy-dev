@@ -9,6 +9,8 @@ from apps.matches.views import MatchViewSet
 from apps.messaging.views import MessageViewSet, GroupChatViewSet
 from apps.swipes.views import SwipeViewSet
 from django.shortcuts import redirect
+
+from .views import FirebaseAuthTestView
 # Initialize the router
 router = DefaultRouter()
 
@@ -46,10 +48,29 @@ schema_view = get_schema_view(
 
 
 urlpatterns = [
+    # Admin panel
     path("admin/", admin.site.urls),
     path('api/', include(router.urls)),
+
+    ####### NOT FOR FIREBASE -> this is Djnago Rest Framework JWT, this will be DELETED 
     path('api/auth/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    ######## 
+
     path('api/auth/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+
+
+
+    # Firebase url
+    path('api/test-auth/', FirebaseAuthTestView.as_view(), name='firebase-test'),
+
+
+
+    # Include the URLs for the apps
+
+    ##
+
+
+    #pusher
     path('trigger/', send_pusher_message, name='trigger-message'),
 
     # Swagger / Redoc Docs
