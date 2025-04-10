@@ -12,6 +12,10 @@ class SwipeViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         # Only return swipes made by the logged-in user
+        
+        #swagger schma generation
+        if getattr(self, 'swagger_fake_view', False):
+            return Swipe.objects.none()
         return self.queryset.filter(swiper=self.request.user)
 
     def perform_create(self, serializer):
