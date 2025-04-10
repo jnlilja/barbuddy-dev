@@ -14,13 +14,8 @@ struct BarDetailPopup: View {
     // State to hold the user's mood selection from the Feedback view
     @State private var selectedMood: Mood? = nil
     @State private var showSwipeView = false
-    @State private var showWaitTimeView = false
-    @State private var showCrowdSizeView = false
-    @State private var selectedCrowd = false
-    @State var selectedTime: Bool = false
-
-    // Track voting view position
-    @State private var position: CGFloat = 0
+    @State private var waitButtonProperties = ButtonProperties(type: "wait")
+    @State private var crowdButtonProperties = ButtonProperties(type: "crowd")
 
     var body: some View {
         NavigationView {
@@ -51,7 +46,7 @@ struct BarDetailPopup: View {
                 // Wait time and crowd size sections
                 HStack(spacing: 30) {
                     VStack(spacing: 10) {
-                        if !selectedTime {
+                        if !waitButtonProperties.selectedOption {
 
                             Text("Est. Wait Time:")
                                 .font(.headline)
@@ -68,9 +63,9 @@ struct BarDetailPopup: View {
                             }
 
                             Button {
-                                withAnimation {
-                                    showWaitTimeView = true
-                                    showCrowdSizeView = false
+                                withAnimation(.spring(duration: 0.5, bounce: 0.3)) {
+                                    waitButtonProperties.showMenu = true
+                                    crowdButtonProperties.showMenu = false
                                 }
                             } label: {
                                 Text("Vote wait time!")
@@ -79,7 +74,7 @@ struct BarDetailPopup: View {
                                     .foregroundColor(Color("DarkPurple"))
 
                             }
-                            .disabled(showWaitTimeView)
+                            .disabled(waitButtonProperties.showMenu)
                         } else {
                             ZStack {
 
@@ -101,7 +96,7 @@ struct BarDetailPopup: View {
                         }
                     }
 
-                    if !selectedCrowd {
+                    if !crowdButtonProperties.selectedOption {
                         VStack(spacing: 10) {
 
                             Text("Crowd Size is:")
@@ -114,7 +109,8 @@ struct BarDetailPopup: View {
                                 HStack {
                                     Image(systemName: "flame.fill")
                                         .foregroundColor(
-                                            Color("DarkPurple"))
+                                            Color("DarkPurple")
+                                        )
                                     Text("Packed")
                                 }
                                 .padding()
@@ -123,9 +119,9 @@ struct BarDetailPopup: View {
                             }
 
                             Button {
-                                withAnimation {
-                                    showCrowdSizeView = true
-                                    showWaitTimeView = false
+                                withAnimation(.spring(duration: 0.5, bounce: 0.3)) {
+                                    crowdButtonProperties.showMenu = true
+                                    waitButtonProperties.showMenu = false
                                 }
                             } label: {
                                 Text("Vote crowd size!")
@@ -133,7 +129,7 @@ struct BarDetailPopup: View {
                                     .underline()
                                     .foregroundColor(Color("DarkPurple"))
                             }
-                            .disabled(showCrowdSizeView)
+                            .disabled(crowdButtonProperties.showMenu)
                         }
                     } else {
                         ZStack {
@@ -182,32 +178,32 @@ struct BarDetailPopup: View {
         .presentationDetents([.large])
         .presentationDragIndicator(.visible)
         .overlay {
-            if showWaitTimeView {
+            if waitButtonProperties.showMenu {
                 HStack {
                     VoteWaitTimeView(
-                        selectedTime: $selectedTime,
-                        showVoteWaitTime: $showWaitTimeView
-                    )
+                        properties: $waitButtonProperties)
+                    .offset(x: waitButtonProperties.offset)
                     .padding(.leading)
-                    .offset(x: position)
                     .gesture(
                         DragGesture(minimumDistance: 0, coordinateSpace: .local)
                             .onChanged { value in
                                 // Only able to swipe to the left
                                 if value.translation.width <= 0 {
-                                    position = value.translation.width
+                                    withAnimation(.linear(duration: 0.1)) {
+                                        waitButtonProperties.offset = value.translation.width
+                                    }
                                 }
                             }
                             .onEnded({ _ in
-                                // View will close when swiped about halfways to the left
-                                if position < -100 {
-                                    withAnimation {
-                                        showWaitTimeView = false
+                                // View will close when swiped to the left
+                                if waitButtonProperties.offset < -100 {
+                                    withAnimation(.snappy) {
+                                        waitButtonProperties.showMenu = false
                                     }
                                 }
                                 // Resets position when not swiped far enough
                                 withAnimation {
-                                    position = 0
+                                    waitButtonProperties.offset = 0
                                 }
                             }
                             )
@@ -218,33 +214,33 @@ struct BarDetailPopup: View {
                 .transition(.move(edge: .leading))
             }
 
-            if showCrowdSizeView {
+            if crowdButtonProperties.showMenu {
                 HStack {
                     Spacer()
                     VoteCrowdSizeView(
-                        selectedCrowd: $selectedCrowd,
-                        showCrowdSizeView: $showCrowdSizeView
-                    )
+                        buttonProperties: $crowdButtonProperties)
+                    .offset(x: crowdButtonProperties.offset)
                     .padding(.trailing)
-                    .offset(x: position)
                     .gesture(
                         DragGesture(minimumDistance: 0, coordinateSpace: .local)
                             .onChanged { value in
                                 // Only able to swipe to the right
                                 if value.translation.width > 0 {
-                                    position = value.translation.width
+                                    withAnimation(.linear(duration: 0.1)) {
+                                        crowdButtonProperties.offset = value.translation.width
+                                    }
                                 }
                             }
                             .onEnded({ _ in
                                 // View will close when swiped about halfways to the right
-                                if position > 100 {
-                                    withAnimation {
-                                        showCrowdSizeView = false
+                                if crowdButtonProperties.offset > 100 {
+                                    withAnimation(.snappy) {
+                                        crowdButtonProperties.showMenu = false
                                     }
                                 }
                                 // Resets position when not swiped far enough
                                 withAnimation {
-                                    position = 0
+                                    crowdButtonProperties.offset = 0
                                 }
                             }
                             )

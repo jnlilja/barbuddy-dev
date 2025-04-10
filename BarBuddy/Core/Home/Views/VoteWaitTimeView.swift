@@ -8,8 +8,7 @@
 import SwiftUI
 
 struct VoteWaitTimeView: View {
-    @Binding var selectedTime: Bool
-    @Binding var showVoteWaitTime: Bool
+    @Binding var properties: ButtonProperties
     var body: some View {
         ZStack {
 
@@ -28,24 +27,24 @@ struct VoteWaitTimeView: View {
                     .bold()
                     .foregroundStyle(.darkBlue)
 
-                VoteButtonView(text: "< 5 min", opacity: 0.06, trigger: $selectedTime)
-                VoteButtonView(text: "5 - 10 min", opacity: 0.1, trigger: $selectedTime)
-                VoteButtonView(text: "10 - 20 min", opacity: 0.2, trigger: $selectedTime)
-                VoteButtonView(text: "20 - 30 min", opacity: 0.3, trigger: $selectedTime)
-                VoteButtonView(text: "30 - 45 min", opacity: 0.4, trigger: $selectedTime)
-                VoteButtonView(text: "> 45 min", opacity: 0.5, trigger: $selectedTime)
+                VoteButtonView(text: "< 5 min", opacity: 0.06, properties: $properties)
+                VoteButtonView(text: "5 - 10 min", opacity: 0.1, properties: $properties)
+                VoteButtonView(text: "10 - 20 min", opacity: 0.2, properties: $properties)
+                VoteButtonView(text: "20 - 30 min", opacity: 0.3, properties: $properties)
+                VoteButtonView(text: "30 - 45 min", opacity: 0.4, properties: $properties)
+                VoteButtonView(text: "> 45 min", opacity: 0.5, properties: $properties)
             
                 Spacer()
             }
         }
-        .onChange(of: selectedTime) { _, _ in
+        .onChange(of: properties.selectedOption) { _, _ in
             withAnimation {
-                showVoteWaitTime = false
+                properties.showMenu = false
             }
         }
     }
 }
 
 #Preview {
-    VoteWaitTimeView(selectedTime: .constant(false), showVoteWaitTime: .constant(true))
+    VoteWaitTimeView(properties: .constant(.init(selectedOption: false, showMenu: false, type: "wait")))
 }

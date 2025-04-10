@@ -8,8 +8,8 @@
 import SwiftUI
 
 struct VoteCrowdSizeView: View {
-    @Binding var selectedCrowd: Bool
-    @Binding var showCrowdSizeView: Bool
+    @Binding var buttonProperties: ButtonProperties
+    
     var body: some View {
         ZStack {
 
@@ -28,24 +28,24 @@ struct VoteCrowdSizeView: View {
                     .bold()
                     .foregroundStyle(.darkBlue)
                 
-                VoteButtonView(text: "🫥 Empty", opacity: 0.06, trigger: $selectedCrowd)
-                VoteButtonView(text: "🫤 Low", opacity: 0.1, trigger: $selectedCrowd)
-                VoteButtonView(text: "🙂 Moderate", opacity: 0.2, trigger: $selectedCrowd)
-                VoteButtonView(text: "✨ Busy", opacity: 0.3, trigger: $selectedCrowd)
-                VoteButtonView(text: "🎉 Crowded", opacity: 0.4, trigger: $selectedCrowd)
-                VoteButtonView(text: "🔥 Packed", opacity: 0.5, trigger: $selectedCrowd)
+                VoteButtonView(text: "🫥 Empty", opacity: 0.06, properties: $buttonProperties,)
+                VoteButtonView(text: "🫤 Low", opacity: 0.1, properties: $buttonProperties)
+                VoteButtonView(text: "🙂 Moderate", opacity: 0.2, properties: $buttonProperties)
+                VoteButtonView(text: "✨ Busy", opacity: 0.3, properties: $buttonProperties)
+                VoteButtonView(text: "🎉 Crowded", opacity: 0.4, properties: $buttonProperties)
+                VoteButtonView(text: "🔥 Packed", opacity: 0.5, properties: $buttonProperties)
             
                 Spacer()
             }
         }
-        .onChange(of: selectedCrowd) { _, _ in
+        .onChange(of: buttonProperties.selectedOption) { _, _ in
             withAnimation {
-                showCrowdSizeView = false
+                buttonProperties.showMenu = false
             }
         }
     }
 }
 
 #Preview {
-    VoteCrowdSizeView(selectedCrowd: .constant(false), showCrowdSizeView: .constant(false))
+    VoteCrowdSizeView(buttonProperties: .constant(.init(selectedOption: false, showMenu: false, offset: 0, type: "crowd")))
 }
