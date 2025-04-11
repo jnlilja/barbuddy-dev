@@ -15,8 +15,6 @@ struct ProfileView: View {
     @State private var selectedImage: String? = nil
     @State private var isImageExpanded = false
     
-    @EnvironmentObject var viewModel: AuthViewModel
-    
     // Compute grid cell width for Photos.
     private var gridCellWidth: CGFloat {
         let screenWidth = UIScreen.main.bounds.width
@@ -39,14 +37,7 @@ struct ProfileView: View {
                             .overlay(Circle().stroke(Color.white, lineWidth: 4))
                             .shadow(radius: 7)
                             .padding(.top, 20)
-                            .onTapGesture {
-                                // Temporary. Logout by pressing on profile picture
-                                do {
-                                    try viewModel.signOut()
-                                } catch {
-                                    print(error)
-                                }
-                            }
+        
                     } else {
                         Circle()
                             .fill(Color.gray.opacity(0.3))
@@ -180,6 +171,16 @@ struct ProfileView: View {
             .background(Color("DarkBlue").ignoresSafeArea())
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    NavigationLink(destination: SettingsView()) {
+                        HStack {
+                            Image(systemName: "gear")
+                            Text("Settings")
+                                .font(.subheadline)
+                        }
+                        .foregroundStyle(.white)
+                    }
+                }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     NavigationLink(destination: RequestsView()) {
                         HStack {
