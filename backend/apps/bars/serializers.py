@@ -86,3 +86,8 @@ class BarRatingSerializer(serializers.ModelSerializer):
     class Meta:
         model = BarRating
         fields = ['id', 'bar', 'user', 'rating', 'review', 'timestamp']
+        read_only_fields = ['user']
+
+    def create(self, validated_data):
+        validated_data['user'] = self.context['request'].user
+        return super().create(validated_data)

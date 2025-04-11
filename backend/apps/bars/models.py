@@ -16,6 +16,8 @@ class Bar(models.Model):
     average_price = models.CharField(max_length=50)
     location = gis.PointField(geography=True, srid=4326) # add more if possible
     users_at_bar = models.ManyToManyField(User, related_name='bars_attended', blank=True)
+    
+
 
     def clean(self):
         super().clean()

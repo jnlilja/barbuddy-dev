@@ -3,26 +3,33 @@ from django.urls import path, include, re_path
 from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from apps.users.views import UserViewSet
-from apps.bars.views import BarViewSet, BarStatusViewSet
+from apps.bars.views import BarViewSet, BarStatusViewSet, BarRatingViewSet
 from apps.events.views import EventViewSet
 from apps.matches.views import MatchViewSet
 from apps.messaging.views import MessageViewSet, GroupChatViewSet
 from apps.swipes.views import SwipeViewSet
 from django.shortcuts import redirect
 
+
 from .views import FirebaseAuthTestView
 # Initialize the router
 router = DefaultRouter()
 
 # Register endpoints using the actual ViewSet classes
-router.register(r'users', UserViewSet, basename="users")
+
+### Router registration
+# Endpoints names, these must match viewset names
 router.register(r'bars', BarViewSet, basename="bars")
 router.register(r'bar-status', BarStatusViewSet, basename="bar-status")
+router.register(r'bar-ratings', BarRatingViewSet, basename="bar-ratings")
+
 router.register(r'events', EventViewSet, basename="events")
 router.register(r'matches', MatchViewSet, basename="matches")
 router.register(r'messages', MessageViewSet, basename="messages")
 router.register(r'group-chats', GroupChatViewSet, basename="group-chats")
 router.register(r'swipes', SwipeViewSet, basename='swipe')
+router.register(r'users', UserViewSet, basename="users")
+
 
 
 from django.urls import path, re_path
@@ -53,12 +60,10 @@ urlpatterns = [
     path('api/', include(router.urls)),
 
     ####### NOT FOR FIREBASE -> this is Djnago Rest Framework JWT, this will be DELETED 
-    path('api/auth/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    # path('api/auth/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     ######## 
 
-    path('api/auth/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-
-
+    # path('api/auth/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 
     # Firebase url
     path('api/test-auth/', FirebaseAuthTestView.as_view(), name='firebase-test'),
@@ -82,3 +87,4 @@ urlpatterns = [
     # Root path handler 
     path('', lambda request: redirect('schema-swagger-ui', permanent=False)),
 ]
+

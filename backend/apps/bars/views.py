@@ -1,7 +1,7 @@
 from rest_framework import viewsets
 from django.contrib.auth import get_user_model
-from .serializers import BarSerializer, BarStatusSerializer
-from .models import Bar, BarStatus
+from .serializers import BarSerializer, BarStatusSerializer, BarRatingSerializer
+from .models import Bar, BarStatus, BarRating
 
 
 User = get_user_model()
@@ -27,3 +27,11 @@ class BarStatusViewSet(viewsets.ModelViewSet):
     queryset = BarStatus.objects.all()
     serializer_class = BarStatusSerializer
 
+#bars rating
+
+class BarRatingViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for managing bar ratings.
+    """
+    queryset = BarRating.objects.all()
+    serializer_class = BarRatingSerializer
