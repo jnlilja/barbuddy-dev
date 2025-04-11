@@ -32,6 +32,13 @@ class BarStatusViewSet(viewsets.ModelViewSet):
 class BarRatingViewSet(viewsets.ModelViewSet):
     """
     ViewSet for managing bar ratings.
+    Supports optional filtering by bar.
     """
-    queryset = BarRating.objects.all()
     serializer_class = BarRatingSerializer
+
+    def get_queryset(self):
+        queryset = BarRating.objects.all()
+        bar_id = self.request.query_params.get('bar')
+        if bar_id:
+            queryset = queryset.filter(bar__id=bar_id)
+        return queryset

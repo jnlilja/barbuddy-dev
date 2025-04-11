@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     'apps.matches',
     'apps.messaging',
     'apps.swipes',
+    'apps.services',
     'corsheaders',
     'drf_yasg',
     'pusher',

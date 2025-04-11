@@ -21,13 +21,21 @@ router = DefaultRouter()
 # Endpoints names, these must match viewset names
 router.register(r'bars', BarViewSet, basename="bars")
 router.register(r'bar-status', BarStatusViewSet, basename="bar-status")
-router.register(r'bar-ratings', BarRatingViewSet, basename="bar-ratings")
 
+
+# MUST DO: EVENTS
 router.register(r'events', EventViewSet, basename="events")
+
+# MUST DO: MATCHES
 router.register(r'matches', MatchViewSet, basename="matches")
+
+#MUST DO: MESSAGING
 router.register(r'messages', MessageViewSet, basename="messages")
-router.register(r'group-chats', GroupChatViewSet, basename="group-chats")
+
+# MUST DO: SWIPES
 router.register(r'swipes', SwipeViewSet, basename='swipe')
+
+# MUST DO: Users
 router.register(r'users', UserViewSet, basename="users")
 
 
@@ -58,12 +66,6 @@ urlpatterns = [
     # Admin panel
     path("admin/", admin.site.urls),
     path('api/', include(router.urls)),
-
-    ####### NOT FOR FIREBASE -> this is Djnago Rest Framework JWT, this will be DELETED 
-    # path('api/auth/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
-    ######## 
-
-    # path('api/auth/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 
     # Firebase url
     path('api/test-auth/', FirebaseAuthTestView.as_view(), name='firebase-test'),
