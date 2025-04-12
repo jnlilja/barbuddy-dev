@@ -7,13 +7,24 @@ from django.contrib.gis.db import models as gis
 class User(AbstractUser):
     phone_number = models.CharField(max_length=15, blank=True, null=True, unique=True)
     date_of_birth = models.DateField(null=True, blank=True)
-    height = models.PositiveIntegerField(null=True, blank=True)
     hometown = models.CharField(max_length=255, blank=True)
     job_or_university = models.CharField(max_length=255, blank=True)
     favorite_drink = models.CharField(max_length=100, blank=True)
-    location = gis.PointField(geography=True, srid=4326, null=True, blank=True) # geography=True, srid=4326, null=True, blank=True
+    location = gis.PointField(geography=True, srid=4326, null=True, blank=True)
     profile_pictures = models.JSONField(default=list, blank=True)
+    vote_weight = models.IntegerField(default=1)
 
+    ACCOUNT_TYPE_CHOICES = [
+        ('regular', 'Regular'),
+        ('trusted', 'Trusted'),
+        ('moderator', 'Moderator'),
+        ('admin', 'Admin'),
+    ]
+
+    account_type = models.CharField(max_length=20, choices=ACCOUNT_TYPE_CHOICES, default='regular')
+
+
+    
     def clean(self):
         super().clean()
         # age verification
@@ -40,4 +51,14 @@ class User(AbstractUser):
 
     def save(self, *args, **kwargs):
         self.clean()
+
+        # Automatically assign vote weight based on account type
+        account_weights = {
+            'regular': 1,
+            'trusted': 2,
+            'moderator': 3,
+            'admin': 5
+        }
+        self.vote_weight = account_weights.get(self.account_type, 1)
+
         super().save(*args, **kwargs)

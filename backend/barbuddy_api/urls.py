@@ -21,9 +21,6 @@ router = DefaultRouter()
 # Endpoints names, these must match viewset names
 router.register(r'bars', BarViewSet, basename="bars")
 router.register(r'bar-status', BarStatusViewSet, basename="bar-status")
-
-
-# MUST DO: EVENTS
 router.register(r'events', EventViewSet, basename="events")
 
 # MUST DO: MATCHES

@@ -20,13 +20,15 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = [
             "id", "username", "first_name", "last_name", "email", "password", "date_of_birth",
-            "height", "hometown", "job_or_university", "favorite_drink", "location",
-            "profile_pictures", "matches", "swipes"
+            "hometown", "job_or_university", "favorite_drink", "location",
+            "profile_pictures", "matches", "swipes", "vote_weight", "account_type"
         ]
         extra_kwargs = {
             "password": {"write_only": True},
             "email": {"write_only": True}
         }
+        read_only_fields = ["vote_weight"]
+
 
     def get_location(self, obj):
         if obj.location:
