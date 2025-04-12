@@ -13,6 +13,7 @@ struct NameEntryView: View {
     @State private var lastName = ""
     @State private var proceedToLocation = false
     @Binding var path: NavigationPath
+    @Environment(SignUpViewModel.self) var viewModel
     
     var body: some View {
         ZStack {
@@ -38,6 +39,7 @@ struct NameEntryView: View {
                         .textFieldStyle(CustomTextFieldStyle())
                     
                     Button(action: {
+                        viewModel.name = "\(firstName) \(lastName)"
                         proceedToLocation = true
                         path.append(NavigationDestinations.location)
                         
@@ -63,4 +65,5 @@ struct NameEntryView: View {
 // Profile Info Previews
 #Preview("Name") {
     NameEntryView(path: .constant(NavigationPath()))
+        .environment(SignUpViewModel())
 }

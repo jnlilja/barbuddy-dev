@@ -35,7 +35,7 @@ struct SignUpView: View {
                         .textFieldStyle(CustomTextFieldStyle())
                         .autocapitalization(.none)
                     
-                    SecureField("Password", text: $viewModel.newPassword)
+                    SecureField("Password", text: $viewModel.password)
                         .textFieldStyle(CustomTextFieldStyle())
                         .overlay(
                             RoundedRectangle(cornerRadius: 10)
@@ -81,8 +81,12 @@ struct SignUpView: View {
             }
             .fullScreenCover(isPresented: $viewModel.showingAgeVerification) {
                 AgeVerificationView()
+                    .environment(viewModel)
             }
         }
     }
-    
+}
+
+#Preview {
+    SignUpView(isPresented: .constant(true), viewModel: SignUpViewModel())
 }

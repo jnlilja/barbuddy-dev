@@ -10,7 +10,7 @@ import Foundation
 struct MockDatabase {
     static func getPrimaryUser() -> User {
         return User(
-            name: "Alex",
+            id: UUID().uuidString, name: "Alex",
             age: 30,
             height: "6'1\"",
             hometown: "Austin",
@@ -25,7 +25,7 @@ struct MockDatabase {
     static func getFriends() -> [User] {
         return [
             User(
-                name: "Ashley",
+                id: UUID().uuidString, name: "Ashley",
                 age: 23,
                 height: "5'11\"",
                 hometown: "San Diego",
@@ -36,7 +36,7 @@ struct MockDatabase {
                 imageNames: ["TestImage", "guy1", "guy2"]
             ),
             User(
-                name: "John",
+                id: UUID().uuidString, name: "John",
                 age: 28,
                 height: "6'0\"",
                 hometown: "Los Angeles",
@@ -47,7 +47,7 @@ struct MockDatabase {
                 imageNames: ["guy3", "TestImage", "guy2"]
             ),
             User(
-                name: "Emily",
+                id: UUID().uuidString, name: "Emily",
                 age: 26,
                 height: "5'5\"",
                 hometown: "New York",

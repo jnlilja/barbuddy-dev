@@ -11,6 +11,7 @@ struct AgeVerificationView: View {
     
     @StateObject private var viewModel = AgeVerificationViewModel()
     @State private var path = NavigationPath()
+    @Environment(SignUpViewModel.self) var signUpViewModel
     
     private var minimumDate: Date {
         Calendar.current.date(byAdding: .year, value: -120, to: Date()) ?? Date()
@@ -54,7 +55,7 @@ struct AgeVerificationView: View {
                     .padding()
                     
                     Button(action: {
-                        viewModel.verifyAge()
+                        signUpViewModel.age = viewModel.verifyAge()
                         if viewModel.proceedToName {
                             
                             // Add destination to the stack
@@ -97,4 +98,5 @@ struct AgeVerificationView: View {
 
 #Preview {
     AgeVerificationView()
+        .environment(SignUpViewModel())
 }

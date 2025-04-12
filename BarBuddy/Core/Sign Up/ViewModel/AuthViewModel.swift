@@ -54,10 +54,21 @@ final class AuthViewModel: ObservableObject {
     }
     
     func verifySMSCode(verificationID: String, smsCode: String) {
-        let credential = PhoneAuthProvider.provider().credential(
+        _ = PhoneAuthProvider.provider().credential(
             withVerificationID: verificationID,
             verificationCode: smsCode
         )
+    }
+    
+    func createUser(data: SignUpViewModel) async throws {
+        do {
+            let result = try await Auth.auth().createUser(withEmail: data.email, password: data.password)
+            self.authUser = result.user
+            print("User created successfully")
+            print(data)
+        }catch{
+            print(error.localizedDescription)
+        }
     }
     
 }

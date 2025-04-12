@@ -9,9 +9,9 @@
 import SwiftUI
 
 struct GenderView: View {
-    @State private var selectedGender: String?
     @State private var proceedToNextPage = false
     @Binding var path: NavigationPath
+    @Environment(SignUpViewModel.self) var viewModel
     
     let genderOptions = ["Man", "Woman", "Non-binary", "Prefer not to say"]
     
@@ -36,12 +36,12 @@ struct GenderView: View {
                     VStack(spacing: 15) {
                         ForEach(genderOptions, id: \.self) { gender in
                             Button(action: {
-                                selectedGender = gender
+                                viewModel.gender = gender
                             }) {
                                 Text(gender)
                                     .bold()
                                     .frame(width: 300, height: 50)
-                                    .background(selectedGender == gender ? Color("DarkPurple") : Color("Salmon"))
+                                    .background(viewModel.gender == gender ? Color("DarkPurple") : Color("Salmon"))
                                     .foregroundColor(.white)
                                     .cornerRadius(10)
                             }
@@ -66,8 +66,8 @@ struct GenderView: View {
                             .background(Color("DarkPurple"))
                             .cornerRadius(10)
                     }
-                    .disabled(selectedGender == nil)
-                    .opacity(selectedGender == nil ? 0.6 : 1)
+                    .disabled(viewModel.gender.isEmpty)
+                    .opacity(viewModel.gender.isEmpty ? 0.6 : 1)
                 }
                 
                 Spacer()
@@ -80,4 +80,5 @@ struct GenderView: View {
 
 #Preview("Gender") {
     GenderView(path: .constant(NavigationPath()))
+        .environment(SignUpViewModel())
 }

@@ -9,16 +9,37 @@ import Foundation
 
 // This viewModel handles the logic of validation and posting changes to UI
 @Observable
-class SignUpViewModel: ObservableObject {
+class SignUpViewModel: CustomStringConvertible {
     var email: String = ""
     var password: String = ""
     var newUsername: String = ""
-    var newPassword: String = ""
     var confirmPassword: String = ""
     var isValidEmail: Bool = true
     var isValidPassword: Bool = true
     var showingAlert = false
     var alertMessage = ""
+    var name: String = ""
+    var age: Int = -1
+    var height: String = ""
+    var hometown: String = ""
+    var school: String = ""
+    var favoriteDrink: String = ""
+    var preference: String = ""
+    var bio: String = ""
+    var imageNames: [String] = []
+    var gender: String = ""
+    
+    // For testing purposes
+    public var description: String {
+        return """
+            Data for \(newUsername):
+            
+            email: \(email)
+            password: \(password)
+            name: \(name)
+            age: \(age)
+            """
+    }
     
     // Add variables for validation
     var passwordsMatch = true
@@ -46,7 +67,7 @@ class SignUpViewModel: ObservableObject {
         }
         
         // Validate password
-        if !isValidPasswordFormat(newPassword) {
+        if !isValidPasswordFormat(password) {
             isValidPassword = false
             alertMessage = "Password must be at least 8 characters with a number and special character"
             showingAlert = true
@@ -54,7 +75,7 @@ class SignUpViewModel: ObservableObject {
         }
         
         // Check if passwords match
-        if newPassword != confirmPassword {
+        if password != confirmPassword {
             passwordsMatch = false
             alertMessage = "Passwords do not match"
             showingAlert = true

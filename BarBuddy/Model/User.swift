@@ -7,17 +7,19 @@
 
 import Foundation
 
-struct User: Identifiable, Decodable, Hashable {
-    let id: UUID = UUID()
-    let name: String
-    let age: Int
-    let height: String
-    let hometown: String
-    let school: String
-    let favoriteDrink: String
-    let preference: String
-    let bio: String
-    let imageNames: [String]
+struct User: Identifiable, Codable, Hashable {
+    let id: String
+    var name: String
+    var age: Int
+    var height: String
+    var hometown: String
+    var school: String
+    var favoriteDrink: String
+    var preference: String
+    var bio: String
+    var imageNames: [String]
+    var username: String = ""
+    var email: String = ""
     
     // Indicates if a friend request was sent.
     var friendRequested: Bool = false

@@ -9,9 +9,11 @@
 import SwiftUI
 
 struct PhotoUploadView: View {
+    @EnvironmentObject var authViewModel: AuthViewModel
     @State private var selectedImages: [UIImage] = []
     @State private var showingImagePicker = false
     @State private var proceedToHome = false
+    @Environment(SignUpViewModel.self) var signUpViewModel
     
     let minPhotos = 4
     let maxPhotos = 6
@@ -72,7 +74,10 @@ struct PhotoUploadView: View {
                 Spacer()
                 
                 Button(action: {
-                    proceedToHome = true
+                    //proceedToHome = true
+                    Task {
+                        try await authViewModel.createUser(data: signUpViewModel)
+                    }
                 }) {
                     Text("Let's go!")
                         .font(.headline)
@@ -97,4 +102,5 @@ struct PhotoUploadView: View {
 
 #Preview("Photo Upload") {
     PhotoUploadView()
+        .environment(SignUpViewModel())
 }
