@@ -3,7 +3,7 @@ from .models import Bar, BarStatus
 from django.contrib.gis.geos import Point
 from django.db.models import Avg
 from django.contrib.auth import get_user_model
-from .models import BarRating
+from .models import BarRating, BarVote
 
 
 User = get_user_model()
@@ -91,3 +91,17 @@ class BarRatingSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         validated_data['user'] = self.context['request'].user
         return super().create(validated_data)
+
+
+class BarVoteSerializer(serializers.ModelSerializer):
+    user = serializers.HiddenField(default=serializers.CurrentUserDefault())
+
+    class Meta:
+        model = BarVote
+        fields = ['id', 'bar', 'user', 'crowd_size', 'wait_time', 'timestamp']
+        read_only_fields = ['timestamp']
+
+    def validate(self, data):
+        if data['bar'] is None:
+            raise serializers.ValidationError("A bar must be specified.")
+        return data
