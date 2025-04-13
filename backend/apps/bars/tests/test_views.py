@@ -11,7 +11,8 @@ from django.contrib.auth import get_user_model
 from django.urls import reverse
 from django.utils import timezone
 from django.contrib.gis.geos import Point
-from apps.bars.models import Bar, BarStatus
+from apps.bars.models import Bar, BarStatus, BarVote
+
 
 User = get_user_model()
 
@@ -166,3 +167,39 @@ class BarStatusViewSetTestCase(APITestCase):
         response = self.client.delete(self.detail_url)
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(BarStatus.objects.filter(id=self.bar_status.id).exists())
+
+class AggregatedVoteViewTest(APITestCase):
+    def setUp(self):
+        # Create users with different weights
+        self.user1 = User.objects.create_user(username="user1", password="test123", account_type='regular')  # vote_weight = 1
+        self.user2 = User.objects.create_user(username="user2", password="test123", account_type='trusted')  # vote_weight = 2
+        self.user3 = User.objects.create_user(username="user3", password="test123", account_type='moderator')  # vote_weight = 3
+
+        self.bar = Bar.objects.create(
+            name="The Spot",
+            address="123 Chill Ave",
+            average_price="$",
+            location=Point(-117.0, 32.0, srid=4326)
+        )
+
+        # Add votes
+        BarVote.objects.create(bar=self.bar, user=self.user1, crowd_size='moderate', wait_time='10-20 min')
+        BarVote.objects.create(bar=self.bar, user=self.user2, crowd_size='moderate', wait_time='5-10 min')
+        BarVote.objects.create(bar=self.bar, user=self.user3, crowd_size='crowded', wait_time='10-20 min')
+
+        self.client.force_authenticate(user=self.user1)
+
+    def test_aggregated_vote_results(self):
+        url = reverse('bars-aggregated-vote', kwargs={'pk': self.bar.id})
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # The weighted votes should make:
+        # - 'crowded' (3 points) win over 'moderate' (1 + 2 = 3) because it's a tie and max() returns first
+        # - '10-20 min' (1 + 3 = 4) beat '5-10 min' (2)
+
+        self.assertIn('crowd_size', response.data)
+        self.assertIn('wait_time', response.data)
+        self.assertEqual(response.data['crowd_size'], 'crowded')
+        self.assertEqual(response.data['wait_time'], '10-20 min')

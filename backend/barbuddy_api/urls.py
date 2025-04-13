@@ -9,6 +9,9 @@ from apps.matches.views import MatchViewSet
 from apps.messaging.views import MessageViewSet, GroupChatViewSet
 from apps.swipes.views import SwipeViewSet
 from django.shortcuts import redirect
+# from .views import BarVoteViewSet
+from apps.bars.views import BarVoteViewSet
+
 
 
 from .views import FirebaseAuthTestView
@@ -21,6 +24,8 @@ router = DefaultRouter()
 # Endpoints names, these must match viewset names
 router.register(r'bars', BarViewSet, basename="bars")
 router.register(r'bar-status', BarStatusViewSet, basename="bar-status")
+router.register(r'bar-votes', BarVoteViewSet, basename='barvote')  # 👈 THIS
+
 router.register(r'events', EventViewSet, basename="events")
 
 # MUST DO: MATCHES
