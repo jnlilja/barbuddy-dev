@@ -77,7 +77,9 @@ struct PhotoUploadView: View {
                 Spacer()
                 
                 Button(action: {
-                    isLoading = true
+                    withAnimation {
+                        isLoading = true
+                    }
                     Task {
                         try await authViewModel.createUser(data: signUpViewModel)
                     }
@@ -93,12 +95,14 @@ struct PhotoUploadView: View {
                 .opacity(selectedImages.count < minPhotos ? 0.6 : 1)
                 .padding(.bottom, 50)
             }
+            if isLoading {
+                LoadingScreenView()
+                    .navigationBarBackButtonHidden()
+                    .transition(.blurReplace)
+            }
         }
         .sheet(isPresented: $showingImagePicker) {
             ImagePicker(selectedImages: $selectedImages, maxPhotos: maxPhotos)
-        }
-        .fullScreenCover(isPresented: $isLoading) {
-            LoadingScreenView()
         }
     }
 }

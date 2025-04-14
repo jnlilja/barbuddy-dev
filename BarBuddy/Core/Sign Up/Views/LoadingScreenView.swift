@@ -13,7 +13,7 @@ struct LoadingScreenView: View {
             Color(.darkBlue)
                 .ignoresSafeArea()
             Text("Welcome!")
-                .font(.system(size: 32, weight: .bold, design: .default))
+                .font(.system(size: 64, weight: .bold, design: .rounded))
                 .foregroundColor(.salmon)
         }
     }
