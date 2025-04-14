@@ -28,7 +28,7 @@ struct VoteCrowdSizeView: View {
                     .bold()
                     .foregroundStyle(.darkBlue)
                 
-                VoteButtonView(text: "🫥 Empty", opacity: 0.06, properties: $buttonProperties,)
+                VoteButtonView(text: "🫥 Empty", opacity: 0.06, properties: $buttonProperties)
                 VoteButtonView(text: "🫤 Low", opacity: 0.1, properties: $buttonProperties)
                 VoteButtonView(text: "🙂 Moderate", opacity: 0.2, properties: $buttonProperties)
                 VoteButtonView(text: "✨ Busy", opacity: 0.3, properties: $buttonProperties)
