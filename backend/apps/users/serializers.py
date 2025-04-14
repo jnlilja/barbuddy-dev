@@ -11,7 +11,7 @@ from apps.matches.serializers import MatchSerializer
 User = get_user_model()
 
 class UserSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True)
+    password = serializers.CharField(write_only=True, required=True)
     location = serializers.SerializerMethodField()
     matches = serializers.SerializerMethodField()
     swipes = serializers.SerializerMethodField()
