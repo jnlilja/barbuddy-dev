@@ -13,4 +13,4 @@ __pycache__/
 *.pyd
 
 
-/backend/firebase
+backend/firebase

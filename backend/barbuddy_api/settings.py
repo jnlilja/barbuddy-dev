@@ -158,6 +158,3 @@ STATIC_URL = "static/"
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
-
-print("DEBUG from env:", env("DEBUG"))
-print("DB_HOST from env:", env("DB_HOST"))
