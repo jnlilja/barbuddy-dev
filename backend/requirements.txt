@@ -59,7 +59,12 @@ requests==2.32.3
 rsa==4.9
 six==1.17.0
 sqlparse==0.5.3
+<<<<<<< HEAD
 typing_extensions==4.13.1
 uritemplate==4.1.1
 urllib3==2.3.0
 Werkzeug==3.1.3
+=======
+Werkzeug==3.1.3
+pusher==3.3.3
+>>>>>>> 840fcea (Updated Pusher messaging, has to be a match to message)

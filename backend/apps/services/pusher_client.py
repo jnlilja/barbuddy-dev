@@ -19,8 +19,6 @@ pusher_client = pusher.Pusher(
 
 )
 
-
-
 def send_message(channel, event, data):
   pusher_client.trigger(channel, event, data)
 

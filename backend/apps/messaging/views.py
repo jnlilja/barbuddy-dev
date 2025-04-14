@@ -6,6 +6,9 @@ from django.http import JsonResponse
 from apps.services.pusher_client import send_message
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from apps.matches.models import Match
+from rest_framework.exceptions import PermissionDenied
+from django.db import models
 
 def send_pusher_message(request):
     data = {'message': 'hello world'}
@@ -15,13 +18,29 @@ def send_pusher_message(request):
 class MessageViewSet(viewsets.ModelViewSet):
     """
     ViewSet for managing direct messages. Users can send, retrieve, and delete messages.
+    Only connected matches can message each other.
     """
     queryset = Message.objects.all()
     serializer_class = MessageSerializer
     permission_classes = [permissions.IsAuthenticated, IsSenderOrReceiver]
 
     def perform_create(self, serializer):
-        message = serializer.save(sender=self.request.user)
+        # Get the receiver from the serializer data
+        receiver = serializer.validated_data.get('receiver')
+        sender = self.request.user
+        
+        # Check if there's an active match between the users
+        if receiver:
+            match = Match.objects.filter(
+                (models.Q(user1=sender) & models.Q(user2=receiver)) |
+                (models.Q(user1=receiver) & models.Q(user2=sender)),
+                status='connected'
+            ).first()
+            
+            if not match:
+                raise PermissionDenied("You can only message users you are connected with.")
+        
+        message = serializer.save(sender=sender)
         
         # Determine the channel name based on whether it's a direct message or group chat
         if message.group_chat:
@@ -51,6 +70,16 @@ class MessageViewSet(viewsets.ModelViewSet):
         other_user_id = request.query_params.get('user_id')
         if not other_user_id:
             return Response({'error': 'user_id is required'}, status=400)
+            
+        # Check if there's an active match between the users
+        match = Match.objects.filter(
+            (models.Q(user1=request.user) & models.Q(user2_id=other_user_id)) |
+            (models.Q(user1_id=other_user_id) & models.Q(user2=request.user)),
+            status='connected'
+        ).first()
+        
+        if not match:
+            raise PermissionDenied("You can only get channel names for users you are connected with.")
             
         user_ids = sorted([request.user.id, int(other_user_id)])
         channel = f'private-chat-{user_ids[0]}-{user_ids[1]}'
