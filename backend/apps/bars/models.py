@@ -3,6 +3,7 @@ from apps.users.models import User
 from django.contrib.gis.db import models as gis
 from django.core.exceptions import ValidationError
 
+
 class Bar(models.Model):
 
     # Edit the music Choices, these are not valid 
@@ -16,7 +17,9 @@ class Bar(models.Model):
     average_price = models.CharField(max_length=50)
     location = gis.PointField(geography=True, srid=4326) # add more if possible
     users_at_bar = models.ManyToManyField(User, related_name='bars_attended', blank=True)
+    
 
+    
     def clean(self):
         super().clean()
         if not self.name or len(self.name.strip()) == 0:
@@ -35,6 +38,11 @@ class Bar(models.Model):
         }
     
 
+    def get_aggregated_vote_status(self):
+        from apps.bars.services.voting import aggregate_bar_votes
+        return aggregate_bar_votes(self.id)
+
+
     def __str__(self):
         return self.name
 
@@ -43,7 +51,6 @@ class Bar(models.Model):
             models.Index(fields=['name']),
             models.Index(fields=['location']),
         ]
-
 
 class BarStatus(models.Model):
     CROWD_CHOICES = [
@@ -108,3 +115,57 @@ class BarRating(models.Model):
 
     def __str__(self):
         return f"{self.user.username}'s rating for {self.bar.name}"
+
+
+
+class BarVote(models.Model):
+    CROWD_CHOICES = [
+        ('empty', 'Empty'),
+        ('low', 'Low'),
+        ('moderate', 'Moderate'),
+        ('busy', 'Busy'),
+        ('crowded', 'Crowded'),
+        ('packed', 'Packed'),
+    ]
+
+    WAIT_TIME_CHOICES = [
+        ('<5 min', 'Less than 5 minutes'),
+        ('5-10 min', '5 to 10 minutes'),
+        ('10-20 min', '10 to 20 minutes'),
+        ('20-30 min', '20 to 30 minutes'),
+        ('>30 min', 'More than 30 minutes'),
+    ]
+
+    bar = models.ForeignKey(Bar, on_delete=models.CASCADE, related_name='votes')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='bar_votes')
+    crowd_size = models.CharField(max_length=50, choices=CROWD_CHOICES)
+    wait_time = models.CharField(max_length=50, choices=WAIT_TIME_CHOICES)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['bar', 'user'], name='unique_vote_per_bar_user')
+        ]
+        indexes = [
+            models.Index(fields=['bar']),
+            models.Index(fields=['user']),
+            models.Index(fields=['timestamp']),
+        ]
+
+    def clean(self):
+        super().clean()
+        crowd_options = dict(self.CROWD_CHOICES).keys()
+        wait_options = dict(self.WAIT_TIME_CHOICES).keys()
+
+        if self.crowd_size not in crowd_options:
+            raise ValidationError({'crowd_size': f"Invalid crowd size. Must be one of: {', '.join(crowd_options)}"})
+
+        if self.wait_time not in wait_options:
+            raise ValidationError({'wait_time': f"Invalid wait time. Must be one of: {', '.join(wait_options)}"})
+
+    def save(self, *args, **kwargs):
+        self.clean()
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.user.username}'s vote for {self.bar.name} - {self.crowd_size}, {self.wait_time}"

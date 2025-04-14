@@ -20,6 +20,8 @@ class Match(models.Model):
     class Meta:
         unique_together = ('user1', 'user2')  # Ensure unique match
         indexes = [models.Index(fields=['user1', 'user2'])]
+        ordering = ['-created_at']
+
 
     def clean(self):
         super().clean()

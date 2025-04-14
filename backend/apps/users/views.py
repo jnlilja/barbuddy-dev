@@ -8,7 +8,6 @@ from .serializers import UserSerializer
 from .permissions import IsOwnerOrReadOnly
 from django.db.models import Q
 
-
 User = get_user_model()
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -21,7 +20,7 @@ class UserViewSet(viewsets.ModelViewSet):
             return User.objects.all()
         return User.objects.filter(id=self.request.user.id)
 
-    # Custom action: Retrieve matches for a user
+    # GET /api/users/{id}/matches/
     @action(detail=True, methods=["get"])
     def matches(self, request, pk=None):
         user = self.get_object()
@@ -30,9 +29,3 @@ class UserViewSet(viewsets.ModelViewSet):
         )
         serializer = MatchSerializer(matches, many=True)
         return Response(serializer.data)
-
-    def get_permissions(self):
-        if self.action in ['retrieve', 'update', 'partial_update', 'destroy']:
-            return [permissions.IsAuthenticated(), IsSelfOrAdmin()]
-        return [permissions.IsAuthenticated()]
-

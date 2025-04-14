@@ -10,6 +10,7 @@ class Event(models.Model):
     event_time = models.DateTimeField()
     event_description = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    #attendance_count = models.PositiveIntegerField(default=0)  # Optional: track headcount only
 
     class Meta:
         app_label = 'events'
@@ -21,7 +22,7 @@ class Event(models.Model):
         if not self.event_name or len(self.event_name.strip()) == 0:
             raise ValidationError({'event_name': 'Event name cannot be empty.'})
 
-        if self.event_time > timezone.now():
+        if self.event_time < timezone.now():
             raise ValidationError("Event time must be in the future.")
 
     def save(self, *args, **kwargs):
@@ -32,17 +33,3 @@ class Event(models.Model):
         return f"{self.event_name} at {self.bar.name}"
 
 
-class EventAttendee(models.Model):
-    # Matter of fact lets remove the attendee list, it's not needed. We dont need to see number of elements
-    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='attendee_list')
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='event_participation')
-
-    class Meta:
-        unique_together = ('event', 'user')
-        app_label = 'events'
-
-    def __str__(self):
-        return f"{self.user} attending {self.event}"
-
-
-Event.attendees = models.ManyToManyField(User, through='EventAttendee', related_name='events_attending', blank=True)

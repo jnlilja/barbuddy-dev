@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     'apps.matches',
     'apps.messaging',
     'apps.swipes',
+    'apps.services',
     'corsheaders',
     'drf_yasg',
     'pusher',
@@ -109,7 +110,8 @@ DATABASES = {
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        #'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'barbuddy_api.authentication.FirebaseAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',

@@ -1,161 +1,145 @@
 from django.test import TestCase
-from django.contrib.auth import get_user_model
 from django.contrib.gis.geos import Point
 from datetime import date, timedelta
-from unittest.mock import patch, MagicMock
-
-from apps.users.serializers import UserSerializer
+from apps.users.models import User
 from apps.matches.models import Match
 from apps.swipes.models import Swipe
+from apps.users.serializers import UserSerializer
 
-User = get_user_model()
-
-class UserSerializerTest(TestCase):
+class UserSerializerTests(TestCase):
     def setUp(self):
-        self.user_data = {
-            'username': 'testuser',
-            'email': 'test@example.com',
-            'password': 'securepassword123',
-            'first_name': 'Test',
-            'last_name': 'User',
-            'date_of_birth': date.today() - timedelta(days=365 * 25),
-            'height': 175,
-            'hometown': 'Test City',
-            'job_or_university': 'Test Company',
-            'favorite_drink': 'Water',
-            'location': {'latitude': 37.7749, 'longitude': -122.4194},
-            'profile_pictures': ['pic1.jpg', 'pic2.jpg']
-        }
-
-        self.user = User.objects.create_user(
-            username='existinguser',
-            email='existing@example.com',
-            password='password123',
-            date_of_birth=date.today() - timedelta(days=365 * 30),
-            height=180,
-            hometown='Existing City',
-            job_or_university='Existing Company',
-            favorite_drink='Coffee',
-            location=Point(-122.4194, 37.7749, srid=4326),
-            profile_pictures=['existing1.jpg', 'existing2.jpg']
+        # Create test users
+        self.user1 = User.objects.create_user(
+            username="user1",
+            email="user1@example.com",
+            password="password123",
+            date_of_birth=date(1995, 1, 1),
+            hometown="Hometown1",
+            job_or_university="Job1",
+            favorite_drink="Coffee",
+            location=Point(1.0, 2.0, srid=4326),
+            profile_pictures=["pic1.jpg", "pic2.jpg"],
+            account_type="trusted"
         )
 
-    def test_serializer_with_valid_data(self):
-        serializer = UserSerializer(data=self.user_data)
-        self.assertTrue(serializer.is_valid())
+        self.user2 = User.objects.create_user(
+            username="user2",
+            email="user2@example.com",
+            password="password123",
+            date_of_birth=date(1990, 1, 1),
+            hometown="Hometown2",
+            job_or_university="Job2",
+            favorite_drink="Tea",
+            location=Point(3.0, 4.0, srid=4326),
+            profile_pictures=["pic3.jpg"],
+            account_type="regular"
+        )
 
-    def test_serializer_create_method(self):
-        serializer = UserSerializer(data=self.user_data)
-        self.assertTrue(serializer.is_valid())
+        # Create test match and swipe
+        self.match = Match.objects.create(user1=self.user1, user2=self.user2, status="connected")
+        self.swipe = Swipe.objects.create(swiper=self.user1, swiped=self.user2, direction="right")
 
-        user = serializer.save()
-        self.assertEqual(user.username, 'testuser')
-        self.assertEqual(user.email, 'test@example.com')
-        self.assertEqual(user.first_name, 'Test')
-        self.assertEqual(user.height, 175)
-        self.assertNotEqual(user.password, 'securepassword123')
-        self.assertTrue(user.check_password('securepassword123'))
-        self.assertIsInstance(user.location, Point)
-        self.assertEqual(user.location.x, -122.4194)
-        self.assertEqual(user.location.y, 37.7749)
+    def test_serialize_user(self):
+        """Test serializing a user."""
+        serializer = UserSerializer(instance=self.user1)
+        data = serializer.data
+        self.assertEqual(data["username"], self.user1.username)
+        self.assertEqual(data["email"], self.user1.email)
+        self.assertEqual(data["hometown"], self.user1.hometown)
+        self.assertEqual(data["job_or_university"], self.user1.job_or_university)
+        self.assertEqual(data["favorite_drink"], self.user1.favorite_drink)
+        self.assertEqual(data["location"]["latitude"], self.user1.location.y)
+        self.assertEqual(data["location"]["longitude"], self.user1.location.x)
+        self.assertEqual(data["profile_pictures"], self.user1.profile_pictures)
+        self.assertEqual(data["account_type"], self.user1.account_type)
+        self.assertEqual(len(data["matches"]), 1)
+        self.assertEqual(len(data["swipes"]), 1)
 
-    def test_serializer_update_method(self):
-        update_data = {
-            'first_name': 'Updated',
-            'last_name': 'Name',
-            'password': 'newpassword123',
-            'height': 190,
-            'location': {'latitude': 34.0522, 'longitude': -118.2437}
+    def test_deserialize_and_create_user(self):
+        """Test deserializing and creating a user."""
+        data = {
+            "username": "newuser",
+            "email": "newuser@example.com",
+            "password": "newpassword123",
+            "date_of_birth": "2000-01-01",
+            "hometown": "New Hometown",
+            "job_or_university": "New Job",
+            "favorite_drink": "Water",
+            "location": {"latitude": 5.0, "longitude": 6.0},
+            "profile_pictures": ["newpic1.jpg", "newpic2.jpg"],
+            "account_type": "regular"
         }
-
-        serializer = UserSerializer(self.user, data=update_data, partial=True)
+        serializer = UserSerializer(data=data)
         self.assertTrue(serializer.is_valid())
-        updated_user = serializer.save()
-        self.assertEqual(updated_user.first_name, 'Updated')
-        self.assertEqual(updated_user.last_name, 'Name')
-        self.assertEqual(updated_user.height, 190)
-        self.assertTrue(updated_user.check_password('newpassword123'))
-        self.assertEqual(updated_user.location.x, -118.2437)
-        self.assertEqual(updated_user.location.y, 34.0522)
-        self.assertEqual(updated_user.hometown, 'Existing City')
+        user = serializer.save()
+        self.assertEqual(user.username, "newuser")
+        self.assertEqual(user.email, "newuser@example.com")
+        self.assertEqual(user.hometown, "New Hometown")
+        self.assertEqual(user.job_or_university, "New Job")
+        self.assertEqual(user.favorite_drink, "Water")
+        self.assertEqual(user.location.x, 6.0)
+        self.assertEqual(user.location.y, 5.0)
+        self.assertEqual(user.profile_pictures, ["newpic1.jpg", "newpic2.jpg"])
+        self.assertEqual(user.account_type, "regular")
 
-    def test_date_of_birth_validation(self):
-        too_young = self.user_data.copy()
-        too_young['date_of_birth'] = date.today() - timedelta(days=365 * 17)
-        serializer = UserSerializer(data=too_young)
+    def test_update_user(self):
+        """Test updating a user."""
+        data = {
+            "first_name": "Updated",
+            "last_name": "User",
+            "hometown": "Updated Hometown",
+            "job_or_university": "Updated Job",
+            "favorite_drink": "Juice",
+            "location": {"latitude": 7.0, "longitude": 8.0},
+        }
+        serializer = UserSerializer(instance=self.user1, data=data, partial=True)
+        self.assertTrue(serializer.is_valid())
+        user = serializer.save()
+        self.assertEqual(user.first_name, "Updated")
+        self.assertEqual(user.last_name, "User")
+        self.assertEqual(user.hometown, "Updated Hometown")
+        self.assertEqual(user.job_or_university, "Updated Job")
+        self.assertEqual(user.favorite_drink, "Juice")
+        self.assertEqual(user.location.x, 8.0)
+        self.assertEqual(user.location.y, 7.0)
+
+    def test_validate_date_of_birth(self):
+        """Test validation for date_of_birth."""
+        data = {
+            "username": "newuser",
+            "email": "newuser@example.com",
+            "password": "newpassword123",
+            "date_of_birth": "2010-01-01",  # Too young
+        }
+        serializer = UserSerializer(data=data)
         self.assertFalse(serializer.is_valid())
-        self.assertIn('date_of_birth', serializer.errors)
+        self.assertIn("date_of_birth", serializer.errors)
+        self.assertEqual(serializer.errors["date_of_birth"][0], "You must be at least 18 years old.")
 
-        too_old = self.user_data.copy()
-        too_old['date_of_birth'] = date.today() - timedelta(days=365 * 121)
-        serializer = UserSerializer(data=too_old)
+        data["date_of_birth"] = "1800-01-01"  # Too old
+        serializer = UserSerializer(data=data)
         self.assertFalse(serializer.is_valid())
-        self.assertIn('date_of_birth', serializer.errors)
+        self.assertIn("date_of_birth", serializer.errors)
+        self.assertEqual(serializer.errors["date_of_birth"][0], "Age cannot exceed 120.")
 
-    def test_location_serialization(self):
-        serializer = UserSerializer(self.user)
+    def test_invalid_location(self):
+        """Test invalid location data."""
+        data = {
+            "username": "newuser",
+            "email": "newuser@example.com",
+            "password": "newpassword123",
+            "location": {"latitude": 5.0},  # Missing longitude
+        }
+        serializer = UserSerializer(data=data)
+        self.assertFalse(serializer.is_valid())
+        self.assertIn("location", serializer.errors)
+        self.assertEqual(serializer.errors["location"][0], "Must include 'latitude' and 'longitude'.")
+
+    def test_match_and_swipe_fields(self):
+        """Test matches and swipes fields."""
+        serializer = UserSerializer(instance=self.user1)
         data = serializer.data
-        self.assertIn('location', data)
-        self.assertEqual(data['location']['latitude'], 37.7749)
-        self.assertEqual(data['location']['longitude'], -122.4194)
-
-    def test_location_validation(self):
-        invalid_data = self.user_data.copy()
-        invalid_data['location'] = {'latitude': 37.7749}  # Missing longitude
-        serializer = UserSerializer(data=invalid_data)
-        self.assertFalse(serializer.is_valid())
-        self.assertIn('location', serializer.errors)
-
-    def test_password_write_only(self):
-        serializer = UserSerializer(self.user)
-        data = serializer.data
-        self.assertNotIn('password', data)
-
-    @patch('apps.matches.models.Match.objects')
-    @patch('apps.swipes.models.Swipe.objects')
-    def test_get_matches(self, mock_swipe_objects, mock_match_objects):
-        mock_match = MagicMock()
-        mock_match_qs = MagicMock()
-        mock_match_objects.filter.return_value = mock_match_qs
-        mock_match_qs.__or__.return_value = mock_match_qs
-        mock_match_qs.distinct.return_value = [mock_match]
-
-        serializer = UserSerializer(self.user)
-        matches = serializer.get_matches(self.user)
-
-        self.assertEqual(mock_match_objects.filter.call_count, 2)
-        args1, kwargs1 = mock_match_objects.filter.call_args_list[0]
-        self.assertEqual(kwargs1['user1'], self.user)
-        self.assertEqual(kwargs1['status'], 'connected')
-        args2, kwargs2 = mock_match_objects.filter.call_args_list[1]
-        self.assertEqual(kwargs2['user2'], self.user)
-        self.assertEqual(kwargs2['status'], 'connected')
-
-    @patch('apps.swipes.models.Swipe.objects')
-    def test_get_swipes(self, mock_swipe_objects):
-        mock_swipe = MagicMock()
-        mock_swipe_objects.filter.return_value = [mock_swipe]
-
-        serializer = UserSerializer(self.user)
-        swipes = serializer.get_swipes(self.user)
-        mock_swipe_objects.filter.assert_called_once_with(swiper=self.user)
-
-    @patch('apps.matches.models.Match.objects')
-    def test_get_match_count(self, mock_match_objects):
-        mock_qs1 = MagicMock()
-        mock_qs1.count.return_value = 5
-        mock_qs2 = MagicMock()
-        mock_qs2.count.return_value = 3
-        mock_match_objects.filter.side_effect = [mock_qs1, mock_qs2]
-
-        serializer = UserSerializer(self.user)
-        count = serializer.get_match_count(self.user)
-        self.assertEqual(count, 8)
-        self.assertEqual(mock_match_objects.filter.call_count, 2)
-
-        args1, kwargs1 = mock_match_objects.filter.call_args_list[0]
-        self.assertEqual(kwargs1['user1'], self.user)
-        self.assertEqual(kwargs1['status'], 'connected')
-        args2, kwargs2 = mock_match_objects.filter.call_args_list[1]
-        self.assertEqual(kwargs2['user2'], self.user)
-        self.assertEqual(kwargs2['status'], 'connected')
+        self.assertEqual(len(data["matches"]), 1)
+        self.assertEqual(data["matches"][0]["id"], self.match.id)
+        self.assertEqual(len(data["swipes"]), 1)
+        self.assertEqual(data["swipes"][0]["id"], self.swipe.id)

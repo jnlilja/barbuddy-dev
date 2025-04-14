@@ -1,26 +1,45 @@
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path, include, re_path
 from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from apps.users.views import UserViewSet
-from apps.bars.views import BarViewSet, BarStatusViewSet
+from apps.bars.views import BarViewSet, BarStatusViewSet, BarRatingViewSet
 from apps.events.views import EventViewSet
 from apps.matches.views import MatchViewSet
 from apps.messaging.views import MessageViewSet, GroupChatViewSet
 from apps.swipes.views import SwipeViewSet
+from django.shortcuts import redirect
+# from .views import BarVoteViewSet
+from apps.bars.views import BarVoteViewSet
 
+
+
+from .views import FirebaseAuthTestView
 # Initialize the router
 router = DefaultRouter()
 
 # Register endpoints using the actual ViewSet classes
-router.register(r'users', UserViewSet, basename="users")
+
+### Router registration
+# Endpoints names, these must match viewset names
 router.register(r'bars', BarViewSet, basename="bars")
 router.register(r'bar-status', BarStatusViewSet, basename="bar-status")
+router.register(r'bar-votes', BarVoteViewSet, basename='barvote')  # 👈 THIS
+
 router.register(r'events', EventViewSet, basename="events")
+
+# MUST DO: MATCHES
 router.register(r'matches', MatchViewSet, basename="matches")
+
+#MUST DO: MESSAGING
 router.register(r'messages', MessageViewSet, basename="messages")
-router.register(r'group-chats', GroupChatViewSet, basename="group-chats")
+
+# MUST DO: SWIPES
 router.register(r'swipes', SwipeViewSet, basename='swipe')
+
+# MUST DO: Users
+router.register(r'users', UserViewSet, basename="users")
+
 
 
 from django.urls import path, re_path
@@ -46,20 +65,30 @@ schema_view = get_schema_view(
 
 
 urlpatterns = [
+    # Admin panel
+    path("admin/", admin.site.urls),
+    path('api/', include(router.urls)),
 
-    #Documentation API Endpoints
-    # Swagger API
+    # Firebase url
+    path('api/test-auth/', FirebaseAuthTestView.as_view(), name='firebase-test'),
+
+
+
+    # Include the URLs for the apps
+
+    ##
+
+
+    #pusher
+    path('trigger/', send_pusher_message, name='trigger-message'),
+
+    # Swagger / Redoc Docs
     re_path(r'^swagger(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0), name='schema-json'),
-    # Swagger UI
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
-    # ReDoc UI
     path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
 
-    path("admin/", admin.site.urls),
-    path('api/', include(router.urls)),  # Make sure this is included
-    path('api/auth/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
-    path('api/auth/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 
-    # Pusher Messaging API
-    path('trigger/', send_pusher_message, name='trigger-message'),
+    # Root path handler 
+    path('', lambda request: redirect('schema-swagger-ui', permanent=False)),
 ]
+

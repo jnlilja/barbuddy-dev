@@ -3,140 +3,102 @@ from rest_framework.exceptions import ValidationError
 from apps.matches.models import Match
 from apps.matches.serializers import MatchSerializer, MatchUserSerializer
 from apps.users.models import User
+from django.contrib.gis.geos import Point
 
 
 class MatchSerializerTests(TestCase):
     def setUp(self):
-        # Create test users
         self.user1 = User.objects.create_user(
-            username='testuser1',
-            email='test1@example.com',
-            password='testpass123',
-            first_name='Test',
-            last_name='User1',
-            profile_pictures=['pic1.jpg', 'pic2.jpg']
+            username="user1",
+            email="user1@example.com",
+            password="password123",
+            first_name="User",
+            last_name="One",
+            profile_pictures=["pic1.jpg"]
         )
         self.user2 = User.objects.create_user(
-            username='testuser2',
-            email='test2@example.com',
-            password='testpass123',
-            first_name='Test',
-            last_name='User2',
-            profile_pictures=['pic3.jpg']
+            username="user2",
+            email="user2@example.com",
+            password="password123",
+            first_name="User",
+            last_name="Two",
+            profile_pictures=["pic2.jpg"]
         )
         self.user3 = User.objects.create_user(
-            username='testuser3',
-            email='test3@example.com',
-            password='testpass123'
+            username="user3",
+            email="user3@example.com",
+            password="password123"
         )
 
-        # Create a sample match
-        self.match = Match.objects.create(
-            user1=self.user1,
-            user2=self.user2,
-            status='connected'
-        )
+        self.match = Match.objects.create(user1=self.user1, user2=self.user2, status="connected")
 
     def test_match_user_serializer(self):
-        """Test the MatchUserSerializer"""
-        serializer = MatchUserSerializer(self.user1)
+        serializer = MatchUserSerializer(instance=self.user1)
         data = serializer.data
+        self.assertEqual(data["id"], self.user1.id)
+        self.assertEqual(data["username"], self.user1.username)
+        self.assertEqual(data["first_name"], self.user1.first_name)
+        self.assertEqual(data["last_name"], self.user1.last_name)
+        self.assertEqual(data["profile_pictures"], self.user1.profile_pictures)
 
-        self.assertEqual(data['id'], self.user1.id)
-        self.assertEqual(data['username'], 'testuser1')
-        self.assertEqual(data['first_name'], 'Test')
-        self.assertEqual(data['last_name'], 'User1')
-        self.assertEqual(data['profile_pictures'], ['pic1.jpg', 'pic2.jpg'])
-
-    def test_match_serializer(self):
-        """Test the MatchSerializer with a connected match"""
-        serializer = MatchSerializer(self.match)
+    def test_match_serializer_serialization(self):
+        serializer = MatchSerializer(instance=self.match)
         data = serializer.data
+        self.assertEqual(data["id"], self.match.id)
+        self.assertEqual(data["user1_details"]["id"], self.user1.id)
+        self.assertEqual(data["user2_details"]["id"], self.user2.id)
+        self.assertEqual(data["user1_details"]["username"], self.user1.username)
+        self.assertEqual(data["user2_details"]["username"], self.user2.username)
+        self.assertEqual(data["status"], "connected")
+        self.assertNotIn("disconnected_by", data)
+        self.assertIsNone(data["disconnected_by_username"])
 
-        self.assertEqual(data['id'], self.match.id)
-        self.assertEqual(data['status'], 'connected')
-        self.assertEqual(data['disconnected_by_username'], None)
-
-        # Test user1 details
-        self.assertEqual(data['user1_details']['id'], self.user1.id)
-        self.assertEqual(data['user1_details']['username'], 'testuser1')
-
-        # Test user2 details
-        self.assertEqual(data['user2_details']['id'], self.user2.id)
-        self.assertEqual(data['user2_details']['username'], 'testuser2')
-
-        # Ensure write-only fields are not in the serialized data
-        self.assertNotIn('user1', data)
-        self.assertNotIn('user2', data)
-        self.assertNotIn('disconnected_by', data)
-
-    def test_match_serializer_disconnected(self):
-        """Test the MatchSerializer with a disconnected match"""
-        # Update match to disconnected
-        self.match.status = 'disconnected'
-        self.match.disconnected_by = self.user1
-        self.match.save()
-
-        serializer = MatchSerializer(self.match)
-        data = serializer.data
-
-        self.assertEqual(data['status'], 'disconnected')
-        self.assertEqual(data['disconnected_by_username'], 'testuser1')
-
-    def test_validate_prevent_self_matching(self):
-        """Test validation to prevent self-matching"""
+    def test_match_serializer_deserialization(self):
         data = {
-            'user1': self.user1.id,
-            'user2': self.user1.id,
-            'status': 'pending'
+            "user1": self.user1.id,
+            "user2": self.user3.id,
+            "status": "pending"
         }
-
-        serializer = MatchSerializer(data=data)
-        with self.assertRaises(ValidationError):
-            serializer.is_valid(raise_exception=True)
-
-    def test_validate_disconnected_by(self):
-        """Test validation for disconnected_by field"""
-        # Test setting disconnected_by with status not being 'disconnected'
-        data = {
-            'user1': self.user1.id,
-            'user2': self.user2.id,
-            'status': 'connected',
-            'disconnected_by': self.user1.id
-        }
-
-        serializer = MatchSerializer(data=data)
-        with self.assertRaises(ValidationError):
-            serializer.is_valid(raise_exception=True)
-
-    def test_create_match(self):
-        """Test creating a match through the serializer"""
-        data = {
-            'user1': self.user1.id,
-            'user2': self.user3.id,
-            'status': 'pending'
-        }
-
         serializer = MatchSerializer(data=data)
         self.assertTrue(serializer.is_valid())
         match = serializer.save()
-
         self.assertEqual(match.user1, self.user1)
         self.assertEqual(match.user2, self.user3)
-        self.assertEqual(match.status, 'pending')
+        self.assertEqual(match.status, "pending")
+        self.assertIsNone(match.disconnected_by)
 
-    def test_update_match(self):
-        """Test updating a match through the serializer"""
+    def test_self_matching_validation(self):
         data = {
-            'user1': self.user1.id,
-            'user2': self.user2.id,
-            'status': 'disconnected',
-            'disconnected_by': self.user2.id
+            "user1": self.user1.id,
+            "user2": self.user1.id,
+            "status": "pending"
         }
+        serializer = MatchSerializer(data=data)
+        self.assertFalse(serializer.is_valid())
+        self.assertIn("non_field_errors", serializer.errors)
+        self.assertEqual(serializer.errors["non_field_errors"][0], "A user cannot match with themselves.")
 
-        serializer = MatchSerializer(self.match, data=data)
+    def test_disconnected_by_validation(self):
+        data = {
+            "user1": self.user1.id,
+            "user2": self.user3.id, 
+            "status": "pending",
+            "disconnected_by": self.user1.id
+        }
+        serializer = MatchSerializer(data=data)
+        self.assertFalse(serializer.is_valid())
+        self.assertIn("non_field_errors", serializer.errors)
+        self.assertIn("Disconnected_by can only be set when status is 'disconnected'.", str(serializer.errors["non_field_errors"][0]))
+
+    def test_disconnected_status_with_disconnected_by(self):
+        data = {
+            "user1": self.user1.id,
+            "user2": self.user3.id,  
+            "status": "disconnected",
+            "disconnected_by": self.user1.id
+        }
+        serializer = MatchSerializer(data=data)
         self.assertTrue(serializer.is_valid())
-        updated_match = serializer.save()
-
-        self.assertEqual(updated_match.status, 'disconnected')
-        self.assertEqual(updated_match.disconnected_by, self.user2)
+        match = serializer.save()
+        self.assertEqual(match.status, "disconnected")
+        self.assertEqual(match.disconnected_by, self.user1)

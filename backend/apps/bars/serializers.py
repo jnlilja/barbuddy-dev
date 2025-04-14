@@ -3,7 +3,7 @@ from .models import Bar, BarStatus
 from django.contrib.gis.geos import Point
 from django.db.models import Avg
 from django.contrib.auth import get_user_model
-from .models import BarRating
+from .models import BarRating, BarVote
 
 
 User = get_user_model()
@@ -75,14 +75,33 @@ class BarSerializer(serializers.ModelSerializer):
 
 
 class BarStatusSerializer(serializers.ModelSerializer):
-    bar = serializers.PrimaryKeyRelatedField(queryset=Bar.objects.all())
+    # bar = serializers.PrimaryKeyRelatedField(queryset=Bar.objects.all())
 
     class Meta:
         model = BarStatus
-        fields = "__all__"
+        fields = ['id', 'bar', 'crowd_size', 'wait_time', 'last_updated'] 
 
 #added a serializer for BarRating
 class BarRatingSerializer(serializers.ModelSerializer):
     class Meta:
         model = BarRating
         fields = ['id', 'bar', 'user', 'rating', 'review', 'timestamp']
+        read_only_fields = ['user']
+
+    def create(self, validated_data):
+        validated_data['user'] = self.context['request'].user
+        return super().create(validated_data)
+
+
+class BarVoteSerializer(serializers.ModelSerializer):
+    user = serializers.HiddenField(default=serializers.CurrentUserDefault())
+
+    class Meta:
+        model = BarVote
+        fields = ['id', 'bar', 'user', 'crowd_size', 'wait_time', 'timestamp']
+        read_only_fields = ['timestamp']
+
+    def validate(self, data):
+        if data['bar'] is None:
+            raise serializers.ValidationError("A bar must be specified.")
+        return data
