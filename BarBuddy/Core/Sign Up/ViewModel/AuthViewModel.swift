@@ -64,6 +64,8 @@ final class AuthViewModel: ObservableObject {
         do {
             let result = try await Auth.auth().createUser(withEmail: data.email, password: data.password)
             self.authUser = result.user
+            let user = User(id: "123", name: data.name, age: data.age, height: data.height, hometown: data.hometown, school: data.school, favoriteDrink: data.favoriteDrink, preference: data.preference, smoke: data.smoke, bio: "Hello", imageNames: [])
+            self.currentUser = user
             print("User created successfully")
             print(data)
         }catch{

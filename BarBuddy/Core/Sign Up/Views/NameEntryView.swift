@@ -41,7 +41,7 @@ struct NameEntryView: View {
                     Button(action: {
                         viewModel.name = "\(firstName) \(lastName)"
                         proceedToLocation = true
-                        path.append(NavigationDestinations.location)
+                        path.append(SignUpNavigation.location)
                         
                     }) {
                         Text("Continue")

@@ -53,7 +53,7 @@ struct HometownView: View {
                     Button(action: {
                         proceedToNextPage = true
                         viewModel.height = hometown
-                        path.append(NavigationDestinations.school)
+                        path.append(SignUpNavigation.school)
                     }) {
                         Text("Continue")
                             .font(.headline)

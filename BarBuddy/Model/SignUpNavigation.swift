@@ -8,7 +8,9 @@
 import Foundation
 
 // Data type representing all NavigationStack paths
-enum NavigationDestinations {
+enum SignUpNavigation {
+    case createAccount
+    case ageVerification
     case nameEntry
     case location
     case gender

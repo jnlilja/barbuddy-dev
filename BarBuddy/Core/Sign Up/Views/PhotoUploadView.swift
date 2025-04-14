@@ -14,11 +14,14 @@ struct PhotoUploadView: View {
     @State private var showingImagePicker = false
     @State private var proceedToHome = false
     @Environment(SignUpViewModel.self) var signUpViewModel
+    @State private var isLoading: Bool = false
     
     let minPhotos = 4
     let maxPhotos = 6
     
     var body: some View {
+        @Bindable var signUpViewModel = signUpViewModel
+        
         ZStack {
             Color("DarkBlue")
                 .ignoresSafeArea()
@@ -74,7 +77,7 @@ struct PhotoUploadView: View {
                 Spacer()
                 
                 Button(action: {
-                    //proceedToHome = true
+                    isLoading = true
                     Task {
                         try await authViewModel.createUser(data: signUpViewModel)
                     }
@@ -94,8 +97,8 @@ struct PhotoUploadView: View {
         .sheet(isPresented: $showingImagePicker) {
             ImagePicker(selectedImages: $selectedImages, maxPhotos: maxPhotos)
         }
-        .fullScreenCover(isPresented: $proceedToHome) {
-            HomeView()
+        .fullScreenCover(isPresented: $isLoading) {
+            LoadingScreenView()
         }
     }
 }
@@ -103,4 +106,5 @@ struct PhotoUploadView: View {
 #Preview("Photo Upload") {
     PhotoUploadView()
         .environment(SignUpViewModel())
+        .environmentObject(AuthViewModel())
 }

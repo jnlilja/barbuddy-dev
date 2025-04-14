@@ -7,10 +7,11 @@
 
 import Foundation
 
-final class AgeVerificationViewModel: ObservableObject {
-    @Published var dateOfBirth = Date()
-    @Published var showingAgeAlert = false
-    @Published var proceedToName = false
+@Observable
+final class AgeVerificationViewModel {
+    var dateOfBirth = Date()
+    var showingAgeAlert = false
+    var proceedToName = false
     
     func verifyAge() -> Int {
         let calendar = Calendar.current

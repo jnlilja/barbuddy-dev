@@ -40,10 +40,6 @@ struct EventCard: View {
     }
 }
 
-struct EventCard_Previews: PreviewProvider {
-    static var previews: some View {
-        EventCard()
-            .previewLayout(.sizeThatFits)
-            .padding()
-    }
+#Preview(traits: .sizeThatFitsLayout) {
+    EventCard()
 }

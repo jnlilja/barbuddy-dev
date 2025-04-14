@@ -74,7 +74,7 @@ struct SchoolView: View {
                     
                     Button(action: {
                         proceedToNextPage = true
-                        path.append(NavigationDestinations.drink)
+                        path.append(SignUpNavigation.drink)
                     }) {
                         Text("Continue")
                             .font(.headline)

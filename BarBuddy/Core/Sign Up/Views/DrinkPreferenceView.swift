@@ -10,9 +10,9 @@ import SwiftUI
 
 struct DrinkPreferenceView: View {
     @State private var favoriteDrink = ""
-    @State private var doesntDrink = false
     @State private var proceedToNextPage = false
     @Binding var path: NavigationPath
+    @Environment(SignUpViewModel.self) var viewModel
     
     var body: some View {
         
@@ -38,21 +38,21 @@ struct DrinkPreferenceView: View {
                         .bold()
                         .multilineTextAlignment(.center)
                     
-                    if !doesntDrink {
+                    if !viewModel.doesntDrink {
                         TextField("Enter your favorite drink", text: $favoriteDrink)
                             .textFieldStyle(CustomTextFieldStyle())
                     }
                     
                     Button(action: {
-                        doesntDrink.toggle()
-                        if doesntDrink {
+                        viewModel.doesntDrink.toggle()
+                        if viewModel.doesntDrink {
                             favoriteDrink = "I don't drink"
                         } else {
                             favoriteDrink = ""
                         }
                     }) {
                         HStack {
-                            Image(systemName: doesntDrink ? "checkmark.square.fill" : "square")
+                            Image(systemName: viewModel.doesntDrink ? "checkmark.square.fill" : "square")
                                 .foregroundColor(Color("Salmon"))
                                 .font(.system(size: 20))
                             
@@ -63,8 +63,9 @@ struct DrinkPreferenceView: View {
                     .padding(.horizontal)
                     
                     Button(action: {
+                        viewModel.favoriteDrink = favoriteDrink
                         proceedToNextPage = true
-                        path.append(NavigationDestinations.smoking)
+                        path.append(SignUpNavigation.smoking)
                     }) {
                         Text("Continue")
                             .font(.headline)
@@ -80,7 +81,7 @@ struct DrinkPreferenceView: View {
                 Spacer()
             }
             .padding()
-            .animation(.easeInOut, value: doesntDrink)
+            .animation(.easeInOut, value: viewModel.doesntDrink)
         }
     }
 }
@@ -88,4 +89,5 @@ struct DrinkPreferenceView: View {
 
 #Preview("Drinks") {
     DrinkPreferenceView(path: .constant(NavigationPath()))
+        .environment(SignUpViewModel())
 }

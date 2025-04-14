@@ -115,7 +115,7 @@ struct MainFeedView: View {
                     }) {
                         VStack {
                             // Navigation to Deals and Events using a NavigationLink
-                            NavigationLink(destination: DealsAndEvents()) {
+                            NavigationLink(destination: DealsAndEventsView()) {
                                 EventCard()
                                     .padding([.horizontal, .bottom])
                             }

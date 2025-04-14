@@ -5,7 +5,6 @@
 //  Created by Andrew Betancourt on 2/25/25.
 //
 
-
 import SwiftUI
 
 struct SmokingPreferenceView: View {
@@ -14,64 +13,74 @@ struct SmokingPreferenceView: View {
     @State private var vapes = false
     @State private var proceedToNextPage = false
     @Binding var path: NavigationPath
-    
+    @Environment(SignUpViewModel.self) var viewModel: SignUpViewModel
+
     var body: some View {
-        
+
         ZStack {
             Color("DarkBlue")
                 .ignoresSafeArea()
-            
+
             VStack {
                 Spacer()
-                
+
                 ProgressDots(currentPage: 6, totalPages: 7)
-                
+
                 VStack(spacing: 25) {
                     Text("Do you smoke?")
                         .font(.largeTitle)
                         .foregroundColor(.white)
                         .bold()
                         .multilineTextAlignment(.center)
-                    
+
                     VStack(spacing: 20) {
                         Button(action: {
                             smokesWeed.toggle()
                         }) {
                             HStack(spacing: 15) {
-                                Image(systemName: smokesWeed ? "checkmark.square.fill" : "square")
-                                    .foregroundColor(Color("Salmon"))
-                                    .font(.system(size: 20))
-                                
+                                Image(
+                                    systemName: smokesWeed
+                                        ? "checkmark.square.fill" : "square"
+                                )
+                                .foregroundColor(Color("Salmon"))
+                                .font(.system(size: 20))
+
                                 Text("Cannabis 🍃")
                                     .foregroundColor(.white)
                                     .font(.title3)
                             }
                         }
                         .frame(width: 200)
-                        
+
                         Button(action: {
                             smokesTobacco.toggle()
                         }) {
                             HStack(spacing: 15) {
-                                Image(systemName: smokesTobacco ? "checkmark.square.fill" : "square")
-                                    .foregroundColor(Color("Salmon"))
-                                    .font(.system(size: 20))
-                                
+                                Image(
+                                    systemName: smokesTobacco
+                                        ? "checkmark.square.fill" : "square"
+                                )
+                                .foregroundColor(Color("Salmon"))
+                                .font(.system(size: 20))
+
                                 Text("Cigarettes 🚬")
                                     .foregroundColor(.white)
                                     .font(.title3)
                             }
                         }
                         .frame(width: 200)
-                        
+
                         Button(action: {
                             vapes.toggle()
                         }) {
                             HStack(spacing: 15) {
-                                Image(systemName: vapes ? "checkmark.square.fill" : "square")
-                                    .foregroundColor(Color("Salmon"))
-                                    .font(.system(size: 20))
-                                
+                                Image(
+                                    systemName: vapes
+                                        ? "checkmark.square.fill" : "square"
+                                )
+                                .foregroundColor(Color("Salmon"))
+                                .font(.system(size: 20))
+
                                 Text("Vape 💨")
                                     .foregroundColor(.white)
                                     .font(.title3)
@@ -80,10 +89,20 @@ struct SmokingPreferenceView: View {
                         .frame(width: 200)
                     }
                     .padding(.vertical, 30)
-                    
+
                     Button(action: {
                         proceedToNextPage = true
-                        path.append(NavigationDestinations.photoPrompt)
+                        path.append(SignUpNavigation.photoPrompt)
+
+                        if smokesWeed {
+                            viewModel.smoke.append(.weed)
+                        }
+                        if smokesTobacco {
+                            viewModel.smoke.append(.tobacco)
+                        }
+                        if vapes {
+                            viewModel.smoke.append(.vape)
+                        }
                     }) {
                         Text("Continue")
                             .font(.headline)
@@ -93,7 +112,7 @@ struct SmokingPreferenceView: View {
                             .cornerRadius(10)
                     }
                 }
-                
+
                 Spacer()
             }
             .padding()
@@ -101,7 +120,7 @@ struct SmokingPreferenceView: View {
     }
 }
 
-
 #Preview("Smoking") {
     SmokingPreferenceView(path: .constant(NavigationPath()))
+        .environment(SignUpViewModel())
 }

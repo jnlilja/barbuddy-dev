@@ -12,7 +12,7 @@ import Foundation
 class SignUpViewModel: CustomStringConvertible {
     var email: String = ""
     var password: String = ""
-    var newUsername: String = ""
+    var username: String = ""
     var confirmPassword: String = ""
     var isValidEmail: Bool = true
     var isValidPassword: Bool = true
@@ -24,7 +24,9 @@ class SignUpViewModel: CustomStringConvertible {
     var hometown: String = ""
     var school: String = ""
     var favoriteDrink: String = ""
+    var doesntDrink: Bool = false
     var preference: String = ""
+    var smoke: [SmokePreference] = []
     var bio: String = ""
     var imageNames: [String] = []
     var gender: String = ""
@@ -32,7 +34,7 @@ class SignUpViewModel: CustomStringConvertible {
     // For testing purposes
     public var description: String {
         return """
-            Data for \(newUsername):
+            Data for \(username):
             
             email: \(email)
             password: \(password)
@@ -60,7 +62,7 @@ class SignUpViewModel: CustomStringConvertible {
         }
         
         // Validate username
-        if newUsername.count < 3 {
+        if username.count < 3 {
             alertMessage = "Username must be at least 3 characters long"
             showingAlert = true
             return

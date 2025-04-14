@@ -14,6 +14,7 @@ struct ProfileView: View {
     @State private var selectedTab = 0
     @State private var selectedImage: String? = nil
     @State private var isImageExpanded = false
+    @EnvironmentObject var viewModel: AuthViewModel
     
     // Compute grid cell width for Photos.
     private var gridCellWidth: CGFloat {
@@ -47,7 +48,7 @@ struct ProfileView: View {
                     
                     // Name and Verification.
                     HStack(spacing: 8) {
-                        Text(primaryUser.name)
+                        Text(viewModel.currentUser?.name ?? "User")
                             .font(.system(size: 32, weight: .bold))
                             .foregroundColor(.white)
                         Image(systemName: "checkmark.seal.fill")
