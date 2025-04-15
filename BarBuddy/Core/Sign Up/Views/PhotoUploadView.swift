@@ -12,8 +12,6 @@ struct PhotoUploadView: View {
     @EnvironmentObject var authViewModel: AuthViewModel
     @State private var selectedImages: [UIImage] = []
     @State private var photoPickerItems: [PhotosPickerItem] = []
-    @State private var showingImagePicker = false
-    @State private var proceedToHome = false
     @Environment(SignUpViewModel.self) var signUpViewModel
     @State private var isLoading: Bool = false
 
