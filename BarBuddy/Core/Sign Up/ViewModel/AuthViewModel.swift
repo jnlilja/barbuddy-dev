@@ -8,6 +8,7 @@
 import Foundation
 import Firebase
 import FirebaseAuth
+import FirebaseFirestore
 
 @MainActor
 final class AuthViewModel: ObservableObject {
@@ -64,8 +65,11 @@ final class AuthViewModel: ObservableObject {
         do {
             let result = try await Auth.auth().createUser(withEmail: data.email, password: data.password)
             self.authUser = result.user
-            let user = User(id: "123", name: data.name, age: data.age, height: data.height, hometown: data.hometown, school: data.school, favoriteDrink: data.favoriteDrink, preference: data.preference, smoke: data.smoke, bio: "Hello", imageNames: [])
+            let user = User(id: UUID().uuidString, name: data.name, age: data.age, height: data.height, hometown: data.hometown, school: data.school, favoriteDrink: data.favoriteDrink, preference: data.preference, smoke: data.smoke, bio: "Hello", imageNames: [])
             self.currentUser = user
+            //let encodedUser = try Firestore.Encoder().encode(user)
+            //try await Firestore.firestore().collection("users").document(user.id).setData(encodedUser)
+            
             print("User created successfully")
             print(data)
         }catch{
