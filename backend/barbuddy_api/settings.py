@@ -18,8 +18,13 @@ import environ, os, sys
 BASE_DIR = Path(__file__).resolve().parent.parent
 sys.path.append(os.path.join(BASE_DIR, 'apps'))
 
+# GDAL configuration for macOS
 GDAL_LIBRARY_PATH = "/opt/homebrew/lib/libgdal.dylib"
+GEOS_LIBRARY_PATH = "/opt/homebrew/lib/libgeos_c.dylib"
+
+# Set environment variables before any GDAL imports
 os.environ["GDAL_LIBRARY_PATH"] = GDAL_LIBRARY_PATH
+os.environ["GEOS_LIBRARY_PATH"] = GEOS_LIBRARY_PATH
 os.environ["DYLD_LIBRARY_PATH"] = "/opt/homebrew/lib:" + os.environ.get("DYLD_LIBRARY_PATH", "")
 
 # SECURITY WARNING: keep the secret key used in production secret!
