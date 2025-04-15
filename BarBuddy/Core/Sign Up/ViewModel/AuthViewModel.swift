@@ -8,6 +8,7 @@
 import Foundation
 import Firebase
 import FirebaseAuth
+import FirebaseFirestore
 
 @MainActor
 final class AuthViewModel: ObservableObject {
@@ -60,7 +61,22 @@ final class AuthViewModel: ObservableObject {
         )
     }
     
+    /// Fetches the authentication confirmation document from Firestore.
+      /// This request is used after the user is signed up and receives a confirmation code.
+      func fetchAuthentication() async {
+          do {
+                      // Instead of using a shared static instance, create a fresh instance of AuthenticationService.
+                      let authService = AuthenticationService()
+                      let authResponse = try await authService.getAuthentication()
+                      print("Authentication confirmation: \(authResponse.message)")
+                      
+                      // Optionally update your UI or internal state based on authResponse.
+                  } catch {
+                      print("Failed to fetch authentication confirmation: \(error.localizedDescription)")
+                  }
+              }
 }
+
 
 // Tells compiler that this type is safe to use in concurent programming
 extension AuthDataResult: @unchecked @retroactive Sendable {}
