@@ -131,32 +131,6 @@ struct DealsAndEventsView: View {
                                 }
                             }
                         }
-                        
-                        // Special Promotions
-                        VStack(alignment: .leading, spacing: 20) {
-                            Text("Special Promotions")
-                                .font(.system(size: 32, weight: .bold))
-                                .foregroundColor(.white)
-                                .padding(.horizontal)
-                                
-                            let filteredPromotions = searchFilter(items: filterItems(items: promotionData))
-                            
-                            if filteredPromotions.isEmpty {
-                                Text("No promotions match your filter")
-                                    .foregroundColor(.white)
-                                    .padding()
-                                    .frame(maxWidth: .infinity)
-                            } else {
-                                ForEach(filteredPromotions) { promo in
-                                    PromotionCard(
-                                        title: promo.title,
-                                        location: promo.location,
-                                        description: promo.description,
-                                        days: promo.daysString
-                                    )
-                                }
-                            }
-                        }
                     }
                     .padding(.vertical)
                 }
@@ -194,71 +168,9 @@ protocol DayFilterable {
 protocol Searchable {
     func matchesSearch(query: String) -> Bool
 }
+    
+    
 
-struct PromotionCard: View {
-    let title: String
-    let location: String
-    let description: String
-    let days: String
-    
-    var body: some View {
-        VStack(alignment: .center, spacing: 8) {
-            Text(title)
-                .font(.system(size: 28, weight: .bold))
-                .foregroundColor(Color("DarkPurple"))
-                .multilineTextAlignment(.center)
-            
-            Text("@ \(location)")
-                .font(.title3)
-                .foregroundColor(Color("DarkPurple"))
-            
-            Text(days)
-                .font(.subheadline)
-                .foregroundColor(.gray)
-            
-            Text(description)
-                .font(.headline)
-                .foregroundColor(.black)
-                .multilineTextAlignment(.center)
-        }
-        .frame(maxWidth: .infinity)
-        .padding()
-        .background(
-            LinearGradient(
-                gradient: Gradient(colors: [Color.white, Color("Salmon").opacity(0.2)]),
-                startPoint: .top,
-                endPoint: .bottom
-            )
-        )
-        .cornerRadius(15)
-        .padding(.horizontal)
-        .shadow(radius: 2)
-    }
-}
-
-struct Promotion: Identifiable, DayFilterable, Searchable {
-    let id = UUID()
-    let title: String
-    let location: String
-    let description: String
-    let days: [DealsAndEventsView.DayFilter]
-    
-    var daysString: String {
-        if days.count == 7 {
-            return "Daily"
-        } else if days.count == 1 {
-            return days[0].rawValue + "s"
-        } else {
-            return days.map { $0.rawValue }.joined(separator: ", ")
-        }
-    }
-    
-    func matchesSearch(query: String) -> Bool {
-        return title.lowercased().contains(query.lowercased()) ||
-               location.lowercased().contains(query.lowercased()) ||
-               description.lowercased().contains(query.lowercased())
-    }
-}
 
 // SAMPLE DATA
 let eventData: [Event] = [
@@ -292,12 +204,6 @@ let dealData: [Deal] = [
     Deal(title: "Thursday Deals", location: "PB Local", description: "50% off wells, bottles, cans", days: [.thursday]),
     Deal(title: "Industry Night", location: "Flamingo Deck", description: "50% off drinks for industry workers", days: [.tuesday]),
     Deal(title: "Punch Bowl Special", location: "Flamingo Deck", description: "$10 off punch bowls", days: [.friday])
-]
-
-let promotionData: [Promotion] = [
-    Promotion(title: "March Madness Deals", location: "Hideaway", description: "Special deals throughout March", days: [.sunday, .monday, .tuesday, .wednesday, .thursday, .friday, .saturday]),
-    Promotion(title: "Wine & Charcuterie Special", location: "Firehouse", description: "½ off bottle wine and charcuterie", days: [.wednesday]),
-    Promotion(title: "Bottomless Sunday", location: "Flamingo Deck", description: "$15 bottomless drinks 10am-2pm", days: [.sunday])
 ]
 
 #Preview("Deals and Events") {
