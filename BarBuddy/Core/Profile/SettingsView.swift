@@ -21,7 +21,9 @@ struct SettingsView: View {
                         .frame(width: 150, height: 50)
                         .foregroundStyle(.salmon)
                     HStack {
-                        Image(systemName: "door.left.hand.open")
+                        // Figure walk right to left
+                        Image(systemName: "figure.walk")
+                            .environment(\.layoutDirection, .rightToLeft)
                         Text("Log Out")
                     }
                     .font(.headline)
@@ -35,4 +37,5 @@ struct SettingsView: View {
 
 #Preview {
     SettingsView()
+        .environmentObject(AuthViewModel())
 }

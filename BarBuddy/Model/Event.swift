@@ -13,7 +13,7 @@ struct Event: Identifiable, DayFilterable, Searchable {
     let title: String
     let location: String
     let timeDescription: String
-    let days: [DealsAndEvents.DayFilter]
+    let days: [DealsAndEventsView.DayFilter]
     
     var daysString: String {
         if days.count == 7 {

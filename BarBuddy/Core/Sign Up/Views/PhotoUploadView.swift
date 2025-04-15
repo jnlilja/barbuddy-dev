@@ -9,14 +9,19 @@
 import SwiftUI
 
 struct PhotoUploadView: View {
+    @EnvironmentObject var authViewModel: AuthViewModel
     @State private var selectedImages: [UIImage] = []
     @State private var showingImagePicker = false
     @State private var proceedToHome = false
+    @Environment(SignUpViewModel.self) var signUpViewModel
+    @State private var isLoading: Bool = false
     
     let minPhotos = 4
     let maxPhotos = 6
     
     var body: some View {
+        @Bindable var signUpViewModel = signUpViewModel
+        
         ZStack {
             Color("DarkBlue")
                 .ignoresSafeArea()
@@ -72,7 +77,12 @@ struct PhotoUploadView: View {
                 Spacer()
                 
                 Button(action: {
-                    proceedToHome = true
+                    withAnimation {
+                        isLoading = true
+                    }
+                    Task {
+                        try await authViewModel.createUser(data: signUpViewModel)
+                    }
                 }) {
                     Text("Let's go!")
                         .font(.headline)
@@ -85,16 +95,20 @@ struct PhotoUploadView: View {
                 .opacity(selectedImages.count < minPhotos ? 0.6 : 1)
                 .padding(.bottom, 50)
             }
+            if isLoading {
+                LoadingScreenView()
+                    .navigationBarBackButtonHidden()
+                    .transition(.blurReplace)
+            }
         }
         .sheet(isPresented: $showingImagePicker) {
             ImagePicker(selectedImages: $selectedImages, maxPhotos: maxPhotos)
-        }
-        .fullScreenCover(isPresented: $proceedToHome) {
-            HomeView()
         }
     }
 }
 
 #Preview("Photo Upload") {
     PhotoUploadView()
+        .environment(SignUpViewModel())
+        .environmentObject(AuthViewModel())
 }

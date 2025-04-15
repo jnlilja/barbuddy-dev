@@ -7,12 +7,13 @@
 
 import Foundation
 
-final class AgeVerificationViewModel: ObservableObject {
-    @Published var dateOfBirth = Date()
-    @Published var showingAgeAlert = false
-    @Published var proceedToName = false
+@Observable
+final class AgeVerificationViewModel {
+    var dateOfBirth = Date()
+    var showingAgeAlert = false
+    var proceedToName = false
     
-    func verifyAge() {
+    func verifyAge() -> Int {
         let calendar = Calendar.current
         let ageComponents = calendar.dateComponents([.year], from: dateOfBirth, to: Date())
         let age = ageComponents.year ?? 0
@@ -22,5 +23,12 @@ final class AgeVerificationViewModel: ObservableObject {
         } else {
             showingAgeAlert = true
         }
+        return age
+    }
+    
+    func dateToString() -> String {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "MM/dd/yyyy"
+        return dateFormatter.string(from: dateOfBirth)
     }
 }

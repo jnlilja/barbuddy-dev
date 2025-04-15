@@ -44,7 +44,7 @@ struct LocationView: View {
                         
                         Button(action: {
                             proceedToProfileSetup = true
-                            path.append(NavigationDestinations.gender)
+                            path.append(SignUpNavigation.gender)
                         }) {
                             Text("Continue")
                                 .font(.headline)

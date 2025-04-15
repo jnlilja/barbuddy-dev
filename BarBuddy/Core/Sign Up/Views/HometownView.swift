@@ -13,6 +13,7 @@ struct HometownView: View {
     @State private var showOnProfile = true
     @State private var proceedToNextPage = false
     @Binding var path: NavigationPath
+    @Environment(SignUpViewModel.self) var viewModel
     
     var body: some View {
         
@@ -51,7 +52,8 @@ struct HometownView: View {
                     
                     Button(action: {
                         proceedToNextPage = true
-                        path.append(NavigationDestinations.school)
+                        viewModel.height = hometown
+                        path.append(SignUpNavigation.school)
                     }) {
                         Text("Continue")
                             .font(.headline)
@@ -74,4 +76,5 @@ struct HometownView: View {
 
 #Preview("Hometown") {
     HometownView(path: .constant(NavigationPath()))
+        .environment(SignUpViewModel())
 }

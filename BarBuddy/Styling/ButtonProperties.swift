@@ -11,5 +11,5 @@ struct ButtonProperties {
     var selectedOption: Bool = false
     var showMenu: Bool = false
     var offset: CGFloat = 0
-    var type: String
+    let type: String
 }

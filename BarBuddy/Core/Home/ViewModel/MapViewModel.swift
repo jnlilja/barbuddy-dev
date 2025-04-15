@@ -10,7 +10,7 @@ import Foundation
 
 @MainActor
 @Observable
-final class MapViewModel: ObservableObject {
+final class MapViewModel {
     var lookAroundScene: MKLookAroundScene?
     var cameraPosition: MapCameraPosition = .userLocation(fallback: .automatic)
     private var pacificBeachCoordinate: CLLocationCoordinate2D = .init(

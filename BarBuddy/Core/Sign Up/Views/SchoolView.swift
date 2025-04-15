@@ -15,6 +15,7 @@ struct SchoolView: View {
     @State private var showOnProfile = true
     @State private var proceedToNextPage = false
     @Binding var path: NavigationPath
+    @Environment(SignUpViewModel.self) var viewModel
     
     var body: some View {
         
@@ -73,7 +74,7 @@ struct SchoolView: View {
                     
                     Button(action: {
                         proceedToNextPage = true
-                        path.append(NavigationDestinations.drink)
+                        path.append(SignUpNavigation.drink)
                     }) {
                         Text("Continue")
                             .font(.headline)
@@ -96,4 +97,5 @@ struct SchoolView: View {
 
 #Preview("School") {
     SchoolView(path: .constant(NavigationPath()))
+        .environment(SignUpViewModel())
 }

@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct DealsAndEvents: View {
+struct DealsAndEventsView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var selectedFilter: DayFilter = .all
     @State private var searchText = ""
@@ -100,7 +100,7 @@ struct DealsAndEvents: View {
                                         title: event.title,
                                         location: event.location,
                                         time: event.timeDescription,
-                                        days: event.daysString
+                                        description: event.daysString
                                     )
                                 }
                             }
@@ -187,82 +187,12 @@ struct DealsAndEvents: View {
 
 // Protocols for filtering
 protocol DayFilterable {
-    var days: [DealsAndEvents.DayFilter] { get }
+    var days: [DealsAndEventsView.DayFilter] { get }
     var daysString: String { get }
 }
 
 protocol Searchable {
     func matchesSearch(query: String) -> Bool
-}
-
-// Card Views
-struct DetailedEventCard: View {
-    let title: String
-    let location: String
-    let time: String
-    let days: String
-    
-    var body: some View {
-        VStack(alignment: .center, spacing: 8) {
-            Text(title)
-                .font(.system(size: 28, weight: .bold))
-                .foregroundColor(Color("DarkPurple"))
-                .multilineTextAlignment(.center)
-            
-            Text("@ \(location)")
-                .font(.title3)
-                .foregroundColor(Color("DarkPurple"))
-            
-            Text(days)
-                .font(.subheadline)
-                .foregroundColor(.gray)
-            
-            Text(time)
-                .font(.headline)
-                .foregroundColor(Color("DarkPurple"))
-        }
-        .frame(maxWidth: .infinity)
-        .padding()
-        .background(Color.white)
-        .cornerRadius(15)
-        .padding(.horizontal)
-        .shadow(radius: 2)
-    }
-}
-
-struct DealCard: View {
-    let title: String
-    let location: String
-    let description: String
-    let days: String
-    
-    var body: some View {
-        VStack(alignment: .center, spacing: 8) {
-            Text(title)
-                .font(.system(size: 28, weight: .bold))
-                .foregroundColor(Color("DarkPurple"))
-                .multilineTextAlignment(.center)
-            
-            Text("@ \(location)")
-                .font(.title3)
-                .foregroundColor(Color("DarkPurple"))
-            
-            Text(days)
-                .font(.subheadline)
-                .foregroundColor(.gray)
-            
-            Text(description)
-                .font(.headline)
-                .foregroundColor(.black)
-                .multilineTextAlignment(.center)
-        }
-        .frame(maxWidth: .infinity)
-        .padding()
-        .background(Color.white)
-        .cornerRadius(15)
-        .padding(.horizontal)
-        .shadow(radius: 2)
-    }
 }
 
 struct PromotionCard: View {
@@ -306,16 +236,12 @@ struct PromotionCard: View {
     }
 }
 
-
-
-
-
 struct Promotion: Identifiable, DayFilterable, Searchable {
     let id = UUID()
     let title: String
     let location: String
     let description: String
-    let days: [DealsAndEvents.DayFilter]
+    let days: [DealsAndEventsView.DayFilter]
     
     var daysString: String {
         if days.count == 7 {
@@ -376,6 +302,6 @@ let promotionData: [Promotion] = [
 
 #Preview("Deals and Events") {
     NavigationStack {
-        DealsAndEvents()
+        DealsAndEventsView()
     }
 }
