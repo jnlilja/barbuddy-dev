@@ -28,6 +28,10 @@ class Bar(models.Model):
     def save(self, *args, **kwargs):
         self.clean()
         super().save(*args, **kwargs)
+        
+        from apps.bars.services.proximity import update_users_at_bar
+
+        update_users_at_bar(self)
 
     def get_latest_status(self):
         latest_status = self.status_updates.order_by('-last_updated').first()
