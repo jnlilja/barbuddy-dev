@@ -55,21 +55,9 @@ struct PhotoUploadView: View {
                         ) { [selectedImages] in
                             ZStack {
                                 if index < selectedImages.count {
-                                    Image(uiImage: selectedImages[index])
-                                        .resizable()
-                                        .scaledToFill()
-                                        .frame(width: 100, height: 100)
-                                        .clipShape(
-                                            RoundedRectangle(cornerRadius: 10)
-                                        )
+                                    ImageTileView(image: selectedImages[index])
                                 } else {
-                                    RoundedRectangle(cornerRadius: 10)
-                                        .fill(Color.black.opacity(0.1))
-                                        .frame(width: 100, height: 100)
-                                    
-                                    Image(systemName: "plus")
-                                        .font(.system(size: 30))
-                                        .foregroundColor(.white)
+                                    EmptyImageTileView()
                                 }
                             }
                         }
