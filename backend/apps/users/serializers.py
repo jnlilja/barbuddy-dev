@@ -21,14 +21,14 @@ class UserSerializer(serializers.ModelSerializer):
         fields = [
             "id", "username", "first_name", "last_name", "email", "password", "date_of_birth",
             "hometown", "job_or_university", "favorite_drink", "location",
-            "profile_pictures", "matches", "swipes", "vote_weight", "account_type"
+            "profile_pictures", "matches", "swipes", "vote_weight", "account_type",
+            "sexual_preference"  
         ]
         extra_kwargs = {
             "password": {"write_only": True},
             "email": {"write_only": True}
         }
         read_only_fields = ["vote_weight"]
-
 
     def get_location(self, obj):
         if obj.location:
@@ -89,3 +89,18 @@ class UserSerializer(serializers.ModelSerializer):
     def get_match_count(self, obj):
         return Match.objects.filter(user1=obj, status='connected').count() + \
                Match.objects.filter(user2=obj, status='connected').count()
+
+
+
+class UserLocationUpdateSerializer(serializers.Serializer):
+    latitude = serializers.FloatField()
+    longitude = serializers.FloatField()
+
+    def update(self, instance, validated_data):
+        instance.location = Point(
+            validated_data['longitude'],
+            validated_data['latitude'],
+            srid=4326
+        )
+        instance.save()
+        return instance
