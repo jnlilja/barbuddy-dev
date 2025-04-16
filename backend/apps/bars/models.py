@@ -2,6 +2,7 @@ from django.db import models
 from apps.users.models import User
 from django.contrib.gis.db import models as gis
 from django.core.exceptions import ValidationError
+from django.db.models import Avg 
 
 
 class Bar(models.Model):
@@ -45,6 +46,10 @@ class Bar(models.Model):
     def get_aggregated_vote_status(self):
         from apps.bars.services.voting import aggregate_bar_votes
         return aggregate_bar_votes(self.id)
+    
+    def get_average_rating(self):
+        avg_rating = self.ratings.aggregate(Avg('rating'))['rating__avg']
+        return round(avg_rating, 2) if avg_rating else None
 
 
     def __str__(self):
