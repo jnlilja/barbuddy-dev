@@ -18,7 +18,6 @@ struct MockDatabase {
             school: "UT Austin",
             favoriteDrink: "Craft Beer",
             preference: "Straight",
-            smoke: [.weed],
             bio: "Lover of live music and outdoor adventures.",
             imageNames: ["TestImage", "guy2"]
         )
@@ -35,7 +34,6 @@ struct MockDatabase {
                 school: "SDSU",
                 favoriteDrink: "Tequila",
                 preference: "Straight",
-                smoke: [],
                 bio: "Outgoing and adventurous.",
                 imageNames: ["TestImage", "guy1", "guy2"]
             ),
@@ -48,7 +46,6 @@ struct MockDatabase {
                 school: "UCLA",
                 favoriteDrink: "Whiskey",
                 preference: "Gay",
-                smoke: [.weed, .tobacco],
                 bio: "Passionate and creative.",
                 imageNames: ["guy3", "TestImage", "guy2"]
             ),
@@ -61,7 +58,6 @@ struct MockDatabase {
                 school: "NYU",
                 favoriteDrink: "Wine",
                 preference: "Bisexual",
-                smoke: [.weed, .tobacco, .vape],
                 bio: "Smart and witty.",
                 imageNames: ["guy1", "guy3", "TestImage"]
             ),

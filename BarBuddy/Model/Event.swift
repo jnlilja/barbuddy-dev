@@ -8,22 +8,24 @@
 import Foundation
 
 // DATA MODELS
-struct Event: Identifiable, DayFilterable, Searchable {
+struct Event: Identifiable, Searchable {
+    
     let id = UUID()
     let title: String
     let location: String
     let timeDescription: String
-    let days: [DealsAndEventsView.DayFilter]
+    let description: String
+    let day: String
     
-    var daysString: String {
-        if days.count == 7 {
-            return "Daily"
-        } else if days.count == 1 {
-            return days[0].rawValue + "s"
-        } else {
-            return days.map { $0.rawValue }.joined(separator: ", ")
-        }
-    }
+//    var daysString: String {
+//        if description.count == 7 {
+//            return "Daily"
+//        } else if description.count == 1 {
+//            return description[0].rawValue + "s"
+//        } else {
+//            return description.map { $0.rawValue }.joined(separator: ", ")
+//        }
+//    }
     
     func matchesSearch(query: String) -> Bool {
         return title.lowercased().contains(query.lowercased()) ||

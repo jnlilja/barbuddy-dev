@@ -136,7 +136,7 @@ struct SwipeCard: View {
 
 struct SwipeCard_Previews: PreviewProvider {
     static var previews: some View {
-        SwipeCard(user: User(id: UUID().uuidString, name: "Preview", age: 25, height: "5'9\"", hometown: "Sample City", school: "Sample Uni", favoriteDrink: "Coffee", preference: "Open", smoke: [.vape], bio: "Loves adventure", imageNames: ["TestImage"]))
+        SwipeCard(user: User(id: UUID().uuidString, name: "Preview", age: 25, height: "5'9\"", hometown: "Sample City", school: "Sample Uni", favoriteDrink: "Coffee", preference: "Open", bio: "Loves adventure", imageNames: ["TestImage"]))
             .previewLayout(.device)
             .previewDisplayName("SwipeCard")
     }

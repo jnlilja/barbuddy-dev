@@ -17,7 +17,6 @@ enum SignUpNavigation {
     case hometown
     case school
     case drink
-    case smoking
     case photoPrompt
     case photoUpload
 }

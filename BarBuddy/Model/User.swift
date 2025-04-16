@@ -16,7 +16,6 @@ struct User: Identifiable, Codable, Hashable {
     var school: String
     var favoriteDrink: String
     var preference: String
-    var smoke: [SmokePreference]
     var bio: String
     var imageNames: [String]
     var username: String = ""
