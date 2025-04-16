@@ -248,10 +248,11 @@ let eventData: [Event] = [
     Event(title: "Trivia Night", location: "PB Shoreclub", timeDescription: "7pm - 10pm", description: "1/2 Off Select Drafts, $7 Wine, $6 Ketel One/Crown Royal", day: "Tuesday"),
     Event(title: "Industry Monday", location: "PB Shoreclub", timeDescription: "8pm - Close", description: "$6 Herradura, Tits & High Noon, 52% OFF Industry Drink Tabs", day: "Monday"),
     Event(title: "Fish Races", location: "PB Shoreclub", timeDescription: "8pm - Close", description: "$6 absolut/altos/jameson/kona drafts", day: "Wednesday"),
-    Event(title: "Live DJ", location: "PB Local", timeDescription: "9pm-2am", description: "", day: <#String#>),
-    Event(title: "House Thursdays", location: "PB Local", timeDescription: "9pm-2am", description: "", day: <#String#>),
-    Event(title: "DJ Night", location: "Firehouse", timeDescription: "9pm-close", description: "", day: <#String#>),
-          Event(title: "College Night", location: "Hideaway", timeDescription: "8pm-close", description: "", day: <#String#>),
+    Event(title: "Live DJ", location: "PB Local", timeDescription: "9pm-2am", description: "", day: ""),
+    Event(title: "House Thursdays", location: "PB Local", timeDescription: "9pm-2am", description: "", day: ""),
+    Event(title: "DJ Night", location: "Firehouse", timeDescription: "9pm-close", description: "", day: ""),
+          Event(title: "College Night", location: "Hideaway", timeDescription: "8pm-close", description: "", day: "")
+]
 
 
 let dealData: [Deal] = [
