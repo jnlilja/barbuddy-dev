@@ -8,7 +8,7 @@ class SwipeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Swipe
-        fields = ['swiper', 'swiper_username', 'swiped_on', 'swiped_on_username', 'status', 'timestamp']
+        fields = ['id', 'swiper', 'swiper_username', 'swiped_on', 'swiped_on_username', 'status', 'timestamp']
         read_only_fields = ['timestamp']
 
     def validate(self, data):
