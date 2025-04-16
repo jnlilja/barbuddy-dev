@@ -14,34 +14,47 @@ class User(AbstractUser):
     profile_pictures = models.JSONField(default=list, blank=True)
     vote_weight = models.IntegerField(default=1)
 
+    SEXUAL_PREFERENCE_CHOICES = [
+        ('straight', 'Straight'),
+        ('gay', 'Gay'),
+        ('bisexual', 'Bisexual'),
+        ('asexual', 'Asexual'),
+        ('pansexual', 'Pansexual'),
+        ('other', 'Other'),
+    ]
+    
+    sexual_preference = models.CharField(
+        max_length=20,
+        choices=SEXUAL_PREFERENCE_CHOICES,
+        blank=True,
+        null=True
+    )
+
     ACCOUNT_TYPE_CHOICES = [
         ('regular', 'Regular'),
         ('trusted', 'Trusted'),
         ('moderator', 'Moderator'),
         ('admin', 'Admin'),
     ]
-
     account_type = models.CharField(max_length=20, choices=ACCOUNT_TYPE_CHOICES, default='regular')
 
-
-    
     def clean(self):
         super().clean()
-        # age verification
         if self.date_of_birth:
             today = date.today()
             age = today.year - self.date_of_birth.year - (
-                        (today.month, today.day) < (self.date_of_birth.month, self.date_of_birth.day))
+                (today.month, today.day) < (self.date_of_birth.month, self.date_of_birth.day)
+            )
             if age < 18 or age > 120:
                 raise ValidationError({'date_of_birth': 'User must be between 18 and 120 years old.'})
 
     def get_age(self):
-        """Dynamically calculates age from DOB."""
         if not self.date_of_birth:
             return None
         today = date.today()
         return today.year - self.date_of_birth.year - (
-                    (today.month, today.day) < (self.date_of_birth.month, self.date_of_birth.day))
+            (today.month, today.day) < (self.date_of_birth.month, self.date_of_birth.day)
+        )
 
     class Meta:
         indexes = [
@@ -51,8 +64,6 @@ class User(AbstractUser):
 
     def save(self, *args, **kwargs):
         self.clean()
-
-        # Automatically assign vote weight based on account type
         account_weights = {
             'regular': 1,
             'trusted': 2,
@@ -60,5 +71,4 @@ class User(AbstractUser):
             'admin': 5
         }
         self.vote_weight = account_weights.get(self.account_type, 1)
-
         super().save(*args, **kwargs)
