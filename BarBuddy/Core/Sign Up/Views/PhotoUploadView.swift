@@ -47,45 +47,36 @@ struct PhotoUploadView: View {
                     ],
                     spacing: 15
                 ) {
-                    ForEach(0..<6) { index in
+                    ForEach(0..<6) { i in
                         PhotosPicker(
                             selection: $photoPickerItems,
                             maxSelectionCount: maxPhotos,
+                            selectionBehavior: .ordered,
                             matching: .images
                         ) { [selectedImages] in
-                            ZStack {
-                                if index < selectedImages.count {
-                                    ImageTileView(image: selectedImages[index])
-                                } else {
-                                    EmptyImageTileView()
-                                }
+                            
+                            if i < selectedImages.count {
+                                ImageTileView(image: selectedImages[i])
+                            } else {
+                                EmptyImageTileView()
                             }
                         }
                     }
                 }
                 .padding()
-                .onChange(of: photoPickerItems) { _, _ in
+                .onChange(of: photoPickerItems) { oldValue, newValue in
+                    // Planning to make the logic better but this will do for now
+                    selectedImages.removeAll()
                     Task {
-                        for (i, item) in photoPickerItems.enumerated() {
+                        for item in photoPickerItems {
                             if let data = try? await item.loadTransferable(
                                 type: Data.self
                             ),
-                                let image = UIImage(data: data)
+                               let image = UIImage(data: data)
                             {
-                                if !selectedImages.isEmpty && i < selectedImages.count {
-                                    photoPickerItems[i] = item
-                                    selectedImages[i] = image
-                                }
-                                else if selectedImages.count < maxPhotos {
-                                    selectedImages.append(image)
-                                }
+                                selectedImages.append(image)
                             }
                         }
-                    }
-                }
-                .onChange(of: photoPickerItems.count) { oldValue, newValue in
-                    if newValue < oldValue {
-                        selectedImages.removeAll()
                     }
                 }
                 

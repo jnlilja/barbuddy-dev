@@ -109,7 +109,6 @@ struct LoginView: View {
                 case .hometown: HometownView(path: $path)
                 case .school: SchoolView(path: $path)
                 case .drink: DrinkPreferenceView(path: $path)
-                case .smoking: SmokingPreferenceView(path: $path)
                 case .photoPrompt: PhotoPromptView(path: $path)
                 case .photoUpload: PhotoUploadView()
                 }
