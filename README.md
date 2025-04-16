@@ -32,3 +32,18 @@ At the BarBuddy login screen enter the following:
 
 The messege "Sign in Successful" should be printed to console if it's working properly.
 
+
+### April 16
+I added a `sexual_preference` field to the user model. Options are:
+
+`SEXUAL_PREFERENCE_CHOICES = [     ('straight', 'Straight'),     ('gay', 'Gay'),     ('bisexual', 'Bisexual'),     ('asexual', 'Asexual'),     ('pansexual', 'Pansexual'),     ('other', 'Other'), ]`
+
+- There’s now an endpoint to **get and update** the user’s location.
+- Since we're using **Firebase for auth**, the frontend needs to include the Firebase `idToken` in the `Authorization` header for all API calls:
+
+`Authorization: Bearer <idToken>`
+
+In Swift, you can grab the token with:
+
+`Auth.auth().currentUser?.getIDToken { idToken, error in     // attach "Bearer \(idToken)" to your API request headers }`
+
