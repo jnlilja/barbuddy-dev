@@ -20,7 +20,4 @@ struct Bar: Identifiable {
     var deals: [Deal] {
         dealData.filter { $0.location == name }
     }
-    var promotions: [Promotion] {
-        promotionData.filter { $0.location == name }
-    }
 }
