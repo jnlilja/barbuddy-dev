@@ -8,7 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		1BBB5B712D979D0400A5E2E8 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 1BBB5B702D979D0400A5E2E8 /* FirebaseAuth */; };
-		1BEC02B22DB056A100ED74F0 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 1BEC02B12DB056A100ED74F0 /* FirebaseFirestore */; };
 		1BF7EF472D79161D001786D8 /* BottomSheet in Frameworks */ = {isa = PBXBuildFile; productRef = 1BF7EF462D79161D001786D8 /* BottomSheet */; };
 /* End PBXBuildFile section */
 
@@ -73,7 +72,6 @@
 			files = (
 				1BF7EF472D79161D001786D8 /* BottomSheet in Frameworks */,
 				1BBB5B712D979D0400A5E2E8 /* FirebaseAuth in Frameworks */,
-				1BEC02B22DB056A100ED74F0 /* FirebaseFirestore in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -136,7 +134,6 @@
 			packageProductDependencies = (
 				1BF7EF462D79161D001786D8 /* BottomSheet */,
 				1BBB5B702D979D0400A5E2E8 /* FirebaseAuth */,
-				1BEC02B12DB056A100ED74F0 /* FirebaseFirestore */,
 			);
 			productName = BarBuddy;
 			productReference = 599153B12D540523004B2832 /* BarBuddy.app */;
@@ -425,6 +422,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"BarBuddy/Preview Content\"";
+				DEVELOPMENT_TEAM = 6K96C3FPZ4;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = BarBuddy/Info.plist;
@@ -455,6 +453,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"BarBuddy/Preview Content\"";
+				DEVELOPMENT_TEAM = 6K96C3FPZ4;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = BarBuddy/Info.plist;
@@ -610,11 +609,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 1BBB5B6F2D979D0400A5E2E8 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseAuth;
-		};
-		1BEC02B12DB056A100ED74F0 /* FirebaseFirestore */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 1BBB5B6F2D979D0400A5E2E8 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
-			productName = FirebaseFirestore;
 		};
 		1BF7EF462D79161D001786D8 /* BottomSheet */ = {
 			isa = XCSwiftPackageProductDependency;
