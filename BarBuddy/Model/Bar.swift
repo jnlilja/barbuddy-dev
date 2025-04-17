@@ -15,9 +15,9 @@ struct Bar: Identifiable {
     var usersAtBar: Int?
     var averageRating: String?
     var events: [Event] {
-        eventData.filter { $0.location == name }
+        Event.eventData.filter { $0.location == name }
     }
     var deals: [Deal] {
-        dealData.filter { $0.location == name }
+        Deal.dealData.filter { $0.location == name }
     }
 }
