@@ -8,227 +8,189 @@
 import SwiftUI
 
 struct ProfileView: View {
-    // Load the primary user from the mock database.
-    private let primaryUser: User = MockDatabase.getPrimaryUser()
-    
-    @State private var selectedTab = 0
+    @EnvironmentObject private var authVM: AuthViewModel
+    @State private var selectedTab      = 0
     @State private var selectedImage: String? = nil
     @State private var isImageExpanded = false
-    @EnvironmentObject var viewModel: AuthViewModel
-    
-    // Compute grid cell width for Photos.
+    @StateObject private var userFriends = UserFriends.shared
+
     private var gridCellWidth: CGFloat {
         let screenWidth = UIScreen.main.bounds.width
-        let totalHorizontalPadding: CGFloat = 16 * 2
-        let totalSpacing: CGFloat = 15 * 2
-        return (screenWidth - totalHorizontalPadding - totalSpacing) / 3
+        let padding     = CGFloat(16 * 2 + 15 * 2)
+        return (screenWidth - padding) / 3
     }
-    
+
     var body: some View {
         NavigationView {
-            ScrollView {
-                VStack(spacing: 25) {
-                    // Profile Header with Dynamic Profile Picture.
-                    if let profilePic = primaryUser.imageNames.first {
-                        Image(profilePic)
-                            .resizable()
-                            .scaledToFill()
-                            .frame(width: 120, height: 120)
-                            .clipShape(Circle())
-                            .overlay(Circle().stroke(Color.white, lineWidth: 4))
-                            .shadow(radius: 7)
-                            .padding(.top, 20)
-        
-                    } else {
-                        Circle()
-                            .fill(Color.gray.opacity(0.3))
-                            .frame(width: 120, height: 120)
-                            .padding(.top, 20)
-                    }
-                    
-                    // Name and Verification.
-                    HStack(spacing: 8) {
-                        Text(viewModel.currentUser?.name ?? "User")
-                            .font(.system(size: 32, weight: .bold))
-                            .foregroundColor(.white)
-                        Image(systemName: "checkmark.seal.fill")
-                            .foregroundColor(Color("NeonPink"))
-                            .font(.system(size: 24))
-                    }
-                    
-                    // Custom Segmented Control with 3 buttons.
-                    HStack(spacing: 0) {
-                        TabButton(text: "Photos", isSelected: selectedTab == 0) {
-                            withAnimation { selectedTab = 0 }
-                        }
-                        TabButton(text: "Info", isSelected: selectedTab == 1) {
-                            withAnimation { selectedTab = 1 }
-                        }
-                        TabButton(text: "Friends", isSelected: selectedTab == 2) {
-                            withAnimation { selectedTab = 2 }
-                        }
-                    }
-                    .background(Color.white.opacity(0.1))
-                    .cornerRadius(25)
-                    .padding(.horizontal)
-                    .padding(.top, 20)
-                    
-                    // Content based on selected tab.
-                    if selectedTab == 0 {
-                        // Photos Grid.
-                        LazyVGrid(columns: [
-                            GridItem(.fixed(gridCellWidth), spacing: 15),
-                            GridItem(.fixed(gridCellWidth), spacing: 15),
-                            GridItem(.fixed(gridCellWidth))
-                        ], spacing: 15) {
-                            ForEach(primaryUser.imageNames, id: \.self) { imageName in
-                                ZStack(alignment: .topTrailing) {
-                                    Image(imageName)
-                                        .resizable()
-                                        .scaledToFill()
-                                        .frame(width: gridCellWidth, height: gridCellWidth)
-                                        .clipped()
-                                        .cornerRadius(10)
-                                        .onTapGesture {
-                                            selectedImage = imageName
-                                            isImageExpanded = true
-                                        }
-                                    Button(action: {
-                                        // Add photo edit action here.
-                                    }) {
-                                        Circle()
-                                            .fill(Color("Salmon"))
-                                            .frame(width: 30, height: 30)
-                                            .overlay(
-                                                Image(systemName: "pencil")
-                                                    .font(.system(size: 12))
-                                                    .foregroundColor(.white)
-                                            )
-                                    }
-                                    .padding(8)
-                                }
-                            }
-                        }
-                        .padding(.horizontal, 16)
-                    } else if selectedTab == 1 {
-                        // Info View.
-                        VStack(alignment: .leading, spacing: 20) {
-                            InfoSection(title: "Basic Info", items: [
-                                InfoItem(icon: "calendar", text: "\(primaryUser.age) years old"),
-                                InfoItem(icon: "ruler", text: primaryUser.height),
-                                InfoItem(icon: "mappin.circle.fill", text: primaryUser.hometown)
-                            ])
-                            InfoSection(title: "Work & Education", items: [
-                                InfoItem(icon: "graduationcap.fill", text: primaryUser.school)
-                            ])
-                            InfoSection(title: "Preferences", items: [
-                                InfoItem(icon: "wineglass.fill", text: "Favorite Drink: \(primaryUser.favoriteDrink)"),
-                                InfoItem(icon: "person.2.fill", text: "Preference: \(primaryUser.preference)")
-                            ])
-                            Text(primaryUser.bio)
-                                .font(.footnote)
-                                .foregroundColor(.white)
-                                .padding(.horizontal)
-                                .padding(.top, 5)
-                        }
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.horizontal, 16)
-                        .padding(.top)
-                    } else if selectedTab == 2 {
-                        // Friends View: Display accepted friends from UserFriends.
-                        if UserFriends.shared.getFriends().isEmpty {
-                            Text("No friends yet.")
-                                .foregroundColor(.white)
-                                .padding()
-                                .frame(maxWidth: .infinity, alignment: .center)
+            if let user = authVM.currentUser {
+                ScrollView {
+                    VStack(spacing: 25) {
+                        // MARK: – Header
+                        if let key = user.profile_pictures?.keys.first,
+                           let pic = user.profile_pictures?[key] {
+                            Image(pic)
+                                .resizable()
+                                .scaledToFill()
+                                .frame(width: 120, height: 120)
+                                .clipShape(Circle())
+                                .overlay(Circle().stroke(Color.white, lineWidth: 4))
+                                .shadow(radius: 7)
+                                .padding(.top, 20)
                         } else {
-                            ForEach(UserFriends.shared.getFriends()) { friend in
-                                NavigationLink(destination: FriendProfile(user: friend)) {
-                                    HStack {
-                                        Image(friend.imageNames.first ?? "TestImage")
+                            Circle()
+                                .fill(Color.gray.opacity(0.3))
+                                .frame(width: 120, height: 120)
+                                .padding(.top, 20)
+                        }
+
+                        HStack(spacing: 8) {
+                            Text("\(user.first_name) \(user.last_name)")
+                                .font(.system(size: 32, weight: .bold))
+                                .foregroundColor(.white)
+                            Image(systemName: "checkmark.seal.fill")
+                                .foregroundColor(Color("NeonPink"))
+                                .font(.system(size: 24))
+                        }
+
+                        // MARK: – Tabs
+                        HStack(spacing: 0) {
+                            TabButton(text: "Photos",  isSelected: selectedTab == 0) { selectedTab = 0 }
+                            TabButton(text: "Info",    isSelected: selectedTab == 1) { selectedTab = 1 }
+                            TabButton(text: "Friends", isSelected: selectedTab == 2) { selectedTab = 2 }
+                        }
+                        .background(Color.white.opacity(0.1))
+                        .cornerRadius(25)
+                        .padding(.horizontal)
+                        .padding(.top, 20)
+
+                        // MARK: – Content
+                        if selectedTab == 0 {
+                            LazyVGrid(columns: [
+                                GridItem(.fixed(gridCellWidth), spacing: 15),
+                                GridItem(.fixed(gridCellWidth), spacing: 15),
+                                GridItem(.fixed(gridCellWidth))
+                            ], spacing: 15) {
+                                ForEach(user.profile_pictures?.values.sorted() ?? [], id: \.self) { img in
+                                    ZStack(alignment: .topTrailing) {
+                                        Image(img)
                                             .resizable()
                                             .scaledToFill()
-                                            .frame(width: 60, height: 60)
-                                            .clipShape(Circle())
-                                        VStack(alignment: .leading) {
-                                            Text(friend.name)
-                                                .font(.headline)
-                                                .foregroundColor(.white)
-                                            Text(friend.hometown)
-                                                .font(.subheadline)
-                                                .foregroundColor(.white)
+                                            .frame(width: gridCellWidth, height: gridCellWidth)
+                                            .clipped()
+                                            .cornerRadius(10)
+                                            .onTapGesture {
+                                                selectedImage = img
+                                                isImageExpanded = true
+                                            }
+                                        Button {
+                                            // edit action
+                                        } label: {
+                                            Circle()
+                                                .fill(Color("Salmon"))
+                                                .frame(width: 30, height: 30)
+                                                .overlay(
+                                                    Image(systemName: "pencil")
+                                                        .font(.system(size: 12))
+                                                        .foregroundColor(.white)
+                                                )
                                         }
-                                        Spacer()
+                                        .padding(8)
                                     }
-                                    .padding(.vertical, 8)
-                                    .padding(.horizontal, 16)
+                                }
+                            }
+                            .padding(.horizontal, 16)
+
+                        } else if selectedTab == 1 {
+                            VStack(alignment: .leading, spacing: 20) {
+                                InfoSection(title: "Basic Info", items: [
+                                    InfoItem(icon: "calendar", text: user.date_of_birth),
+                                    InfoItem(icon: "mappin.circle.fill", text: user.hometown)
+                                ])
+                                InfoSection(title: "Work & Education", items: [
+                                    InfoItem(icon: "graduationcap.fill", text: user.job_or_university)
+                                ])
+                                InfoSection(title: "Preferences", items: [
+                                    InfoItem(icon: "wineglass.fill", text: user.favorite_drink),
+                                    InfoItem(icon: "person.2.fill", text: user.sexual_preference)
+                                ])
+                            }
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.horizontal, 16)
+                            .padding(.top)
+
+                        } else {
+                            // Friends tab: real friends list
+                            if userFriends.friends.isEmpty {
+                                Text("No friends yet.")
+                                    .foregroundColor(.white)
+                                    .padding()
+                                    .frame(maxWidth: .infinity)
+                            } else {
+                                ForEach(userFriends.friends) { friend in
+                                    NavigationLink(destination: FriendProfile(user: friend)) {
+                                        HStack {
+                                            Image(friend.profile_pictures?.values.first ?? "")
+                                                .resizable()
+                                                .scaledToFill()
+                                                .frame(width: 60, height: 60)
+                                                .clipShape(Circle())
+                                            VStack(alignment: .leading) {
+                                                Text("\(friend.first_name) \(friend.last_name)")
+                                                    .font(.headline)
+                                                    .foregroundColor(.white)
+                                                Text(friend.hometown)
+                                                    .font(.subheadline)
+                                                    .foregroundColor(.white)
+                                            }
+                                            Spacer()
+                                        }
+                                        .padding(.vertical, 8)
+                                        .padding(.horizontal, 16)
+                                    }
                                 }
                             }
                         }
                     }
+                    .padding(.bottom, 20)
                 }
-                .padding(.bottom, 20)
-            }
-            .background(Color("DarkBlue").ignoresSafeArea())
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    NavigationLink(destination: SettingsView()) {
-                        HStack {
-                            Image(systemName: "gear")
-                            Text("Settings")
-                                .font(.subheadline)
+                .background(Color("DarkBlue").ignoresSafeArea())
+                .fullScreenCover(isPresented: $isImageExpanded) {
+                    if let img = selectedImage {
+                        ZStack {
+                            Color.black.ignoresSafeArea()
+                            Image(img)
+                                .resizable()
+                                .scaledToFit()
+                                .onTapGesture { isImageExpanded = false }
                         }
-                        .foregroundStyle(.white)
                     }
                 }
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    NavigationLink(destination: RequestsView()) {
-                        HStack {
-                            Image(systemName: "person.crop.circle.badge.plus")
-                            Text("Friend Requests")
-                                .font(.subheadline)
+                .toolbar {
+                    ToolbarItem(placement: .navigationBarLeading) {
+                        NavigationLink(destination: RequestsView()) {
+                            Label("Friend Requests", systemImage: "person.crop.circle.badge.plus")
+                                .foregroundColor(.white)
                         }
-                        .foregroundColor(.white)
                     }
                 }
-            }
-            // Full-Screen Photo Viewer.
-            .fullScreenCover(isPresented: $isImageExpanded) {
-                ZStack {
-                    Color.black.edgesIgnoringSafeArea(.all)
-                    if let selectedImage = selectedImage {
-                        Image(selectedImage)
-                            .resizable()
-                            .scaledToFit()
-                            .background(Color.black)
-                            .onTapGesture {
-                                isImageExpanded = false
-                            }
-                    }
-                    VStack {
-                        HStack {
-                            Button(action: { isImageExpanded = false }) {
-                                Image(systemName: "chevron.left")
-                                    .foregroundColor(.white)
-                                    .font(.title2)
-                                    .padding()
-                            }
-                            Spacer()
-                        }
-                        Spacer()
-                    }
+                .task {
+                    await userFriends.loadFriends()
                 }
+
+            } else {
+                ProgressView()
             }
         }
     }
 }
 
+// ───────── Helpers ─────────
+
 struct TabButton: View {
     let text: String
     let isSelected: Bool
     let action: () -> Void
-    
+
     var body: some View {
         Button(action: action) {
             Text(text)
@@ -244,7 +206,7 @@ struct TabButton: View {
 struct InfoSection: View {
     let title: String
     let items: [InfoItem]
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 15) {
             Text(title)
@@ -265,12 +227,43 @@ struct InfoSection: View {
 }
 
 struct InfoItem: Identifiable {
-    let id = UUID()
+    let id   = UUID()
     let icon: String
     let text: String
 }
 
-#Preview {
+
+//uncomment for real user data
+/*#Preview {
     ProfileView()
         .environmentObject(AuthViewModel())
+}*/
+
+//uncomment block to see how profile looks
+#Preview {
+    ProfileView()
+      .environmentObject({
+          // build & seed your AuthViewModel in one expression
+          let vm = AuthViewModel()
+          vm.currentUser = GetUser(
+            id: 1,
+            username: "jdoe",
+            first_name: "John",
+            last_name: "Doe",
+            email: "jdoe@example.com",
+            password: "",
+            date_of_birth: "1990-01-01",
+            hometown: "Springfield",
+            job_or_university: "Example U",
+            favorite_drink: "Coffee",
+            location: "Springfield",
+            profile_pictures: ["pic1":"TestImage"],
+            matches: "",
+            swipes: "",
+            vote_weight: 0,
+            account_type: "regular",
+            sexual_preference: "straight"
+          )
+          return vm
+      }())
 }

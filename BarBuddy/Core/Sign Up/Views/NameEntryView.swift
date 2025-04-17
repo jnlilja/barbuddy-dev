@@ -10,16 +10,15 @@ import SwiftUI
 
 struct NameEntryView: View {
     @State private var firstName = ""
-    @State private var lastName = ""
+    @State private var lastName  = ""
     @State private var proceedToLocation = false
     @Binding var path: NavigationPath
-    @Environment(SignUpViewModel.self) var viewModel
-    
+    @EnvironmentObject var viewModel: SignUpViewModel
+
     var body: some View {
         ZStack {
-            Color("DarkBlue")
-                .ignoresSafeArea()
-            
+            Color("DarkBlue").ignoresSafeArea()
+
             VStack {
                 Spacer()
                 
@@ -27,34 +26,31 @@ struct NameEntryView: View {
                 
                 VStack(spacing: 25) {
                     Text("What's Your Name?")
-                        .font(.largeTitle)
+                        .font(.largeTitle).bold()
                         .foregroundColor(.white)
-                        .bold()
                         .multilineTextAlignment(.center)
-                    
+
                     TextField("First Name", text: $firstName)
                         .textFieldStyle(CustomTextFieldStyle())
-                    
+
                     TextField("Last Name", text: $lastName)
                         .textFieldStyle(CustomTextFieldStyle())
-                    
-                    Button(action: {
-                        viewModel.name = "\(firstName) \(lastName)"
-                        proceedToLocation = true
+
+                    Button("Continue") {
+                        // write back into shared view‑model
+                        viewModel.firstName = firstName
+                        viewModel.lastName  = lastName
                         path.append(SignUpNavigation.location)
-                        
-                    }) {
-                        Text("Continue")
-                            .font(.headline)
-                            .foregroundColor(.white)
-                            .frame(width: 300, height: 50)
-                            .background(Color("DarkPurple"))
-                            .cornerRadius(10)
                     }
                     .disabled(firstName.isEmpty || lastName.isEmpty)
                     .opacity(firstName.isEmpty || lastName.isEmpty ? 0.6 : 1)
+                    .font(.headline)
+                    .foregroundColor(.white)
+                    .frame(width: 300, height: 50)
+                    .background(Color("DarkPurple"))
+                    .cornerRadius(10)
                 }
-                
+
                 Spacer()
             }
             .padding()
@@ -62,8 +58,7 @@ struct NameEntryView: View {
     }
 }
 
-// Profile Info Previews
 #Preview("Name") {
     NameEntryView(path: .constant(NavigationPath()))
-        .environment(SignUpViewModel())
+        .environmentObject(SignUpViewModel())
 }

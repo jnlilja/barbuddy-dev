@@ -9,75 +9,67 @@
 import SwiftUI
 
 struct DrinkPreferenceView: View {
-    @State private var favoriteDrink = ""
-    @State private var proceedToNextPage = false
+    @State private var favoriteDrink    = ""
     @Binding var path: NavigationPath
-    @Environment(SignUpViewModel.self) var viewModel
-    
+    @EnvironmentObject var viewModel: SignUpViewModel
+    @State private var proceedToNextPage = false
+
     var body: some View {
-        
         ZStack {
-            
-            Color("DarkBlue")
-                .ignoresSafeArea()
-            
+            Color("DarkBlue").ignoresSafeArea()
+
             VStack {
                 Spacer()
-                
+
                 ProgressDots(currentPage: 5, totalPages: 7)
-                
+
                 VStack(spacing: 25) {
                     Image(systemName: "cocktail")
                         .font(.system(size: 60))
                         .foregroundColor(.white)
                         .padding(.bottom, 10)
-                    
+
                     Text("What's your drink of choice?")
-                        .font(.largeTitle)
+                        .font(.largeTitle).bold()
                         .foregroundColor(.white)
-                        .bold()
                         .multilineTextAlignment(.center)
-                    
+
                     if !viewModel.doesntDrink {
                         TextField("Enter your favorite drink", text: $favoriteDrink)
                             .textFieldStyle(CustomTextFieldStyle())
                     }
-                    
-                    Button(action: {
+
+                    Button {
                         viewModel.doesntDrink.toggle()
                         if viewModel.doesntDrink {
                             favoriteDrink = "I don't drink"
                         } else {
                             favoriteDrink = ""
                         }
-                    }) {
+                    } label: {
                         HStack {
                             Image(systemName: viewModel.doesntDrink ? "checkmark.square.fill" : "square")
                                 .foregroundColor(Color("Salmon"))
                                 .font(.system(size: 20))
-                            
                             Text("I don't drink 🙏")
                                 .foregroundColor(.white)
                         }
                     }
                     .padding(.horizontal)
-                    
-                    Button(action: {
+
+                    Button("Continue") {
                         viewModel.favoriteDrink = favoriteDrink
-                        proceedToNextPage = true
                         path.append(SignUpNavigation.photoPrompt)
-                    }) {
-                        Text("Continue")
-                            .font(.headline)
-                            .foregroundColor(.white)
-                            .frame(width: 300, height: 50)
-                            .background(Color("DarkPurple"))
-                            .cornerRadius(10)
                     }
                     .disabled(favoriteDrink.isEmpty)
                     .opacity(favoriteDrink.isEmpty ? 0.6 : 1)
+                    .font(.headline)
+                    .foregroundColor(.white)
+                    .frame(width: 300, height: 50)
+                    .background(Color("DarkPurple"))
+                    .cornerRadius(10)
                 }
-                
+
                 Spacer()
             }
             .padding()
@@ -86,8 +78,7 @@ struct DrinkPreferenceView: View {
     }
 }
 
-
 #Preview("Drinks") {
     DrinkPreferenceView(path: .constant(NavigationPath()))
-        .environment(SignUpViewModel())
+        .environmentObject(SignUpViewModel())
 }

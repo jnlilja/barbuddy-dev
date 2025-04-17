@@ -10,53 +10,45 @@ import SwiftUI
 
 struct PhotoUploadView: View {
     @EnvironmentObject var authViewModel: AuthViewModel
+    @EnvironmentObject var signUpViewModel: SignUpViewModel
+
     @State private var selectedImages: [UIImage] = []
     @State private var photoPickerItems: [PhotosPickerItem] = []
-    @Environment(SignUpViewModel.self) var signUpViewModel
     @State private var isLoading: Bool = false
 
     let minPhotos = 4
     let maxPhotos = 6
 
     var body: some View {
-        @Bindable var signUpViewModel = signUpViewModel
-
         ZStack {
-            Color("DarkBlue")
-                .ignoresSafeArea()
+            Color("DarkBlue").ignoresSafeArea()
 
             VStack {
                 Spacer()
 
                 Text("Add \(minPhotos)-\(maxPhotos) Photos")
-                    .font(.title)
+                    .font(.title).bold()
                     .foregroundColor(.white)
-                    .bold()
 
                 Text("\(selectedImages.count)/\(maxPhotos) photos added")
                     .foregroundColor(Color("Salmon"))
                     .padding(.vertical, 20)
 
-                // Center the grid in the middle of the screen
+                // snapshot of the @State array for Sendable closure
+                let imageSnapshot = selectedImages
 
-                LazyVGrid(
-                    columns: [
-                        GridItem(.flexible()),
-                        GridItem(.flexible()),
-                        GridItem(.flexible()),
-                    ],
-                    spacing: 15
-                ) {
-                    ForEach(0..<6) { i in
+                LazyVGrid(columns: Array(repeating: .init(.flexible()), count: 3),
+                          spacing: 15)
+                {
+                    ForEach(0..<maxPhotos, id: \.self) { i in
                         PhotosPicker(
                             selection: $photoPickerItems,
                             maxSelectionCount: maxPhotos,
                             selectionBehavior: .ordered,
                             matching: .images
-                        ) { [selectedImages] in
-                            
-                            if i < selectedImages.count {
-                                ImageTileView(image: selectedImages[i])
+                        ) {
+                            if i < imageSnapshot.count {
+                                ImageTileView(image: imageSnapshot[i])
                             } else {
                                 EmptyImageTileView()
                             }
@@ -64,43 +56,41 @@ struct PhotoUploadView: View {
                     }
                 }
                 .padding()
-                .onChange(of: photoPickerItems) { oldValue, newValue in
-                    // Planning to make the logic better but this will do for now
+                .onChange(of: photoPickerItems) { _, newItems in
                     selectedImages.removeAll()
                     Task {
-                        for item in photoPickerItems {
-                            if let data = try? await item.loadTransferable(
-                                type: Data.self
-                            ),
-                               let image = UIImage(data: data)
+                        for item in newItems {
+                            if let data = try? await item.loadTransferable(type: Data.self),
+                               let img  = UIImage(data: data)
                             {
-                                selectedImages.append(image)
+                                selectedImages.append(img)
                             }
                         }
                     }
                 }
-                
+
                 Spacer()
-                
-                Button(action: {
-                    withAnimation {
-                        isLoading = true
-                    }
+
+                Button("Let's go!") {
+                    withAnimation { isLoading = true }
                     Task {
-                        try await authViewModel.createUser(data: signUpViewModel)
+                        let profile = signUpViewModel.buildProfile()
+                        await authViewModel.signUp(
+                            profile: profile,
+                            password: signUpViewModel.newPassword
+                        )
                     }
-                }) {
-                    Text("Let's go!")
-                        .font(.headline)
-                        .foregroundColor(.white)
-                        .frame(width: 300, height: 50)
-                        .background(Color("DarkPurple"))
-                        .cornerRadius(10)
                 }
                 .disabled(selectedImages.count < minPhotos)
                 .opacity(selectedImages.count < minPhotos ? 0.6 : 1)
+                .font(.headline)
+                .foregroundColor(.white)
+                .frame(width: 300, height: 50)
+                .background(Color("DarkPurple"))
+                .cornerRadius(10)
                 .padding(.bottom, 50)
             }
+
             if isLoading {
                 LoadingScreenView()
                     .navigationBarBackButtonHidden()
@@ -112,6 +102,6 @@ struct PhotoUploadView: View {
 
 #Preview("Photo Upload") {
     PhotoUploadView()
-        .environment(SignUpViewModel())
+        .environmentObject(SignUpViewModel())
         .environmentObject(AuthViewModel())
 }

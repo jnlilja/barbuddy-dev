@@ -6,121 +6,102 @@
 //
 
 import SwiftUI
+import FirebaseAuth
 
 struct LoginView: View {
-    @State private var email = ""
-    @State private var password = ""
-    @State private var wrongUsername: Float = 0
-    @State private var wrongPassword: Float = 0
+    @State private var email              = ""
+    @State private var password           = ""
     @State private var showingSignUpSheet = false
-    @EnvironmentObject var authViewModel: AuthViewModel
-    @State var viewModel = SignUpViewModel()
-    @State private var path = NavigationPath()
+    @State private var alertMessage       = ""
+    @State private var showingAlert       = false
+
+    @EnvironmentObject private var authVM: AuthViewModel
+    @StateObject private var vm = LoginViewModel()       // pulls profile via /users
 
     var body: some View {
-        NavigationStack(path: $path){
-            ZStack {
-                // Idea for new login page
-                AnimatedBackgroundView()
-                
-                Circle()
-                    .scale(1.7)
-                    .foregroundColor(Color("Nude")).opacity(0.15)
-                Circle()
-                    .scale(1.35)
-                    .foregroundColor(.nude).opacity(0.9)
-                
-                VStack {
-                    Image(systemName: "party.popper.fill")
-                        .font(.system(size: 60))
-                        .foregroundColor(Color("DarkPurple"))
-                        .padding(.bottom, 20)
-                    
-                    Text("BarBuddy")
-                        .font(.largeTitle)
-                        .foregroundColor(Color("DarkPurple"))
-                        .bold()
-                    
-                    Text("Know Before You Go")
-                        .font(.subheadline)
-                        .foregroundColor(Color("DarkPurple"))
-                        .padding(.bottom, 50)
-                    
-                    TextField("Email", text: $email)
-                        .textInputAutocapitalization(.never)
-                        .padding()
-                        .frame(width: 300, height: 50)
-                        .background(Color.white)
-                        .cornerRadius(10)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 10)
-                                .stroke(Color("DarkPurple"), lineWidth: 1)
-                        )
-                        .border(.red, width: CGFloat(wrongUsername))
-                    
-                    SecureField("Password", text: $password)
-                        .padding()
-                        .frame(width: 300, height: 50)
-                        .background(Color.white)
-                        .cornerRadius(10)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 10)
-                                .stroke(Color("DarkPurple"), lineWidth: 1)
-                        )
-                        .border(.red, width: CGFloat(wrongPassword))
-                        .padding(.top, 10)
-                    
-                    Button(action: {
-                        Task {
-                            try await authViewModel.signIn(
-                                email: email,
-                                password: password
-                            )
+        ZStack {
+            AnimatedBackgroundView()
+            Circle().scale(1.7).foregroundColor(Color("Nude")).opacity(0.15)
+            Circle().scale(1.35).foregroundColor(.nude).opacity(0.9)
+
+            VStack(spacing: 15) {
+                Image(systemName: "party.popper.fill")
+                    .font(.system(size: 60))
+                    .foregroundColor(Color("DarkPurple"))
+                    .padding(.bottom, 10)
+
+                Text("BarBuddy")
+                    .font(.largeTitle).bold()
+                    .foregroundColor(Color("DarkPurple"))
+
+                Text("Know Before You Go")
+                    .font(.subheadline)
+                    .foregroundColor(Color("DarkPurple"))
+                    .padding(.bottom, 30)
+
+                TextField("Email", text: $email)
+                    .autocapitalization(.none)
+                    .padding()
+                    .frame(width: 300, height: 50)
+                    .background(Color.white)
+                    .cornerRadius(10)
+                    .overlay(RoundedRectangle(cornerRadius: 10)
+                        .stroke(Color("DarkPurple"), lineWidth: 1))
+
+                SecureField("Password", text: $password)
+                    .padding()
+                    .frame(width: 300, height: 50)
+                    .background(Color.white)
+                    .cornerRadius(10)
+                    .overlay(RoundedRectangle(cornerRadius: 10)
+                        .stroke(Color("DarkPurple"), lineWidth: 1))
+                    .padding(.top, 10)
+
+                // ───────── Login button
+                Button {
+                    Task {
+                        do {
+                            try await authVM.signIn(email: email, password: password)
+                            // authVM.currentUser is now filled by AuthViewModel;
+                            // dismiss or navigate to the main app UI here if you like.
+                        } catch {
+                            alert(error.localizedDescription)
                         }
-                    }) {
-                        Text("Login")
-                            .font(.headline)
-                            .foregroundColor(.white)
-                            .frame(width: 300, height: 50)
-                            .background(Color("DarkPurple"))
-                            .cornerRadius(10)
                     }
-                    .padding(.top, 30)
-                    
-                    Button(action: {
-                        path.append(SignUpNavigation.createAccount)
-                    }) {
-                        Text("Don't have an account? Sign up")
-                            .font(.subheadline)
-                            .foregroundColor(Color("DarkPurple"))
-                    }
-                    .padding(.top, 15)
+                } label: {
+                    Text("Login")
+                        .foregroundColor(.white)
+                        .frame(width: 300, height: 50)
+                        .background(Color("DarkPurple"))
+                        .cornerRadius(10)
                 }
-                .padding(.top, 15)
-            }
-            .navigationDestination(for: SignUpNavigation.self) { view in
-                // All views of sign up process
-                switch view {
-                case .createAccount: SignUpView(path: $path)
-                case .ageVerification: AgeVerificationView(path: $path)
-                case .nameEntry: NameEntryView(path: $path)
-                case .location: LocationView(path: $path)
-                case .gender: GenderView(path: $path)
-                case .hometown: HometownView(path: $path)
-                case .school: SchoolView(path: $path)
-                case .drink: DrinkPreferenceView(path: $path)
-                case .photoPrompt: PhotoPromptView(path: $path)
-                case .photoUpload: PhotoUploadView()
+                .padding(.top, 25)
+
+                Button("Don't have an account? Sign up") {
+                    showingSignUpSheet = true
                 }
+                .font(.subheadline)
+                .foregroundColor(Color("DarkPurple"))
             }
         }
-        .tint(.salmon)
-        .environment(viewModel)
+        .sheet(isPresented: $showingSignUpSheet) {
+            SignUpView(isPresented: $showingSignUpSheet)
+                .environmentObject(authVM)   // pass auth down
+        }
+        .alert("Login Error",
+               isPresented: $showingAlert,
+               actions: { Button("OK", role: .cancel) { } },
+               message: { Text(alertMessage) })
+    }
+
+    // helper
+    private func alert(_ msg: String) {
+        alertMessage = msg
+        showingAlert = true
     }
 }
 
 #Preview("Login View") {
     LoginView()
         .environmentObject(AuthViewModel())
-        .environment(SignUpViewModel())
 }

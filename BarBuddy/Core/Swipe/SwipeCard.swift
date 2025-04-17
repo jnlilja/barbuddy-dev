@@ -5,139 +5,70 @@
 //  Created by Andrew Betancourt on 2/25/25.
 //
 
+//
+//  SwipeCard.swift
+//  BarBuddy
+//
+//  Updated 2025‑04‑16
+//  Renders a single user profile card from the REST‑API `UserProfile` model.
+//
+
 import SwiftUI
 
 struct SwipeCard: View {
-    let user: User
+    let profile: UserProfile
+    private let cardWidth: CGFloat = UIScreen.main.bounds.width * 0.85
+
+    // Convenience
+    var displayName: String {
+        let name = "\(profile.first_name) \(profile.last_name)".trimmingCharacters(in: .whitespaces)
+        return name.isEmpty ? profile.username : name
+    }
 
     var body: some View {
         VStack(spacing: 0) {
-            // Photo gallery with swipable images.
-            TabView {
-                ForEach(user.imageNames, id: \.self) { imageName in
-                    Image(imageName)
-                        .resizable()
-                        .scaledToFill()
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 457)
-                        .clipShape(RoundedRectangle(cornerRadius: 12)) // Reduced corner radius for softer look
+            // ───────── Profile picture
+            AsyncImage(url: profile.profilePicURL) { phase in
+                switch phase {
+                case .success(let img): img.resizable().scaledToFill()
+                case .failure(_):       Color.gray.opacity(0.3)
+                case .empty:            ProgressView()
+                @unknown default:       Color.gray.opacity(0.3)
                 }
             }
-            .frame(height: 457)
-            .tabViewStyle(PageTabViewStyle())
-            
-            // User info card below photos.
-            VStack(alignment: .leading, spacing: 12) {
-                // Name row with verification and hometown tag.
-                HStack {
-                    Text(user.name)
-                        .font(.system(size: 32, weight: .bold))
-                        .foregroundColor(Color("DarkPurple"))
-                    
-                    Image(systemName: "checkmark.seal.fill")
-                        .foregroundColor(Color("NeonPink"))
-                        .font(.system(size: 20))
-                    
-                    Spacer()
-                    
-                    HStack(spacing: 4) {
-                        Image(systemName: "heart.fill")
-                        Text(user.hometown)
-                    }
-                    .foregroundColor(Color("DarkPurple"))
+            .frame(width: cardWidth, height: 400)
+            .clipped()
+
+            // ───────── Info panel
+            VStack(alignment: .leading, spacing: 8) {
+                Text(displayName)
+                    .font(.system(size: 28, weight: .bold))
+                    .foregroundColor(.white)
+
+                Text("@\(profile.username)")
+                    .font(.subheadline)
+                    .foregroundColor(.white.opacity(0.8))
+
+                Divider().overlay(Color.white)
+
+                Label("DOB: \(profile.date_of_birth)", systemImage: "calendar")
+                if !profile.job_or_university.isEmpty {
+                    Label(profile.job_or_university, systemImage: "graduationcap")
                 }
-                
-                Divider()
-                
-                // First row: Age, Height, Hometown.
-                HStack {
-                    HStack(spacing: 4) {
-                        Image(systemName: "birthday.cake")
-                            .foregroundColor(.secondary)
-                        Text("\(user.age)")
-                    }
-                    .frame(maxWidth: .infinity)
-                    
-                    HStack(spacing: 4) {
-                        Image(systemName: "ruler")
-                            .foregroundColor(.secondary)
-                        Text(user.height)
-                    }
-                    .frame(maxWidth: .infinity)
-                    
-                    HStack(spacing: 4) {
-                        Image(systemName: "house.fill")
-                            .foregroundColor(.secondary)
-                        Text(user.hometown)
-                    }
-                    .frame(maxWidth: .infinity)
+                if !profile.favorite_drink.isEmpty {
+                    Label("Fav drink: \(profile.favorite_drink)", systemImage: "wineglass")
                 }
-                .font(.system(size: 16))
-                .foregroundColor(Color("DarkPurple"))
-                
-                // Second row: School, Favorite Drink, and Preference.
-                HStack {
-                    HStack(spacing: 4) {
-                        Text("🎓")
-                        Text(user.school)
-                    }
-                    .frame(maxWidth: .infinity)
-                    
-                    HStack(spacing: 4) {
-                        Image(systemName: "wineglass.fill")
-                            .foregroundColor(.secondary)
-                        Text(user.favoriteDrink)
-                    }
-                    .frame(maxWidth: .infinity)
-                    
-                    HStack(spacing: 4) {
-                        Text("⚥")
-                        Text(user.preference)
-                    }
-                    .frame(maxWidth: .infinity)
-                }
-                .font(.system(size: 16))
-                .foregroundColor(Color("DarkPurple"))
-                
-                // Bio/Description with decorative quote images.
-                HStack(alignment: .center, spacing: 4) {
-                    Image("fowardQuote")
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .frame(width: 16, height: 24)
-                        .italic()
-                        .offset(y: -8)
-                    
-                    Text(user.bio)
-                    
-                    Image("backwardQuote")
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .frame(width: 16, height: 24)
-                        .italic()
-                        .offset(y: -8)
-                }
-                .font(.system(size: 24, weight: .light).italic())
-                .foregroundColor(Color("Salmon"))
-                .padding(.top, 12)
-                .lineLimit(1)
-                .truncationMode(.tail)
-                .frame(maxWidth: .infinity, alignment: .center)
-                .multilineTextAlignment(.center)
             }
+            .labelStyle(.titleAndIcon)
+            .font(.subheadline)
+            .foregroundColor(.white)
             .padding()
-            .background(Color.white)
-            .cornerRadius(20)
-            .padding()
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Color.black.opacity(0.6))
         }
-        .padding()
+        .clipShape(RoundedRectangle(cornerRadius: 30))
+        .shadow(radius: 8)
+        .padding(.horizontal)
     }
 }
 
-struct SwipeCard_Previews: PreviewProvider {
-    static var previews: some View {
-        SwipeCard(user: User(id: UUID().uuidString, name: "Preview", age: 25, height: "5'9\"", hometown: "Sample City", school: "Sample Uni", favoriteDrink: "Coffee", preference: "Open", bio: "Loves adventure", imageNames: ["TestImage"]))
-            .previewLayout(.device)
-            .previewDisplayName("SwipeCard")
-    }
-}

@@ -8,14 +8,14 @@
 import SwiftUI
 
 struct FriendProfile: View {
-    let user: User
+    let user: GetUser
 
     var body: some View {
         ScrollView {
             VStack(spacing: 0) {
-                // MARK: - Photo Gallery
+                // Photo Gallery
                 TabView {
-                    ForEach(user.imageNames, id: \.self) { imageName in
+                    ForEach(user.profile_pictures?.values.sorted() ?? [], id: \.self) { imageName in
                         Image(imageName)
                             .resizable()
                             .scaledToFill()
@@ -26,105 +26,69 @@ struct FriendProfile: View {
                 }
                 .frame(height: 457)
                 .tabViewStyle(PageTabViewStyle())
-                
-                // MARK: - Info Card
+
+                // Info Card
                 VStack(alignment: .leading, spacing: 12) {
-                    // Name row with verification and hometown tag.
                     HStack {
-                        Text(user.name)
+                        Text("\(user.first_name) \(user.last_name)")
                             .font(.system(size: 32, weight: .bold))
                             .foregroundColor(Color("DarkPurple"))
-                        
                         Image(systemName: "checkmark.seal.fill")
                             .foregroundColor(Color("NeonPink"))
                             .font(.system(size: 20))
-                        
                         Spacer()
-                        
                         HStack(spacing: 4) {
                             Image(systemName: "heart.fill")
                             Text(user.hometown)
                         }
                         .foregroundColor(Color("DarkPurple"))
                     }
-                    
+
                     Divider()
-                    
-                    // First row: Age, Height, Hometown.
+
                     HStack {
                         HStack(spacing: 4) {
-                            Image(systemName: "birthday.cake")
-                                .foregroundColor(.secondary)
-                            Text("\(user.age)")
+                            Image(systemName: "calendar")
+                            Text(user.date_of_birth)
                         }
                         .frame(maxWidth: .infinity)
-                        
+
                         HStack(spacing: 4) {
-                            Image(systemName: "ruler")
-                                .foregroundColor(.secondary)
-                            Text(user.height)
-                        }
-                        .frame(maxWidth: .infinity)
-                        
-                        HStack(spacing: 4) {
-                            Image(systemName: "house.fill")
-                                .foregroundColor(.secondary)
-                            Text(user.hometown)
+                            Image(systemName: "mappin.circle.fill")
+                            Text(user.location)
                         }
                         .frame(maxWidth: .infinity)
                     }
                     .font(.system(size: 16))
                     .foregroundColor(Color("DarkPurple"))
-                    
-                    // Second row: School, Favorite Drink, and Preference.
+
                     HStack {
                         HStack(spacing: 4) {
-                            Text("🎓")
-                            Text(user.school)
+                            Image(systemName: "graduationcap.fill")
+                            Text(user.job_or_university)
                         }
                         .frame(maxWidth: .infinity)
-                        
+
                         HStack(spacing: 4) {
                             Image(systemName: "wineglass.fill")
-                                .foregroundColor(.secondary)
-                            Text(user.favoriteDrink)
+                            Text(user.favorite_drink)
                         }
                         .frame(maxWidth: .infinity)
-                        
+
                         HStack(spacing: 4) {
-                            Text("⚥")
-                            Text(user.preference)
+                            Image(systemName: "person.2.fill")
+                            Text(user.sexual_preference)
                         }
                         .frame(maxWidth: .infinity)
                     }
                     .font(.system(size: 16))
                     .foregroundColor(Color("DarkPurple"))
-                    
-                    // Bio with decorative quotes.
-                    HStack(alignment: .center, spacing: 4) {
-                        Image("fowardQuote")
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .frame(width: 16, height: 24)
-                            .italic()
-                            .offset(y: -8)
-                        
-                        Text(user.bio)
-                        
-                        Image("backwardQuote")
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .frame(width: 16, height: 24)
-                            .italic()
-                            .offset(y: -8)
-                    }
-                    .font(.system(size: 24, weight: .light).italic())
-                    .foregroundColor(Color("Salmon"))
-                    .padding(.top, 12)
-                    .lineLimit(1)
-                    .truncationMode(.tail)
-                    .frame(maxWidth: .infinity, alignment: .center)
-                    .multilineTextAlignment(.center)
+
+                    // If you have a bio field, replace this:
+                    Text("")
+                        .font(.system(size: 24, weight: .light).italic())
+                        .foregroundColor(Color("Salmon"))
+                        .padding(.top, 12)
                 }
                 .padding()
                 .background(Color.white)
@@ -139,7 +103,27 @@ struct FriendProfile: View {
 struct FriendProfile_Previews: PreviewProvider {
     static var previews: some View {
         NavigationView {
-            FriendProfile(user: User(id: UUID().uuidString, name: "Preview", age: 25, height: "5'9\"", hometown: "Sample City", school: "Sample Uni", favoriteDrink: "Coffee", preference: "Open", bio: "Loves adventure", imageNames: ["TestImage"]))
+            FriendProfile(
+                user: GetUser(
+                    id: 1,
+                    username: "sampleuser",
+                    first_name: "Sample",
+                    last_name: "User",
+                    email: "sample@example.com",
+                    password: "password",
+                    date_of_birth: "1990-01-01",
+                    hometown: "Springfield",
+                    job_or_university: "Example University",
+                    favorite_drink: "Coffee",
+                    location: "Springfield",
+                    profile_pictures: ["profilePic": "TestImage"],
+                    matches: "Loves SwiftUI",
+                    swipes: "",
+                    vote_weight: 0,
+                    account_type: "regular",
+                    sexual_preference: "straight"
+                )
+            )
         }
     }
 }

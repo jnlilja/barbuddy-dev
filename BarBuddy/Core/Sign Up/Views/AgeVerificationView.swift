@@ -8,9 +8,8 @@
 import SwiftUI
 
 struct AgeVerificationView: View {
-
     @State private var viewModel = AgeVerificationViewModel()
-    @Environment(SignUpViewModel.self) var signUpViewModel
+    @EnvironmentObject var signUpViewModel: SignUpViewModel
     @Binding var path: NavigationPath
 
     private var minimumDate: Date {
@@ -29,9 +28,8 @@ struct AgeVerificationView: View {
 
             VStack(spacing: 25) {
                 Text("Verify Your Age")
-                    .font(.largeTitle)
+                    .font(.largeTitle).bold()
                     .foregroundColor(.white)
-                    .bold()
                     .multilineTextAlignment(.center)
                     .padding(.top, 50)
 
@@ -50,34 +48,40 @@ struct AgeVerificationView: View {
                 .cornerRadius(10)
                 .padding()
 
-                Button(action: {
-                    signUpViewModel.age = viewModel.verifyAge()
+                Button("Verify Age") {
+                    // 1) run the check
+                    viewModel.verifyAge()
+
+                    // 2) if it passed, write back and navigate
                     if viewModel.proceedToName {
+                        // format as ISO string
+                        let fmt = DateFormatter()
+                        fmt.dateFormat = "yyyy-MM-dd"
+                        signUpViewModel.dateOfBirth = fmt.string(from: viewModel.dateOfBirth)
+                        
                         path.append(SignUpNavigation.nameEntry)
                     }
-                }) {
-                    Text("Verify Age")
-                        .font(.headline)
-                        .foregroundColor(.white)
-                        .frame(width: 300, height: 50)
-                        .background(Color("DarkPurple"))
-                        .cornerRadius(10)
                 }
+                .font(.headline)
+                .foregroundColor(.white)
+                .frame(width: 300, height: 50)
+                .background(Color("DarkPurple"))
+                .cornerRadius(10)
             }
             .padding()
-        }
-        .alert(
-            "Age Verification Failed",
-            isPresented: $viewModel.showingAgeAlert
-        ) {
-            Button("OK", role: .cancel) {}
-        } message: {
-            Text("You must be 21 or older to use BarBuddy.")
+            .alert(
+                "Age Verification Failed",
+                isPresented: $viewModel.showingAgeAlert
+            ) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text("You must be 21 or older to use BarBuddy.")
+            }
         }
     }
 }
 
 #Preview {
     AgeVerificationView(path: .constant(NavigationPath()))
-        .environment(SignUpViewModel())
+        .environmentObject(SignUpViewModel())
 }

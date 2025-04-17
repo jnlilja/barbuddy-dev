@@ -1,108 +1,112 @@
 //
-//  LoginViewModel.swift
+//  SignUpViewModel.swift
 //  BarBuddy
-//
-//  Created by Andrew Betancourt on 2/26/25.
 //
 
 import Foundation
+import FirebaseAuth
 
-// This viewModel handles the logic of validation and posting changes to UI
-@Observable
-class SignUpViewModel: CustomStringConvertible {
-    var email: String = ""
-    var password: String = ""
-    var username: String = ""
-    var confirmPassword: String = ""
-    var isValidEmail: Bool = true
-    var isValidPassword: Bool = true
-    var showingAlert = false
-    var alertMessage = ""
-    var name: String = ""
-    var age: Int = -1
-    var height: String = ""
-    var hometown: String = ""
-    var school: String = ""
-    var favoriteDrink: String = ""
-    var doesntDrink: Bool = false
-    var preference: String = ""
-    var bio: String = ""
-    var imageNames: [String] = []
-    var gender: String = ""
+@MainActor
+final class SignUpViewModel: ObservableObject {
+    // ───────── UI‑bound fields ─────────
+    @Published var email            = ""
+    @Published var newUsername      = ""
+    @Published var newPassword      = ""
+    @Published var confirmPassword  = ""
+
+    @Published var firstName        = ""
+    @Published var lastName         = ""
+    @Published var dateOfBirth      = ""
+    @Published var gender           = ""          // added for GenderView
+    @Published var hometown         = ""
+    @Published var jobOrUniversity  = ""
+    @Published var favoriteDrink    = ""
+    @Published var doesntDrink      = false       // added for DrinkPreferenceView
+    @Published var sexualPreference = "straight"
     
-    // For testing purposes
-    public var description: String {
-        return """
-            Data for \(username):
-            
-            email: \(email)
-            password: \(password)
-            name: \(name)
-            age: \(age)
-            """
-    }
+    // ───────── Validation state ─────────
+    @Published var isValidEmail     = true
+    @Published var isValidPassword  = true
+    @Published var passwordsMatch   = true
+    @Published var alertMessage     = ""
+    @Published var showingAlert     = false
     
-    // Add variables for validation
-    var passwordsMatch = true
-    var showingAgeVerification = false
-    
+    func buildProfile() -> PostUser {
+            PostUser(
+                username: newUsername,
+                first_name: firstName,
+                last_name: lastName,
+                email: email,
+                password: newPassword,
+                date_of_birth: dateOfBirth,
+                hometown: hometown,
+                job_or_university: jobOrUniversity,
+                favorite_drink: favoriteDrink,
+                profile_pictures: [:],
+                account_type: "regular",
+                sexual_preference: sexualPreference
+            )
+        }
+
+    // MARK: - Public entry point from the UI
     func validateAndSignUp() {
-        // Reset validation states
-        isValidEmail = true
-        isValidPassword = true
-        passwordsMatch = true
-        
-        // Validate email
-        if !isValidEmailFormat(email) {
-            isValidEmail = false
-            alertMessage = "Please enter a valid email address"
-            showingAlert = true
-            return
+        // 1) Basic client‑side validation
+        guard isValidEmailFormat(email) else { return fire("Please enter a valid email.") }
+        guard newUsername.count >= 3 else { return fire("Username must be ≥ 3 characters.") }
+        guard isValidPasswordFormat(newPassword) else {
+            return fire("Password must be ≥ 8 characters with a number & special char.")
         }
-        
-        // Validate username
-        if username.count < 3 {
-            alertMessage = "Username must be at least 3 characters long"
-            showingAlert = true
-            return
-        }
-        
-        // Validate password
-        if !isValidPasswordFormat(password) {
-            isValidPassword = false
-            alertMessage = "Password must be at least 8 characters with a number and special character"
-            showingAlert = true
-            return
-        }
-        
-        // Check if passwords match
-        if password != confirmPassword {
-            passwordsMatch = false
-            alertMessage = "Passwords do not match"
-            showingAlert = true
-            return
-        }
-        
-        // If all validations pass
-        if !showingAlert {
-            showingAgeVerification = true  // Show age verification instead of dismissing
+        guard newPassword == confirmPassword else { return fire("Passwords do not match.") }
+
+        // 2) Build profile & call Auth + API
+        let profile = PostUser(
+            username: newUsername,
+            first_name: firstName,
+            last_name: lastName,
+            email: email,
+            password: newPassword,      // store hashed in backend, plain here only to send
+            date_of_birth: dateOfBirth,
+            hometown: hometown,
+            job_or_university: jobOrUniversity,
+            favorite_drink: favoriteDrink,
+            profile_pictures: [:],
+            account_type: "regular",
+            sexual_preference: sexualPreference
+        )
+
+        Task {
+            await signUp(profile: profile)
         }
     }
-    
-    // Regex for email
-    private func isValidEmailFormat(_ email: String) -> Bool {
-        let emailRegex = "[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,64}"
-        let emailPredicate = NSPredicate(format:"SELF MATCHES %@", emailRegex)
-        return emailPredicate.evaluate(with: email)
+
+    // MARK: - Sign‑up flow
+    private func signUp(profile: PostUser) async {
+        do {
+            // 1) Create Firebase Auth account
+            _ = try await Auth.auth().createUser(withEmail: profile.email,
+                                                 password: profile.password)
+
+            // 2) Send profile JSON to your API
+            try await PostUserAPIService.shared.create(user: profile)
+
+            alertMessage = "Account created successfully!"
+            showingAlert = true
+        } catch {
+            fire(error.localizedDescription)
+        }
     }
-    
-    // Regex for user password
-    private func isValidPasswordFormat(_ password: String) -> Bool {
-        // At least 8 characters
-        // Contains at least one number
-        // Contains at least one special character
-        let passwordRegex = "^(?=.*[0-9])(?=.*[!@#$%^&*])[A-Za-z0-9!@#$%^&*]{8,}$"
-        let passwordPredicate = NSPredicate(format:"SELF MATCHES %@", passwordRegex)
-        return passwordPredicate.evaluate(with: password)
+
+    // MARK: - Helpers
+    private func isValidEmailFormat(_ str: String) -> Bool {
+        let regex = "[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,64}"
+        return NSPredicate(format: "SELF MATCHES %@", regex).evaluate(with: str)
+    }
+    private func isValidPasswordFormat(_ str: String) -> Bool {
+        let regex = "^(?=.*[0-9])(?=.*[!@#$%^&*]).{8,}$"
+        return NSPredicate(format: "SELF MATCHES %@", regex).evaluate(with: str)
+    }
+    private func fire(_ message: String) {
+        alertMessage  = message
+        showingAlert  = true
     }
 }

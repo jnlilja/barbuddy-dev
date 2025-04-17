@@ -54,7 +54,9 @@ struct HomeView: View {
 }
 
 
-// Add this new preview provider
+// Preview with required environment object
+//profile page is buffering because no real user data is implemented yet, go to profile.swift to view data
 #Preview("Home Tab Bar") {
     HomeView()
+        .environmentObject(AuthViewModel())
 }

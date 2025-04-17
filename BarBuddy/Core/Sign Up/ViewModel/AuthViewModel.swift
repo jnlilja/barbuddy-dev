@@ -2,82 +2,83 @@
 //  AuthViewModel.swift
 //  BarBuddy
 //
-//  Created by Andrew Betancourt on 3/28/25.
+//  Revised 2025‑04‑16 – Async/await Firebase Auth + REST profile integration.
 //
 
 import Foundation
-import Firebase
-import FirebaseAuth
-import FirebaseFirestore
+@preconcurrency import FirebaseAuth   // Treat non‑Sendable Firebase types as warnings
 
 @MainActor
 final class AuthViewModel: ObservableObject {
-    @Published var authUser: FirebaseAuth.User?
-    @Published var currentUser: User?
-    
-    init() {
-        self.authUser = Auth.auth().currentUser
-    }
-    
-    func signIn(email: String, password: String) async throws {
+    // MARK: - Published state
+    @Published private(set) var authUser: FirebaseAuth.User?
+    @Published var currentUser: GetUser?
+
+    // MARK: - Sign‑in (existing account)
+    func signIn(email: String, password: String) async {
         do {
-            let result = try await Auth.auth().signIn(withEmail: email, password: password)
-            self.authUser = result.user
-            print("Sign in successful")
-            
-        }catch{
-            print("Could not sign in with error \(error.localizedDescription)")
+            let result: AuthDataResult = try await Auth.auth().signIn(withEmail: email,
+                                                                      password: password)
+            authUser = result.user
+            try await loadCurrentUser(email: email)
+        } catch {
+            print("❌ Sign‑in failed:", error.localizedDescription)
         }
     }
-    
-    func signOut() throws {
+
+    // MARK: - Sign‑up (new account)
+    /// Creates a Firebase Auth account and stores the profile in your backend.
+    func signUp(profile: PostUser, password: String) async {
+        do {
+            let result: AuthDataResult = try await Auth.auth().createUser(withEmail: profile.email,
+                                                                         password: password)
+            authUser = result.user
+
+            // Store profile through REST POST
+            try await PostUserAPIService.shared.create(user: profile)
+
+            try await loadCurrentUser(email: profile.email)
+            print("✅ New user created & stored.")
+        } catch {
+            print("❌ Sign‑up failed:", error.localizedDescription)
+        }
+    }
+
+    // MARK: - Sign‑out
+    func signOut() {
         do {
             try Auth.auth().signOut()
-            self.authUser = nil
-            self.currentUser = nil
-            print("Logged out")
-        }catch{
-            print("Could not logout with error \(error.localizedDescription)")
+            authUser = nil
+            currentUser = nil
+        } catch {
+            print("❌ Sign‑out failed:", error.localizedDescription)
         }
     }
-    
-    func startPhoneNumberAuth(phoneNumber: String) {
-        // Example: +1 555-555-1234
-        PhoneAuthProvider.provider()
-          .verifyPhoneNumber(phoneNumber, uiDelegate: nil) { verificationID, error in
-            if let error = error {
-                print("Verification error: \(error.localizedDescription)")
-                return
-            }
-            // Store verificationID somewhere (e.g., in UserDefaults).
-            // Then prompt user for the SMS verification code.
-        }
+
+    // MARK: - Private helpers
+    private func loadCurrentUser(email: String) async throws {
+        // If your backend echoes the profile record (with id) after sign‑up,
+        // you could store that id in UserDefaults, then:
+        //
+        // currentUser = try await GetUserAPIService.shared.fetchUser(id: savedId)
+        //
+        // For the moment we’ll stick with email filtering:
+        let users = try await GetUserAPIService.shared.fetchUsers()
+        currentUser = users.first(where: { $0.email == email })
     }
-    
-    func verifySMSCode(verificationID: String, smsCode: String) {
-        _ = PhoneAuthProvider.provider().credential(
-            withVerificationID: verificationID,
-            verificationCode: smsCode
-        )
-    }
-    
-    func createUser(data: SignUpViewModel) async throws {
-        do {
-            let result = try await Auth.auth().createUser(withEmail: data.email, password: data.password)
-            self.authUser = result.user
-            let user = User(id: UUID().uuidString, name: data.name, age: data.age, height: data.height, hometown: data.hometown, school: data.school, favoriteDrink: data.favoriteDrink, preference: data.preference, bio: "Hello", imageNames: [])
-            self.currentUser = user
-            //let encodedUser = try Firestore.Encoder().encode(user)
-            //try await Firestore.firestore().collection("users").document(user.id).setData(encodedUser)
-            
-            print("User created successfully")
-            print(data)
-        }catch{
-            print(error.localizedDescription)
-        }
-    }
-    
 }
 
-// Tells compiler that this type is safe to use in concurent programming
-extension AuthDataResult: @unchecked @retroactive Sendable {}
+// ─────────────────────────────────────────────────────────────────────────────
+// Async convenience for PostUserAPIService
+// ─────────────────────────────────────────────────────────────────────────────
+
+extension PostUserAPIService {
+    /// Async/await wrapper around the completion‑handler version of create(user:…)
+    func create(user: PostUser) async throws {
+        try await withCheckedThrowingContinuation { cont in
+            self.create(user: user) { result in
+                cont.resume(with: result)
+            }
+        }
+    }
+}

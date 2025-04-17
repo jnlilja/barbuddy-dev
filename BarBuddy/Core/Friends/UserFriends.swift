@@ -6,22 +6,29 @@
 //
 
 import Foundation
-import SwiftUI
 
 @MainActor
 class UserFriends: ObservableObject {
     static let shared = UserFriends()
-    
-    @Published private var friends: [User] = []
-    
+
+    @Published var friends: [GetUser] = []
+
     private init() { }
-    
-    func addFriend(_ user: User) {
+
+    func loadFriends() async {
+        let all = (try? await GetUserAPIService.shared.fetchUsers()) ?? []
+        // Placeholder: include every user for now
+        friends = all.filter { user in
+            // your real friend‑filter logic here
+            true
+        }
+    }
+
+    func addFriend(_ user: GetUser) {
         guard !friends.contains(where: { $0.id == user.id }) else { return }
         friends.append(user)
     }
-    
-    func getFriends() -> [User] {
-        return friends
-    }
 }
+
+
+
