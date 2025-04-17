@@ -26,7 +26,6 @@ class SignUpViewModel: CustomStringConvertible {
     var favoriteDrink: String = ""
     var doesntDrink: Bool = false
     var preference: String = ""
-    var smoke: [SmokePreference] = []
     var bio: String = ""
     var imageNames: [String] = []
     var gender: String = ""
