@@ -67,3 +67,4 @@ struct MockDatabase {
         return allUsers
     }
 }
+

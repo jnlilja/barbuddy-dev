@@ -1,11 +1,3 @@
-//
-//  SwipeView.swift
-//  BarBuddy
-//
-//  Created by Andrew Betancourt on 2/25/25.
-//
-
-
 import SwiftUI
 
 struct SwipeView: View {
@@ -17,7 +9,7 @@ struct SwipeView: View {
                 Color("DarkBlue").ignoresSafeArea()
 
                 VStack {
-                    // ───────── Top bar
+                    // ——— Top bar (can be expanded later) ———
                     HStack {
                         Text("@ Hideaway")
                             .font(.title2).bold()
@@ -28,9 +20,10 @@ struct SwipeView: View {
                             .cornerRadius(25)
                         Spacer()
                     }
-                    .padding()
+                    .padding(.horizontal)
+                    .padding(.top)
 
-                    // ───────── Card stack
+                    // ——— Card stack ———
                     ZStack {
                         if vm.users.isEmpty {
                             Text("No more users")
@@ -38,46 +31,9 @@ struct SwipeView: View {
                                 .foregroundColor(.white)
                         } else {
                             ForEach(vm.users.reversed()) { profile in
-                                SwipeCardView(profile: profile)
+                                SwipeCard(profile: profile)
                                     .clipShape(RoundedRectangle(cornerRadius: 60))
-                                    .overlay(
-                                        HStack {
-                                            // Ignore (left swipe)
-                                            Button {
-                                                withAnimation { vm.swipeLeft(profile: profile) }
-                                            } label: {
-                                                Circle()
-                                                    .fill(Color.white)
-                                                    .frame(width: 48, height: 48)
-                                                    .shadow(radius: 5)
-                                                    .overlay(
-                                                        Image(systemName: "xmark")
-                                                            .font(.system(size: 26))
-                                                            .foregroundColor(.red)
-                                                    )
-                                            }
-                                            .padding(.leading, 30)
-
-                                            Spacer()
-
-                                            // Friend request (right swipe)
-                                            Button {
-                                                withAnimation { vm.swipeRight(profile: profile) }
-                                            } label: {
-                                                Circle()
-                                                    .fill(Color.white)
-                                                    .frame(width: 48, height: 48)
-                                                    .shadow(radius: 5)
-                                                    .overlay(
-                                                        Image(systemName: "heart.fill")
-                                                            .font(.system(size: 26))
-                                                            .foregroundColor(Color("Salmon"))
-                                                    )
-                                            }
-                                            .padding(.trailing, 30)
-                                        }
-                                        .offset(y: UIScreen.main.bounds.height * 0.085)
-                                    )
+                                    .overlay(actionButtons(for: profile))
                                     .padding(.top, -20)
                             }
                         }
@@ -86,7 +42,7 @@ struct SwipeView: View {
                     Spacer()
                 }
 
-                // Error overlay
+                // Error banner
                 if let msg = vm.errorMessage {
                     VStack {
                         Spacer()
@@ -101,54 +57,49 @@ struct SwipeView: View {
             .navigationBarHidden(true)
         }
     }
-}
 
-// MARK: - Simple card view for demo
-private struct SwipeCardView: View {
-    let profile: UserProfile
-
-    var body: some View {
-        VStack(spacing: 12) {
-            AsyncImage(url: profile.profilePicURL) { phase in
-                switch phase {
-                case .success(let img): img.resizable().scaledToFill()
-                case .failure(_):       Color.gray.opacity(0.3)
-                case .empty:            ProgressView()
-                @unknown default:       Color.gray.opacity(0.3)
-                }
+    // MARK: - Like / dislike buttons overlay
+    private func actionButtons(for profile: UserProfile) -> some View {
+        HStack {
+            // Dislike
+            Button {
+                withAnimation { vm.swipeLeft(profile: profile) }
+            } label: {
+                Circle()
+                    .fill(Color.white)
+                    .frame(width: 48, height: 48)
+                    .shadow(radius: 5)
+                    .overlay(
+                        Image(systemName: "xmark")
+                            .font(.system(size: 26))
+                            .foregroundColor(.red)
+                    )
             }
-            .frame(height: 380)
-            .clipped()
+            .padding(.leading, 30)
 
-            Text(profile.username)
-                .font(.headline)
-                .foregroundColor(.white)
+            Spacer()
 
-            Text(profile.displayName)
-                .font(.title3).bold()
-                .foregroundColor(.white)
-
-            Text(profile.hometown)
-                .foregroundColor(.white)
-
-            Text(profile.job_or_university)
-                .foregroundColor(.white)
-
-            Text("Fav drink: \(profile.favorite_drink)")
-                .font(.footnote)
-                .foregroundColor(Color("Salmon"))
-                .padding(.bottom, 20)
+            // Like
+            Button {
+                withAnimation { vm.swipeRight(profile: profile) }
+            } label: {
+                Circle()
+                    .fill(Color.white)
+                    .frame(width: 48, height: 48)
+                    .shadow(radius: 5)
+                    .overlay(
+                        Image(systemName: "heart.fill")
+                            .font(.system(size: 26))
+                            .foregroundColor(Color("Salmon"))
+                    )
+            }
+            .padding(.trailing, 30)
         }
-        .frame(maxWidth: .infinity)
-        .background(Color.black.opacity(0.4))
-        .cornerRadius(30)
-        .shadow(radius: 8)
-        .padding()
+        .offset(y: UIScreen.main.bounds.height * 0.085)
     }
 }
 
-// MARK: - Preview
 #Preview {
     SwipeView()
-        .environmentObject(AuthViewModel())   // in case cards later need auth
+        .environmentObject(AuthViewModel())
 }
