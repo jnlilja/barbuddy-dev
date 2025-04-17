@@ -9,15 +9,25 @@ import SwiftUI
 
 struct ProfileView: View {
     @EnvironmentObject private var authVM: AuthViewModel
-    @State private var selectedTab      = 0
+    @State private var selectedTab: Int = 0
+    @State private var searchText: String = ""
     @State private var selectedImage: String? = nil
-    @State private var isImageExpanded = false
+    @State private var isImageExpanded: Bool = false
     @StateObject private var userFriends = UserFriends.shared
 
     private var gridCellWidth: CGFloat {
         let screenWidth = UIScreen.main.bounds.width
-        let padding     = CGFloat(16 * 2 + 15 * 2)
+        let padding = CGFloat(16 * 2 + 15 * 2)
         return (screenWidth - padding) / 3
+    }
+
+    // MARK: – Filtered Friends based on search
+    private var filteredFriends: [GetUser] {
+        guard !searchText.isEmpty else { return userFriends.friends }
+        return userFriends.friends.filter { friend in
+            let fullName = "\(friend.first_name) \(friend.last_name)".lowercased()
+            return fullName.contains(searchText.lowercased())
+        }
     }
 
     var body: some View {
@@ -54,8 +64,8 @@ struct ProfileView: View {
 
                         // MARK: – Tabs
                         HStack(spacing: 0) {
-                            TabButton(text: "Photos",  isSelected: selectedTab == 0) { selectedTab = 0 }
-                            TabButton(text: "Info",    isSelected: selectedTab == 1) { selectedTab = 1 }
+                            TabButton(text: "Photos", isSelected: selectedTab == 0) { selectedTab = 0 }
+                            TabButton(text: "Info", isSelected: selectedTab == 1) { selectedTab = 1 }
                             TabButton(text: "Friends", isSelected: selectedTab == 2) { selectedTab = 2 }
                         }
                         .background(Color.white.opacity(0.1))
@@ -63,7 +73,16 @@ struct ProfileView: View {
                         .padding(.horizontal)
                         .padding(.top, 20)
 
-                        // MARK: – Content
+                        // MARK: – Search Bar
+                        if selectedTab == 2 {
+                            TextField("Search Friends", text: $searchText)
+                                .padding(8)
+                                .background(Color(.systemGray6))
+                                .cornerRadius(8)
+                                .padding(.horizontal, 16)
+                        }
+
+                        // MARK: – Content Views
                         if selectedTab == 0 {
                             LazyVGrid(columns: [
                                 GridItem(.fixed(gridCellWidth), spacing: 15),
@@ -119,14 +138,14 @@ struct ProfileView: View {
                             .padding(.top)
 
                         } else {
-                            // Friends tab: real friends list
-                            if userFriends.friends.isEmpty {
-                                Text("No friends yet.")
+                            // MARK: – Friends List
+                            if filteredFriends.isEmpty {
+                                Text(searchText.isEmpty ? "No friends yet." : "No friends found.")
                                     .foregroundColor(.white)
                                     .padding()
                                     .frame(maxWidth: .infinity)
                             } else {
-                                ForEach(userFriends.friends) { friend in
+                                ForEach(filteredFriends) { friend in
                                     NavigationLink(destination: FriendProfile(user: friend)) {
                                         HStack {
                                             Image(friend.profile_pictures?.values.first ?? "")
@@ -227,10 +246,12 @@ struct InfoSection: View {
 }
 
 struct InfoItem: Identifiable {
-    let id   = UUID()
+    let id = UUID()
     let icon: String
     let text: String
 }
+
+
 
 
 //uncomment for real user data
