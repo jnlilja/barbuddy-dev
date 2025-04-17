@@ -118,11 +118,24 @@ struct DealsAndEventsView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var searchText: String = ""
 
+    // Compute today's weekday name, e.g. "Friday"
+    private var todayName: String {
+        let formatter = DateFormatter()
+        formatter.locale = Locale.current
+        formatter.dateFormat = "EEEE"
+        return formatter.string(from: Date())
+    }
+
+    // Filtered by search AND if the event occurs today
     private var filteredEvents: [BarEvent] {
-        sampleEvents.filter { $0.matchesSearch(query: searchText) }
+        sampleEvents.filter { event in
+            event.day.contains(todayName) && event.matchesSearch(query: searchText)
+        }
     }
     private var filteredDeals: [BarDeal] {
-        sampleDeals.filter { $0.matchesSearch(query: searchText) }
+        sampleDeals.filter { deal in
+            deal.day.contains(todayName) && deal.matchesSearch(query: searchText)
+        }
     }
 
     var body: some View {
@@ -143,42 +156,48 @@ struct DealsAndEventsView: View {
                 ScrollView {
                     VStack(spacing: 30) {
                         // Events Section
-                        VStack(alignment: .leading, spacing: 12) {
-                            Text("Featured Events")
-                                .font(.system(size: 32, weight: .bold))
-                                .foregroundColor(.white)
-                                .padding(.horizontal)
+                        if !filteredEvents.isEmpty {
+                            VStack(alignment: .leading, spacing: 12) {
+                                Text("Featured Events")
+                                    .font(.system(size: 32, weight: .bold))
+                                    .foregroundColor(.white)
+                                    .padding(.horizontal)
 
-                            ForEach(filteredEvents) { event in
-                                DetailedEventCard(
-                                    title: event.title,
-                                    location: event.location,
-                                    time:  event.timeDescription,
-                                    description: event.description
-                                )
-                            }
-
-                            ForEach(filteredDeals) { deal in
-                                DetailedEventCard(
-                                    title: deal.title,
-                                    location: deal.location,
-                                    time:  deal.timeDescription,
-                                    description: deal.description
-                                )
+                                ForEach(filteredEvents) { event in
+                                    DetailedEventCard(
+                                        title: event.title,
+                                        location: event.location,
+                                        time: event.timeDescription,
+                                        description: event.description
+                                    )
+                                }
                             }
                         }
 
-                        // Special Promotions
-                        VStack(alignment: .leading, spacing: 12) {
-                            Text("Special Promotions")
-                                .font(.system(size: 32, weight: .bold))
-                                .foregroundColor(.white)
-                                .padding(.horizontal)
+                        // Deals Section
+                        if !filteredDeals.isEmpty {
+                            VStack(alignment: .leading, spacing: 12) {
+                                Text("Happy Hours & Deals")
+                                    .font(.system(size: 32, weight: .bold))
+                                    .foregroundColor(.white)
+                                    .padding(.horizontal)
 
-                            // Placeholder: no promotions yet
-                            Text("No special promotions at this time.")
+                                ForEach(filteredDeals) { deal in
+                                    DetailedEventCard(
+                                        title: deal.title,
+                                        location: deal.location,
+                                        time: deal.timeDescription,
+                                        description: deal.description
+                                    )
+                                }
+                            }
+                        }
+
+                        // No items placeholder
+                        if filteredEvents.isEmpty && filteredDeals.isEmpty {
+                            Text("No deals or events available for \(todayName).")
                                 .foregroundColor(.white.opacity(0.7))
-                                .padding(.horizontal)
+                                .padding()
                         }
                     }
                     .padding(.vertical)
@@ -206,62 +225,10 @@ struct DealsAndEventsView: View {
     }
 }
 
-// MARK: - Row Views
-struct EventRow: View {
-    let event: BarEvent
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(event.title)
-                .font(.headline)
-                .foregroundColor(.white)
-            Text(event.location)
-                .font(.subheadline)
-                .foregroundColor(.white.opacity(0.8))
-            Text(event.timeDescription)
-                .font(.caption)
-                .foregroundColor(.white.opacity(0.7))
-            if !event.description.isEmpty {
-                Text(event.description)
-                    .font(.caption2)
-                    .foregroundColor(.white.opacity(0.7))
-            }
-        }
-        .padding()
-        .background(Color.white.opacity(0.1))
-        .cornerRadius(10)
-    }
-}
-
-struct DealRow: View {
-    let deal: BarDeal
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(deal.title)
-                .font(.headline)
-                .foregroundColor(.white)
-            Text(deal.location)
-                .font(.subheadline)
-                .foregroundColor(.white.opacity(0.8))
-            Text(deal.timeDescription)
-                .font(.caption)
-                .foregroundColor(.white.opacity(0.7))
-            if !deal.description.isEmpty {
-                Text(deal.description)
-                    .font(.caption2)
-                    .foregroundColor(.white.opacity(0.7))
-            }
-        }
-        .padding()
-        .background(Color.white.opacity(0.1))
-        .cornerRadius(10)
-    }
-}
-
 // MARK: - Preview
 #Preview("Deals and Events") {
     NavigationStack {
         DealsAndEventsView()
     }
 }
+
