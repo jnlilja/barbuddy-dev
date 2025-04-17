@@ -9,51 +9,43 @@
 import SwiftUI
 
 struct SwipeView: View {
-    @StateObject var viewModel = SwipeViewModel()
-    
+    @StateObject private var vm = SwipeViewModel()
+
     var body: some View {
         NavigationView {
             ZStack {
-                Color("DarkBlue")
-                    .ignoresSafeArea()
-                
+                Color("DarkBlue").ignoresSafeArea()
+
                 VStack {
-                    // Top Bar.
+                    // ───────── Top bar
                     HStack {
-                        HStack(spacing: 4) {
-                            Text("@ Hideaway")
-                                .font(.title2)
-                                .bold()
-                                .foregroundColor(.white)
-                                .padding(.horizontal, 15)
-                                .padding(.vertical, 4)
-                                .background(Color("Salmon").opacity(0.3))
-                                .cornerRadius(25)
-                        }
-                        .padding(.horizontal)
-                        .padding(.vertical, 8)
-                        
+                        Text("@ Hideaway")
+                            .font(.title2).bold()
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 15)
+                            .padding(.vertical, 4)
+                            .background(Color("Salmon").opacity(0.3))
+                            .cornerRadius(25)
                         Spacer()
                     }
-                    
-                    // Card Stack.
+                    .padding()
+
+                    // ───────── Card stack
                     ZStack {
-                        if viewModel.users.isEmpty {
+                        if vm.users.isEmpty {
                             Text("No more users")
                                 .font(.title)
                                 .foregroundColor(.white)
                         } else {
-                            ForEach(viewModel.users.reversed()) { user in
-                                SwipeCard(user: user)
+                            ForEach(vm.users.reversed()) { profile in
+                                SwipeCardView(profile: profile)
                                     .clipShape(RoundedRectangle(cornerRadius: 60))
                                     .overlay(
                                         HStack {
-                                            // Left X Button.
-                                            Button(action: {
-                                                withAnimation {
-                                                    viewModel.swipeLeft(user: user)
-                                                }
-                                            }) {
+                                            // Ignore (left swipe)
+                                            Button {
+                                                withAnimation { vm.swipeLeft(profile: profile) }
+                                            } label: {
                                                 Circle()
                                                     .fill(Color.white)
                                                     .frame(width: 48, height: 48)
@@ -65,15 +57,13 @@ struct SwipeView: View {
                                                     )
                                             }
                                             .padding(.leading, 30)
-                                            
+
                                             Spacer()
-                                            
-                                            // Right Heart Button.
-                                            Button(action: {
-                                                withAnimation {
-                                                    viewModel.swipeRight(user: user)
-                                                }
-                                            }) {
+
+                                            // Friend request (right swipe)
+                                            Button {
+                                                withAnimation { vm.swipeRight(profile: profile) }
+                                            } label: {
                                                 Circle()
                                                     .fill(Color.white)
                                                     .frame(width: 48, height: 48)
@@ -86,15 +76,26 @@ struct SwipeView: View {
                                             }
                                             .padding(.trailing, 30)
                                         }
-                                        // Position buttons slightly above the bottom.
                                         .offset(y: UIScreen.main.bounds.height * 0.085)
                                     )
+                                    .padding(.top, -20)
                             }
                         }
                     }
-                    .padding(.top, -20)
-                    
+
                     Spacer()
+                }
+
+                // Error overlay
+                if let msg = vm.errorMessage {
+                    VStack {
+                        Spacer()
+                        Text(msg)
+                            .padding()
+                            .frame(maxWidth: .infinity)
+                            .background(Color.red.opacity(0.9))
+                            .foregroundColor(.white)
+                    }
                 }
             }
             .navigationBarHidden(true)
@@ -102,8 +103,52 @@ struct SwipeView: View {
     }
 }
 
-struct SwipeView_Previews: PreviewProvider {
-    static var previews: some View {
-        SwipeView()
+// MARK: - Simple card view for demo
+private struct SwipeCardView: View {
+    let profile: UserProfile
+
+    var body: some View {
+        VStack(spacing: 12) {
+            AsyncImage(url: profile.profilePicURL) { phase in
+                switch phase {
+                case .success(let img): img.resizable().scaledToFill()
+                case .failure(_):       Color.gray.opacity(0.3)
+                case .empty:            ProgressView()
+                @unknown default:       Color.gray.opacity(0.3)
+                }
+            }
+            .frame(height: 380)
+            .clipped()
+
+            Text(profile.username)
+                .font(.headline)
+                .foregroundColor(.white)
+
+            Text(profile.displayName)
+                .font(.title3).bold()
+                .foregroundColor(.white)
+
+            Text(profile.hometown)
+                .foregroundColor(.white)
+
+            Text(profile.job_or_university)
+                .foregroundColor(.white)
+
+            Text("Fav drink: \(profile.favorite_drink)")
+                .font(.footnote)
+                .foregroundColor(Color("Salmon"))
+                .padding(.bottom, 20)
+        }
+        .frame(maxWidth: .infinity)
+        .background(Color.black.opacity(0.4))
+        .cornerRadius(30)
+        .shadow(radius: 8)
+        .padding()
     }
+}
+
+// MARK: - Preview
+#Preview {
+    SwipeView()
+        .environmentObject(AuthViewModel())   // in case cards later need auth
 }
