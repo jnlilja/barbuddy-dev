@@ -6,96 +6,98 @@
 //
 
 import SwiftUI
+import FirebaseAuth
 
 struct LoginView: View {
-    @State private var email = ""
-    @State private var password = ""
-    @State private var wrongUsername: Float = 0
-    @State private var wrongPassword: Float = 0
+    @State private var email              = ""
+    @State private var password           = ""
     @State private var showingSignUpSheet = false
-    @EnvironmentObject var authViewModel: AuthViewModel
-    
+    @State private var alertMessage       = ""
+    @State private var showingAlert       = false
+
+    @EnvironmentObject private var authVM: AuthViewModel
+    @StateObject private var vm = LoginViewModel()       // pulls profile via /users
+
     var body: some View {
         ZStack {
-            // Idea for new login page
             AnimatedBackgroundView()
+            Circle().scale(1.7).foregroundColor(Color("Nude")).opacity(0.15)
+            Circle().scale(1.35).foregroundColor(.nude).opacity(0.9)
 
-            Circle()
-                .scale(1.7)
-                .foregroundColor(Color("Nude")).opacity(0.15)
-            Circle()
-                .scale(1.35)
-                .foregroundColor(.nude).opacity(0.9)
-
-            VStack {
+            VStack(spacing: 15) {
                 Image(systemName: "party.popper.fill")
                     .font(.system(size: 60))
                     .foregroundColor(Color("DarkPurple"))
-                    .padding(.bottom, 20)
+                    .padding(.bottom, 10)
 
                 Text("BarBuddy")
-                    .font(.largeTitle)
+                    .font(.largeTitle).bold()
                     .foregroundColor(Color("DarkPurple"))
-                    .bold()
 
                 Text("Know Before You Go")
                     .font(.subheadline)
                     .foregroundColor(Color("DarkPurple"))
-                    .padding(.bottom, 50)
+                    .padding(.bottom, 30)
 
                 TextField("Email", text: $email)
-                    .textInputAutocapitalization(.never)
+                    .autocapitalization(.none)
                     .padding()
                     .frame(width: 300, height: 50)
                     .background(Color.white)
                     .cornerRadius(10)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 10)
-                            .stroke(Color("DarkPurple"), lineWidth: 1)
-                    )
-                    .border(.red, width: CGFloat(wrongUsername))
+                    .overlay(RoundedRectangle(cornerRadius: 10)
+                        .stroke(Color("DarkPurple"), lineWidth: 1))
 
                 SecureField("Password", text: $password)
                     .padding()
                     .frame(width: 300, height: 50)
                     .background(Color.white)
                     .cornerRadius(10)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 10)
-                            .stroke(Color("DarkPurple"), lineWidth: 1)
-                    )
-                    .border(.red, width: CGFloat(wrongPassword))
+                    .overlay(RoundedRectangle(cornerRadius: 10)
+                        .stroke(Color("DarkPurple"), lineWidth: 1))
                     .padding(.top, 10)
 
-                Button(action: {
+                // ───────── Login button
+                Button {
                     Task {
-                        try await authViewModel.signIn(
-                                email: email, password: password)
+                        do {
+                            try await authVM.signIn(email: email, password: password)
+                            // authVM.currentUser is now filled by AuthViewModel;
+                            // dismiss or navigate to the main app UI here if you like.
+                        } catch {
+                            alert(error.localizedDescription)
+                        }
                     }
-                }) {
+                } label: {
                     Text("Login")
-                        .font(.headline)
                         .foregroundColor(.white)
                         .frame(width: 300, height: 50)
                         .background(Color("DarkPurple"))
                         .cornerRadius(10)
                 }
-                .padding(.top, 30)
+                .padding(.top, 25)
 
-                Button(action: {
+                Button("Don't have an account? Sign up") {
                     showingSignUpSheet = true
-                }) {
-                    Text("Don't have an account? Sign up")
-                        .font(.subheadline)
-                        .foregroundColor(Color("DarkPurple"))
                 }
-                .padding(.top, 15)
+                .font(.subheadline)
+                .foregroundColor(Color("DarkPurple"))
             }
-            .padding()
         }
         .sheet(isPresented: $showingSignUpSheet) {
             SignUpView(isPresented: $showingSignUpSheet)
+                .environmentObject(authVM)   // pass auth down
         }
+        .alert("Login Error",
+               isPresented: $showingAlert,
+               actions: { Button("OK", role: .cancel) { } },
+               message: { Text(alertMessage) })
+    }
+
+    // helper
+    private func alert(_ msg: String) {
+        alertMessage = msg
+        showingAlert = true
     }
 }
 

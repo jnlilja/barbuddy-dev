@@ -1,107 +1,94 @@
-import Foundation
+//
+//  SignUpViewModel.swift
+//  BarBuddy
+//
 
-@Observable
-class SignUpViewModel: ObservableObject {
-    // Sign up fields already present
-    var email: String = ""
-    var newUsername: String = ""
-    var newPassword: String = ""
-    var confirmPassword: String = ""
-    
-    // Additional fields (if your UI collects these)
-    var firstName: String = ""
-    var lastName: String = ""
-    var dateOfBirth: String = ""
-    var hometown: String = ""
-    var jobOrUniversity: String = ""
-    var favoriteDrink: String = ""
-    
-    // Validation and state variables
-    var isValidEmail: Bool = true
-    var isValidPassword: Bool = true
-    var showingAlert = false
-    var alertMessage = ""
-    var passwordsMatch = true
-    var showingAgeVerification = false
-    
-    // Instance of the PostUserViewModel (to make the API call)
-    private let postUserVM = PostUserViewModel()
-    
+import Foundation
+import FirebaseAuth
+
+@MainActor
+final class SignUpViewModel: ObservableObject {
+    // ───────── UI‑bound fields ─────────
+    @Published var email            = ""
+    @Published var newUsername      = ""
+    @Published var newPassword      = ""
+    @Published var confirmPassword  = ""
+
+    @Published var firstName        = ""
+    @Published var lastName         = ""
+    @Published var dateOfBirth      = ""
+    @Published var hometown         = ""
+    @Published var jobOrUniversity  = ""
+    @Published var favoriteDrink    = ""
+    @Published var sexualPreference = "straight"
+    @Published var isValidEmail     = true
+    @Published var isValidPassword  = true
+    @Published var passwordsMatch   = true
+
+
+    // ───────── Validation state ─────────
+    @Published var alertMessage = ""
+    @Published var showingAlert = false
+
+    // MARK: - Public entry point from the UI
     func validateAndSignUp() {
-        // Reset validation states
-        isValidEmail = true
-        isValidPassword = true
-        passwordsMatch = true
-        
-        // Validate email
-        if !isValidEmailFormat(email) {
-            isValidEmail = false
-            alertMessage = "Please enter a valid email address"
-            showingAlert = true
-            return
+        // 1) Basic client‑side validation
+        guard isValidEmailFormat(email) else { return fire("Please enter a valid email.") }
+        guard newUsername.count >= 3 else { return fire("Username must be ≥ 3 characters.") }
+        guard isValidPasswordFormat(newPassword) else {
+            return fire("Password must be ≥ 8 characters with a number & special char.")
         }
-        
-        // Validate username
-        if newUsername.count < 3 {
-            alertMessage = "Username must be at least 3 characters long"
-            showingAlert = true
-            return
-        }
-        
-        // Validate password format
-        if !isValidPasswordFormat(newPassword) {
-            isValidPassword = false
-            alertMessage = "Password must be at least 8 characters with a number and special character"
-            showingAlert = true
-            return
-        }
-        
-        // Check if passwords match
-        if newPassword != confirmPassword {
-            passwordsMatch = false
-            alertMessage = "Passwords do not match"
-            showingAlert = true
-            return
-        }
-        
-        // If everything validates and if you’re ready to proceed (or after age verification),
-        // call signUpUser() to create the API call.
-        if !showingAlert {
-            signUpUser()
-        }
-    }
-    
-    // Constructs a PostUser instance and calls the API to create the new user.
-    func signUpUser() {
-        let newUser = PostUser(
+        guard newPassword == confirmPassword else { return fire("Passwords do not match.") }
+
+        // 2) Build profile & call Auth + API
+        let profile = PostUser(
             username: newUsername,
             first_name: firstName,
             last_name: lastName,
             email: email,
-            password: newPassword,
+            password: newPassword,      // store hashed in backend, plain here only to send
             date_of_birth: dateOfBirth,
             hometown: hometown,
             job_or_university: jobOrUniversity,
             favorite_drink: favoriteDrink,
             profile_pictures: [:],
-            account_type: "regular"
+            account_type: "regular",
+            sexual_preference: sexualPreference
         )
-        
-        // Use the PostUserViewModel to send the request
-        postUserVM.postUser(newUser: newUser)
+
+        Task {
+            await signUp(profile: profile)
+        }
     }
-    
-    // Regex for validating email format.
-    private func isValidEmailFormat(_ email: String) -> Bool {
-        let emailRegex = "[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,64}"
-        let emailPredicate = NSPredicate(format:"SELF MATCHES %@", emailRegex)
-        return emailPredicate.evaluate(with: email)
+
+    // MARK: - Sign‑up flow
+    private func signUp(profile: PostUser) async {
+        do {
+            // 1) Create Firebase Auth account
+            _ = try await Auth.auth().createUser(withEmail: profile.email,
+                                                 password: profile.password)
+
+            // 2) Send profile JSON to your API
+            try await PostUserAPIService.shared.create(user: profile)
+
+            alertMessage = "Account created successfully!"
+            showingAlert = true
+        } catch {
+            fire(error.localizedDescription)
+        }
     }
-    
-    // Regex for validating password format.
-    private func isValidPasswordFormat(_ password: String) -> Bool {
-        let passwordRegex = "^(?=.*[0-9])(?=.*[!@#$%^&*])[A-Za-z0-9!@#$%^&*]{8,}$"
-        let passwordPredicate = NSPredicate(format:"SELF MATCHES %@", passwordRegex)
-        return passwordPredicate.evaluate(with: password)
+
+    // MARK: - Helpers
+    private func isValidEmailFormat(_ str: String) -> Bool {
+        let regex = "[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,64}"
+        return NSPredicate(format: "SELF MATCHES %@", regex).evaluate(with: str)
+    }
+    private func isValidPasswordFormat(_ str: String) -> Bool {
+        let regex = "^(?=.*[0-9])(?=.*[!@#$%^&*]).{8,}$"
+        return NSPredicate(format: "SELF MATCHES %@", regex).evaluate(with: str)
+    }
+    private func fire(_ message: String) {
+        alertMessage  = message
+        showingAlert  = true
     }
 }
