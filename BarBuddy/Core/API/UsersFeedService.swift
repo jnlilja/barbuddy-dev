@@ -15,12 +15,14 @@ struct UserProfile: Identifiable, Codable, Hashable {
     let username: String
     let first_name: String
     let last_name: String
+    let email: String
     let hometown: String
     let job_or_university: String
     let favorite_drink: String
+    let location: String
     let profile_pictures: [String: String]?
     let date_of_birth: String
-
+    let sexual_preference: String
     // Convenience
     var displayName: String { "\(first_name) \(last_name)".trimmingCharacters(in: .whitespaces) }
 
