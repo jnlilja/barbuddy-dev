@@ -78,11 +78,14 @@ class MessageViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated, IsSenderOrReceiver]
 
     def get_queryset(self):
-        """Return messages where the user is either sender or recipient"""
+        # Fix for Swagger schema generation (AnonymousUser issue)
+        if getattr(self, 'swagger_fake_view', False):
+            return Message.objects.none()
+
         return Message.objects.filter(
             models.Q(sender=self.request.user) |
             models.Q(recipient=self.request.user)
-        )
+    )
 
     def perform_create(self, serializer):
         recipient = serializer.validated_data.get('recipient')

@@ -4,12 +4,19 @@ from apps.bars.models import Bar
 import random, string
 from django.core.exceptions import ValidationError
 
+
+class MessageManager(models.Manager):
+    def get_unread_messages(self, user):
+        return self.filter(recipient=user, is_read=False)
+
+
 class Message(models.Model):
     sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_messages')
     recipient = models.ForeignKey(User, on_delete=models.CASCADE, related_name='received_messages')
     content = models.TextField(max_length=5000)
     timestamp = models.DateTimeField(auto_now_add=True)
     is_read = models.BooleanField(default=False)
+    objects = MessageManager()
 
     class Meta:
         app_label = 'messaging'
@@ -53,20 +60,16 @@ class GroupChat(models.Model):
 
     def clean(self):
         super().clean()
-        # Ensure group chat has at least 2 members
-        if hasattr(self, 'pk') and self.members.count() < 2:
-            raise ValidationError("A group chat must have at least 2 members.")
-
-        # Ensure name isn't empty
         if not self.name or len(self.name.strip()) == 0:
             raise ValidationError("Group chat name cannot be empty.")
 
-    def __str__(self):
-        return self.name
-
     def save(self, *args, **kwargs):
-        self.clean()
+        is_new = self.pk is None
         super().save(*args, **kwargs)
+
+        # Only validate member count AFTER save (so self.members is ready)
+        if self.members.count() < 2:
+            raise ValidationError("A group chat must have at least 2 members.")
 
 class GroupMessage(models.Model):
     group = models.ForeignKey(GroupChat, on_delete=models.CASCADE, related_name='messages')
@@ -94,3 +97,5 @@ class GroupMessage(models.Model):
     def save(self, *args, **kwargs):
         self.clean()
         super().save(*args, **kwargs)
+
+
