@@ -38,7 +38,7 @@ struct ProfileView: View {
         NavigationView {
             ZStack {
                 Color("DarkBlue")
-                        .ignoresSafeArea()
+                    .ignoresSafeArea()
                 // ─── Main profile + tabs + content ───
                 if let user = authVM.currentUser {
                     ScrollView {
@@ -139,7 +139,7 @@ struct ProfileView: View {
                                 .padding(.horizontal, 16)
 
                             default:
-                                // Friends list (no inline search bar)
+                                // Friends list
                                 if userFriends.friends.isEmpty {
                                     Text("No friends yet.")
                                         .foregroundColor(.white)
@@ -184,7 +184,6 @@ struct ProfileView: View {
                                 searchText = ""
                                 isSearchFieldFocused = false
                             }
-                            
                         }
                         .foregroundColor(Color("Salmon"))
                         .padding(.leading, 8)
@@ -203,29 +202,28 @@ struct ProfileView: View {
                     .listStyle(PlainListStyle())
                 }
                 .background(Color("DarkBlue").ignoresSafeArea())
-                // slide from bottom when toggled
                 .offset(y: isSearchActive ? 0 : UIScreen.main.bounds.height)
                 .animation(.easeInOut(duration: 0.25), value: isSearchActive)
                 .zIndex(1)
             }
             .toolbar {
-              ToolbarItem(placement: .navigationBarLeading) {
-                NavigationLink(destination: RequestsView()) {
-                  Label("Friend Requests", systemImage: "person.crop.circle.badge.plus")
+                ToolbarItem(placement: .navigationBarLeading) {
+                    NavigationLink(destination: RequestsView()) {
+                        Label("Friend Requests", systemImage: "person.crop.circle.badge.plus")
+                    }
+                    .tint(Color("Salmon"))
                 }
-                // apply your asset color here:
-                .tint(Color("Salmon"))
-              }
-              ToolbarItem(placement: .navigationBarTrailing) {
-                Button {
-                  withAnimation { isSearchActive = true }
-                } label: {
-                  Image(systemName: "magnifyingglass")
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button {
+                        withAnimation { isSearchActive = true }
+                    } label: {
+                        Image(systemName: "magnifyingglass")
+                    }
+                    .tint(Color("Salmon"))
                 }
-                .tint(Color("Salmon"))
-              }
             }
         }
+        .tint(Color("Salmon")) // ← Apply Salmon tint to back button
     }
 }
 
