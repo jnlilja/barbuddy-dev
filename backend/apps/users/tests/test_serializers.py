@@ -18,7 +18,8 @@ class UserSerializerTests(TestCase):
             favorite_drink="Coffee",
             location=Point(1.0, 2.0, srid=4326),
             profile_pictures=["pic1.jpg", "pic2.jpg"],
-            account_type="trusted"
+            account_type="trusted",
+            sexual_preference="gay"
         )
 
         self.user2 = User.objects.create_user(
@@ -31,7 +32,8 @@ class UserSerializerTests(TestCase):
             favorite_drink="Tea",
             location=Point(3.0, 4.0, srid=4326),
             profile_pictures=["pic3.jpg"],
-            account_type="regular"
+            account_type="regular",
+            sexual_preference="straight"
         )
 
         self.match = Match.objects.create(user1=self.user1, user2=self.user2, status="connected")
@@ -50,6 +52,7 @@ class UserSerializerTests(TestCase):
         self.assertEqual(data["account_type"], self.user1.account_type)
         self.assertEqual(len(data["matches"]), 1)
         self.assertEqual(len(data["swipes"]), 1)
+        self.assertEqual(data["sexual_preference"], self.user1.sexual_preference)
 
     def test_deserialize_and_create_user(self):
         data = {
@@ -62,7 +65,8 @@ class UserSerializerTests(TestCase):
             "favorite_drink": "Water",
             "location": {"latitude": 5.0, "longitude": 6.0},
             "profile_pictures": ["newpic1.jpg", "newpic2.jpg"],
-            "account_type": "regular"
+            "account_type": "regular",
+            "sexual_preference": "bisexual"
         }
         serializer = UserSerializer(data=data)
         self.assertTrue(serializer.is_valid(), serializer.errors)
@@ -70,13 +74,15 @@ class UserSerializerTests(TestCase):
         self.assertEqual(user.username, "newuser")
         self.assertEqual(user.location.x, 6.0)
         self.assertEqual(user.location.y, 5.0)
+        self.assertEqual(user.sexual_preference, "bisexual")
 
     def test_update_user(self):
         data = {
             "first_name": "Updated",
             "last_name": "User",
             "hometown": "Updated Town",
-            "location": {"latitude": 9.0, "longitude": 10.0}
+            "location": {"latitude": 9.0, "longitude": 10.0},
+            "sexual_preference": "asexual"
         }
         serializer = UserSerializer(instance=self.user1, data=data, partial=True)
         self.assertTrue(serializer.is_valid(), serializer.errors)
@@ -84,6 +90,7 @@ class UserSerializerTests(TestCase):
         self.assertEqual(user.first_name, "Updated")
         self.assertEqual(user.location.x, 10.0)
         self.assertEqual(user.location.y, 9.0)
+        self.assertEqual(user.sexual_preference, "asexual")
 
     def test_validate_date_of_birth(self):
         too_young_data = {

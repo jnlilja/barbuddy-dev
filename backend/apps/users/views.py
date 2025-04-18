@@ -11,6 +11,10 @@ from .serializers import UserSerializer, UserLocationUpdateSerializer
 from .permissions import IsOwnerOrReadOnly
 from .authentication import FirebaseAuthentication
 
+from .models import FriendRequest
+from .serializers import FriendRequestSerializer
+
+
 User = get_user_model()
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -55,3 +59,41 @@ class UserViewSet(viewsets.ModelViewSet):
             serializer.update(request.user, serializer.validated_data)
             return Response({"status": "Location updated successfully."})
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    @action(detail=True, methods=["post"])
+    def send_friend_request(self, request, pk=None):
+        to_user = User.objects.get(pk=pk)
+        if request.user == to_user:
+            return Response({"error": "You cannot send a request to yourself."}, status=400)
+
+        friend_request, created = FriendRequest.objects.get_or_create(from_user=request.user, to_user=to_user)
+        if not created:
+            return Response({"error": "Friend request already sent."}, status=400)
+
+        return Response({"status": "Friend request sent."})
+
+    @action(detail=True, methods=["post"])
+    def respond_friend_request(self, request, pk=None):
+        action = request.data.get("action")
+        try:
+            fr = FriendRequest.objects.get(pk=pk, to_user=request.user)
+        except FriendRequest.DoesNotExist:
+            return Response({"error": "Friend request not found."}, status=404)
+
+        if action == "accept":
+            fr.status = "accepted"
+            fr.save()
+            request.user.friends.add(fr.from_user)
+            fr.from_user.friends.add(request.user)
+            return Response({"status": "Friend request accepted."})
+        elif action == "decline":
+            fr.status = "declined"
+            fr.save()
+            return Response({"status": "Friend request declined."})
+        return Response({"error": "Invalid action."}, status=400)
+
+    @action(detail=False, methods=["get"])
+    def friends(self, request):
+        friends = request.user.friends.all()
+        data = UserSerializer(friends, many=True).data
+        return Response(data)

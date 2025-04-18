@@ -13,6 +13,8 @@ class User(AbstractUser):
     location = gis.PointField(geography=True, srid=4326, null=True, blank=True)
     profile_pictures = models.JSONField(default=list, blank=True)
     vote_weight = models.IntegerField(default=1)
+    friends = models.ManyToManyField('self', symmetrical=True, blank=True)
+
 
     SEXUAL_PREFERENCE_CHOICES = [
         ('straight', 'Straight'),
@@ -72,3 +74,17 @@ class User(AbstractUser):
         }
         self.vote_weight = account_weights.get(self.account_type, 1)
         super().save(*args, **kwargs)
+
+
+
+class FriendRequest(models.Model):
+    from_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_requests')
+    to_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='received_requests')
+    status = models.CharField(max_length=10, choices=[('pending', 'Pending'), ('accepted', 'Accepted'), ('declined', 'Declined')], default='pending')
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('from_user', 'to_user')
+
+    def __str__(self):
+        return f"{self.from_user} -> {self.to_user} [{self.status}]"
