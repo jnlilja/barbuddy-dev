@@ -97,3 +97,29 @@ class UserViewSet(viewsets.ModelViewSet):
         friends = request.user.friends.all()
         data = UserSerializer(friends, many=True).data
         return Response(data)
+    
+    @action(detail=False, methods=["post"])
+    def update_profile_pictures(self, request):
+        user = request.user
+        pics = request.data.get("profile_pictures", [])
+        if not isinstance(pics, list):
+            return Response({"error": "Expected a list of image URLs."}, status=400)
+
+        user.profile_pictures = pics
+        user.save()
+        return Response({"status": "Profile pictures updated."})
+    
+    @action(detail=False, methods=["delete"])
+    def delete_profile_picture(self, request):
+        user = request.user
+        url_to_remove = request.data.get("url")
+
+        if not url_to_remove:
+            return Response({"error": "No URL provided."}, status=400)
+
+        if url_to_remove not in user.profile_pictures:
+            return Response({"error": "URL not found in profile pictures."}, status=404)
+
+        user.profile_pictures.remove(url_to_remove)
+        user.save()
+        return Response({"status": "Profile picture removed."})
