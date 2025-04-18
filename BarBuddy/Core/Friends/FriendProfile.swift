@@ -9,6 +9,11 @@ import SwiftUI
 
 struct FriendProfile: View {
     let user: GetUser
+        @StateObject private var friendService = FriendService.shared
+
+        var isFriend: Bool {
+            friendService.friends.contains { $0.id == user.id }
+        }
 
     var body: some View {
         ScrollView {
@@ -94,6 +99,12 @@ struct FriendProfile: View {
                 .background(Color.white)
                 .cornerRadius(20)
                 .padding()
+                if !isFriend {
+                    Button("Add Friend") { Task { await friendService.sendFriendRequest(to: user) } }
+                        .buttonStyle(.borderedProminent)
+                        .tint(Color("DarkPurple")) 
+                        .padding()
+                }
             }
         }
         .navigationBarTitleDisplayMode(.inline)
