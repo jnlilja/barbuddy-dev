@@ -14,7 +14,8 @@ final class MapViewModel: ObservableObject {
     // MARK: – Published properties so SwiftUI updates when they change
     @Published var cameraPosition: MapCameraPosition = .userLocation(fallback: .automatic)
         @Published var statuses: [Int: BarStatus] = [:]    // now Equatable
-
+    @Published var music:    [Int: String]    = [:]
+        @Published var pricing:  [Int: String]    = [:]
     // MARK: – Static list of bars in Pacific Beach
     let bars: [Bar] = [
         Bar(name: "Mavericks Beach Club",
@@ -70,55 +71,49 @@ final class MapViewModel: ObservableObject {
         }
 
     func loadBarData() async {
-        do {
-            async let votes    = BarStatusService.shared.fetchVoteSummaries()
-            async let rawStats = BarStatusService.shared.fetchStatuses()
-            let (voteSummaries, _) = try await (votes, rawStats)
+            do {
+                async let rawStatuses = BarStatusService.shared.fetchStatuses()
+                async let voteSummaries = BarStatusService.shared.fetchVoteSummaries()
+                let (statusList, summaries) = try await (rawStatuses, voteSummaries)
 
-            // 1) Group all the VoteSummary records by bar ID
-            let byBar = Dictionary(grouping: voteSummaries, by: \.bar)
-
-            var computed: [Int: BarStatus] = [:]
-            for (barId, votes) in byBar {
-                // 2) turn the crowd_size strings into Ints, average them
-                let crowdInts = votes.compactMap { Int($0.crowd_size) }
-                let avgCrowd  = crowdInts.isEmpty
-                              ? 0
-                              : crowdInts.reduce(0,+) / crowdInts.count
-
-                // 3) same for wait_time
-                let waitInts  = votes.compactMap { Int($0.wait_time) }
-                let avgWait   = waitInts.isEmpty
-                              ? 0
-                              : waitInts.reduce(0,+) / waitInts.count
-
-                // 4) build a BarStatus with your averaged values
-                let latestTimestamp = votes
-                    .map { $0.timestamp }
-                    .max() ?? ""
-
-                computed[barId] = BarStatus(
-                    id: barId,
-                    bar: barId,
-                    crowd_size: "\(avgCrowd)",
-                    wait_time: "\(avgWait)",
-                    last_updated: latestTimestamp
-                )
+                let threshold = 1
+                var kept: [Int: BarStatus] = [:]
+                for st in statusList {
+                    let count = summaries.filter { $0.bar == st.bar }.count
+                    if count > threshold { kept[st.bar] = st }
+                }
+                statuses = kept
+            } catch {
+                print("Failed loading bar data:", error)
             }
-
-            // Publish the averaged results
-            statuses = computed
-
-        } catch {
-            print("Failed to load bar votes:", error)
         }
-    }
 
+        /// Loads music & pricing choices
+        func loadMetadata() async {
+            do {
+                async let rawMusic   = BarStatusService.shared.fetchMusic()
+                async let rawPricing = BarStatusService.shared.fetchPricing()
+                let (musicList, priceList) = try await (rawMusic, rawPricing)
+
+                var mDict: [Int: String] = [:]
+                for m in musicList { mDict[m.bar] = m.music }
+                music = mDict
+
+                var pDict: [Int: String] = [:]
+                for p in priceList { pDict[p.bar] = p.price_range }
+                pricing = pDict
+
+            } catch {
+                print("Failed loading metadata:", error)
+            }
+        }
 
         func updateCameraPosition(bar: String) async {
             guard let coord = await fetchBarLocation(bar) else { return }
             cameraPosition = .region(
-                .init(center: coord, latitudinalMeters: 300, longitudinalMeters: 300)
+                .init(center: coord,
+                      latitudinalMeters: 300,
+                      longitudinalMeters: 300)
             )
         }
 

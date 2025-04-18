@@ -26,16 +26,28 @@ public struct VoteSummary: Codable, Equatable, Sendable {
     public let timestamp: String
 }
 
+public struct BarMusic: Codable, Equatable, Sendable {
+    public let id: Int
+    public let bar: Int
+    public let music: String
+}
+
+public struct BarPricing: Codable, Equatable, Sendable {
+    public let id: Int
+    public let bar: Int
+    public let price_range: String
+}
+
 public actor BarStatusService {
     public static let shared = BarStatusService()
-    private let baseURL = URL(string: "https://your‑api‑url.com")!
+    private let baseURL = URL(string: "https://your-api-url.com")!
     private init() {}
 
     // GET /bar-status/
     public func fetchStatuses() async throws -> [BarStatus] {
         let url = baseURL.appendingPathComponent("bar-status/")
-        let (data, resp) = try await URLSession.shared.data(from: url)
-        guard (resp as? HTTPURLResponse)?.statusCode == 200 else {
+        let (data, response) = try await URLSession.shared.data(from: url)
+        guard (response as? HTTPURLResponse)?.statusCode == 200 else {
             throw URLError(.badServerResponse)
         }
         return try JSONDecoder().decode([BarStatus].self, from: data)
@@ -44,25 +56,47 @@ public actor BarStatusService {
     // GET /bar-votes/summary/
     public func fetchVoteSummaries() async throws -> [VoteSummary] {
         let url = baseURL.appendingPathComponent("bar-votes/summary/")
-        let (data, resp) = try await URLSession.shared.data(from: url)
-        guard (resp as? HTTPURLResponse)?.statusCode == 200 else {
+        let (data, response) = try await URLSession.shared.data(from: url)
+        guard (response as? HTTPURLResponse)?.statusCode == 200 else {
             throw URLError(.badServerResponse)
         }
         return try JSONDecoder().decode([VoteSummary].self, from: data)
     }
 
+    // GET /bar-music/
+    public func fetchMusic() async throws -> [BarMusic] {
+        let url = baseURL.appendingPathComponent("bar-music/")
+        let (data, response) = try await URLSession.shared.data(from: url)
+        guard (response as? HTTPURLResponse)?.statusCode == 200 else {
+            throw URLError(.badServerResponse)
+        }
+        return try JSONDecoder().decode([BarMusic].self, from: data)
+    }
+
+    // GET /bar-pricing/
+    public func fetchPricing() async throws -> [BarPricing] {
+        let url = baseURL.appendingPathComponent("bar-pricing/")
+        let (data, response) = try await URLSession.shared.data(from: url)
+        guard (response as? HTTPURLResponse)?.statusCode == 200 else {
+            throw URLError(.badServerResponse)
+        }
+        return try JSONDecoder().decode([BarPricing].self, from: data)
+    }
+
     // POST /bar-votes/
     public func submitVote(barId: Int, crowdSize: String, waitTime: String) async throws {
         let url = baseURL.appendingPathComponent("bar-votes/")
-        var req = URLRequest(url: url)
-        req.httpMethod = "POST"
-        req.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        let body = ["bar": barId,
-                    "crowd_size": crowdSize,
-                    "wait_time": waitTime] as [String: Any]
-        req.httpBody = try JSONSerialization.data(withJSONObject: body)
-        let (_, resp) = try await URLSession.shared.data(for: req)
-        guard (resp as? HTTPURLResponse)?.statusCode == 201 else {
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        let body: [String: Any] = [
+            "bar": barId,
+            "crowd_size": crowdSize,
+            "wait_time": waitTime
+        ]
+        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+        let (_, response) = try await URLSession.shared.data(for: request)
+        guard (response as? HTTPURLResponse)?.statusCode == 201 else {
             throw URLError(.badServerResponse)
         }
     }
