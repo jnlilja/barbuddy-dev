@@ -20,8 +20,7 @@ For the time being, this documentation is temporary:
 To view the API documentation:
 
 1. Open [Swagger Editor](https://editor-next.swagger.io/).
-2. Copy and paste the contents of the [April17.txt](https://github.com/user-attachments/files/19808103/April17.copy.txt)
-file into the editor.
+2. Copy and paste the contents of the [April18.txt](https://github.com/user-attachments/files/19817239/April18.txt) file into the editor.
 
 ## Testing Authentication
 At the BarBuddy login screen enter the following:
@@ -46,4 +45,10 @@ I added a `sexual_preference` field to the user model. Options are:
 In Swift, you can grab the token with:
 
 `Auth.auth().currentUser?.getIDToken { idToken, error in     // attach "Bearer \(idToken)" to your API request headers }`
+
+
+### Events filtering based on day: 
+
+GET /api/events/?today=true
+Authorization: Bearer <token>
 
