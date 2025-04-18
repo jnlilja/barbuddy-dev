@@ -1,6 +1,7 @@
 # .gitignore
 
 backend/.env
+backend/venv-3.11.8
 
 # Ignore the virtual environment
 env/
