@@ -1,87 +1,83 @@
 from rest_framework import serializers
-from .models import Bar, BarStatus
 from django.contrib.gis.geos import Point
 from django.db.models import Avg
 from django.contrib.auth import get_user_model
-from .models import BarRating, BarVote
 
+from .models import Bar, BarStatus, BarRating, BarVote, BarImage
 
 User = get_user_model()
 
+class BarImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BarImage
+        fields = ['id', 'image', 'caption', 'uploaded_at']
+
+
 class BarSerializer(serializers.ModelSerializer):
     location = serializers.SerializerMethodField()
-
-    #BarBuddy APP users that are currently at the bar
-    users_at_bar = serializers.PrimaryKeyRelatedField(many=True, queryset=User.objects.all(), required=False)
+    users_at_bar = serializers.PrimaryKeyRelatedField(
+        many=True, queryset=User.objects.all(), required=False
+    )
     current_status = serializers.SerializerMethodField()
     average_rating = serializers.SerializerMethodField()
+    images = BarImageSerializer(many=True, read_only=True)    # ← NEW
 
     class Meta:
         model = Bar
-        #removed music_genre
-        fields = ['id', 'name', 'address', 'average_price',
-                  'location', 'users_at_bar', 'current_status', 'average_rating']
+        fields = [
+            'id', 'name', 'address', 'average_price',
+            'location', 'users_at_bar', 'current_status',
+            'average_rating', 'images',                   # ← NEW
+        ]
 
     def get_location(self, obj):
-        return {"latitude": obj.location.y, "longitude": obj.location.x} if obj.location else None
+        if not obj.location:
+            return None
+        return {
+            "latitude": obj.location.y,
+            "longitude": obj.location.x
+        }
 
     def get_current_status(self, obj):
-        status = obj.get_latest_status()
-        return status if status else None
+        return obj.get_latest_status()
 
-    
-    #Moving this to BarRatingSerializer
     def get_average_rating(self, obj):
-        """Optimize rating retrieval using aggregate()."""
-        average = obj.ratings.aggregate(Avg("rating"))["rating__avg"]
-        return round(average, 2) if average else None 
-    
+        avg = obj.ratings.aggregate(Avg("rating"))["rating__avg"]
+        return round(avg, 2) if avg is not None else None
 
-    #MOST LIKELY NOT NEEDED, CHECK WITH TEAM ON THIS 
     def validate_users_at_bar(self, value):
-        return value
+        return value  # front‑end managed
 
     def to_internal_value(self, data):
-        """Convert latitude/longitude dictionary into a GIS Point object."""
-        internal_value = super().to_internal_value(data)
-
-        if "location" in data and isinstance(data["location"], dict):
+        iv = super().to_internal_value(data)
+        loc = data.get("location")
+        if isinstance(loc, dict):
             try:
-                lat = float(data["location"].get("latitude"))
-                lon = float(data["location"].get("longitude"))
-                if lat is None or lon is None:
-                    raise ValueError()
-                # Store the Point object in internal_value
-                internal_value["location"] = Point(lon, lat, srid=4326)
-            except (TypeError, ValueError):
-                raise serializers.ValidationError({"location": "Latitude and longitude must be valid numbers."})
-
-        return internal_value
+                lat = float(loc["latitude"])
+                lon = float(loc["longitude"])
+                iv["location"] = Point(lon, lat, srid=4326)
+            except Exception:
+                raise serializers.ValidationError({
+                    "location": "Latitude and longitude must be valid numbers."
+                })
+        return iv
 
     def update(self, instance, validated_data):
-        # Handle users_at_bar separately if present
-        users_data = validated_data.pop('users_at_bar', None)
-
-        # Update all other fields, including location
-        for attr, value in validated_data.items():
-            setattr(instance, attr, value)
-
-        # Update many-to-many relationship if users_data is provided
-        if users_data is not None:
-            instance.users_at_bar.set(users_data)
-
+        users = validated_data.pop('users_at_bar', None)
+        for attr, val in validated_data.items():
+            setattr(instance, attr, val)
+        if users is not None:
+            instance.users_at_bar.set(users)
         instance.save()
         return instance
 
 
 class BarStatusSerializer(serializers.ModelSerializer):
-    # bar = serializers.PrimaryKeyRelatedField(queryset=Bar.objects.all())
-
     class Meta:
         model = BarStatus
-        fields = ['id', 'bar', 'crowd_size', 'wait_time', 'last_updated'] 
+        fields = ['id', 'bar', 'crowd_size', 'wait_time', 'last_updated']
 
-#added a serializer for BarRating
+
 class BarRatingSerializer(serializers.ModelSerializer):
     class Meta:
         model = BarRating
@@ -102,6 +98,6 @@ class BarVoteSerializer(serializers.ModelSerializer):
         read_only_fields = ['timestamp']
 
     def validate(self, data):
-        if data['bar'] is None:
+        if data.get('bar') is None:
             raise serializers.ValidationError("A bar must be specified.")
         return data
