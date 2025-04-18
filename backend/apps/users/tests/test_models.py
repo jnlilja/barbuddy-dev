@@ -20,7 +20,8 @@ class UserModelTest(TestCase):
             'favorite_drink': 'Water',
             'location': Point(0, 0, srid=4326),
             'profile_pictures': ['pic1.jpg', 'pic2.jpg'],
-            'account_type': 'trusted'
+            'account_type': 'trusted',
+            'sexual_preference': 'bisexual'
         }
 
     def test_create_user_with_valid_data(self):
@@ -37,6 +38,7 @@ class UserModelTest(TestCase):
         self.assertEqual(user.profile_pictures, ['pic1.jpg', 'pic2.jpg'])
         self.assertEqual(user.account_type, 'trusted')
         self.assertEqual(user.vote_weight, 2)  # Based on account type
+        self.assertEqual(user.sexual_preference, 'bisexual')
 
     def test_user_get_age(self):
         """Test the get_age method."""
@@ -127,4 +129,4 @@ class UserModelTest(TestCase):
         self.assertEqual(user.profile_pictures, [])
         self.assertEqual(user.vote_weight, 1)  # Default value
         self.assertEqual(user.account_type, 'regular')  # Default account type
-
+        self.assertEqual(user.sexual_preference, None)  # Default is None

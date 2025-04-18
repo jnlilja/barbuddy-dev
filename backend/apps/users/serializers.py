@@ -7,6 +7,8 @@ from apps.matches.models import Match
 from apps.swipes.models import Swipe
 from apps.swipes.serializers import SwipeSerializer
 from apps.matches.serializers import MatchSerializer
+from .models import FriendRequest
+
 
 User = get_user_model()
 
@@ -104,3 +106,11 @@ class UserLocationUpdateSerializer(serializers.Serializer):
         )
         instance.save()
         return instance
+
+
+class FriendRequestSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FriendRequest
+        fields = ['id', 'from_user', 'to_user', 'status', 'timestamp']
+        read_only_fields = ['from_user', 'timestamp', 'status']
+
