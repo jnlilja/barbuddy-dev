@@ -15,15 +15,17 @@ struct BarCard: View {
     @Environment(\.colorScheme) var colorScheme
     @State private var showingDetail = false
 
+    // Find this bar’s index in the static array
     private var idx: Int {
         viewModel.bars.firstIndex(where: { $0.id == bar.id }) ?? -1
     }
 
-    private var crowdSize: String {
-        viewModel.statuses[idx]?.crowd_size ?? "–"
-    }
+    // Dynamic values from the view model
     private var musicType: String {
         viewModel.music[idx] ?? "–"
+    }
+    private var crowdSize: String {
+        viewModel.statuses[idx]?.crowd_size ?? "–"
     }
     private var priceRange: String {
         viewModel.pricing[idx] ?? "–"
@@ -31,7 +33,7 @@ struct BarCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            // ───────── Bar Header
+            // Bar Header
             HStack {
                 Text(bar.name)
                     .font(.system(size: 32, weight: .bold))
@@ -47,25 +49,25 @@ struct BarCard: View {
                 }
             }
 
-            // ───────── Open Hours
+            // Open Hours
             Text("Open 11am – 2am")
                 .foregroundColor(colorScheme == .dark ? .nude : Color("DarkPurple"))
 
-            // ───────── Bar Image Placeholder
+            // Image placeholder
             Rectangle()
                 .fill(Color("DarkPurple").opacity(0.3))
                 .frame(height: 200)
                 .cornerRadius(10)
 
-            // ───────── Dynamic Quick‑Info Bubbles
+            // Dynamic Quick‑Info Bubbles
             HStack(spacing: 12) {
-                InfoTag(icon: "music.note",       text: musicType)
-                InfoTag(icon: "person.3.fill",    text: crowdSize)
+                InfoTag(icon: "music.note",        text: musicType)
+                InfoTag(icon: "person.3.fill",     text: crowdSize)
                 InfoTag(icon: "dollarsign.circle", text: priceRange)
             }
             .frame(maxWidth: .infinity)
 
-            // ───────── Action Buttons
+            // Action Buttons
             VStack(spacing: 10) {
                 ActionButton(text: "See who's there", icon: "person.2.fill") {
                     showingDetail = true
@@ -81,7 +83,8 @@ struct BarCard: View {
         .shadow(radius: 5)
         .onTapGesture { showingDetail = true }
         .sheet(isPresented: $showingDetail) {
-            BarDetailPopup(name: bar.name)
+            BarDetailPopup(bar: bar)
+                .environmentObject(viewModel)
                 .tint(.salmon)
         }
     }
@@ -99,3 +102,5 @@ struct BarCard_Previews: PreviewProvider {
         .padding()
     }
 }
+
+

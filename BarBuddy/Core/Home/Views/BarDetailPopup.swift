@@ -6,154 +6,139 @@
 //
 
 import SwiftUI
+import MapKit
 
 struct BarDetailPopup: View {
     @Environment(\.dismiss) var dismiss
-    @State var name: String
+    @EnvironmentObject var viewModel: MapViewModel
 
-    // State to hold the user's mood selection from the Feedback view
-    @State private var selectedMood: Mood? = nil
-    @State private var showSwipeView = false
+    let bar: Bar
     @State private var waitButtonProperties = ButtonProperties(type: "wait")
     @State private var crowdButtonProperties = ButtonProperties(type: "crowd")
 
+    // Helper to find this bar’s index in the viewModel
+    private var idx: Int {
+        viewModel.bars.firstIndex { $0.id == bar.id } ?? -1
+    }
+
+    // Dynamic values from your endpoints
+    private var musicType: String {
+        viewModel.music[idx] ?? "–"
+    }
+    private var crowdSize: String {
+        viewModel.statuses[idx]?.crowd_size ?? "–"
+    }
+    private var priceRange: String {
+        viewModel.pricing[idx] ?? "–"
+    }
+    private var waitTime: String {
+        viewModel.statuses[idx]?.wait_time ?? "–"
+    }
+
     var body: some View {
         NavigationView {
-
             VStack(spacing: 25) {
-
-                // Header with bar name and hours
+                // MARK: — Header
                 VStack(spacing: 8) {
-                    Text(name)
+                    Text(bar.name)
                         .font(.system(size: 40, weight: .bold))
                         .foregroundColor(Color("DarkPurple"))
-
                     HStack {
                         Text("Open")
                             .foregroundColor(.red)
-                        Text("11am - 2am")
+                        Text("11am – 2am")
                             .foregroundColor(Color("DarkPurple"))
                     }
                 }
 
-                // Quick info tags
+                // MARK: — Quick‑info bubbles (music, crowd, price)
                 HStack(spacing: 15) {
-                    InfoBubble(icon: "music.note", text: "House")
-                    InfoBubble(icon: "flame.fill", text: "Packed")
-                    InfoBubble(text: "$ 5 - 20")
+                    InfoBubble(icon: "music.note",      text: musicType)
+                    InfoBubble(icon: "flame.fill",      text: crowdSize)
+                    InfoBubble(icon: "dollarsign.circle", text: priceRange)
                 }
 
-                // Wait time and crowd size sections
+                // MARK: — Wait time & crowd voting
                 HStack(spacing: 30) {
+                    // Wait‑time section
                     VStack(spacing: 10) {
-                        if !waitButtonProperties.selectedOption {
-
-                            Text("Est. Wait Time:")
-                                .font(.headline)
-                                .foregroundColor(Color("DarkPurple"))
-
-                            ZStack {
-                                RoundedRectangle(cornerRadius: 15)
-                                    .foregroundStyle(.salmon.opacity(0.2))
-                                    .frame(width: 131, height: 50)
-
-                                Text("20 - 30 min")
-                                    .padding()
-                                    .cornerRadius(15)
-                            }
-
-                            Button {
-                                withAnimation(.spring(duration: 0.5, bounce: 0.3)) {
-                                    waitButtonProperties.showMenu = true
-                                    crowdButtonProperties.showMenu = false
-                                }
-                            } label: {
-                                Text("Vote wait time!")
-                                    .bold()
-                                    .underline()
-                                    .foregroundColor(Color("DarkPurple"))
-
-                            }
-                            .disabled(waitButtonProperties.showMenu)
-                        } else {
-                            ZStack {
-
-                                RoundedRectangle(cornerRadius: 15)
-                                    .foregroundStyle(
-                                        Gradient(colors: [
-                                            .neonPink, .darkBlue,
-                                        ]).opacity(0.7)
-                                    )
-                                    .frame(width: 131, height: 110)
-
-                                Text("Voted! 👍")
-                                    .foregroundStyle(.darkBlue)
-                                    .padding()
-                                    .cornerRadius(15)
-                                    .bold()
-                            }
-                            .transition(.scale)
-                        }
-                    }
-
-                    if !crowdButtonProperties.selectedOption {
-                        VStack(spacing: 10) {
-
-                            Text("Crowd Size is:")
-                                .font(.headline)
-                                .foregroundColor(Color("DarkPurple"))
-                            ZStack {
-                                RoundedRectangle(cornerRadius: 15)
-                                    .foregroundStyle(.salmon.opacity(0.2))
-                                    .frame(width: 131, height: 50)
-                                HStack {
-                                    Image(systemName: "flame.fill")
-                                        .foregroundColor(
-                                            Color("DarkPurple")
-                                        )
-                                    Text("Packed")
-                                }
-                                .padding()
-                                .foregroundColor(Color("DarkPurple"))
-                                .cornerRadius(15)
-                            }
-
-                            Button {
-                                withAnimation(.spring(duration: 0.5, bounce: 0.3)) {
-                                    crowdButtonProperties.showMenu = true
-                                    waitButtonProperties.showMenu = false
-                                }
-                            } label: {
-                                Text("Vote crowd size!")
-                                    .bold()
-                                    .underline()
-                                    .foregroundColor(Color("DarkPurple"))
-                            }
-                            .disabled(crowdButtonProperties.showMenu)
-                        }
-                    } else {
+                        Text("Est. Wait Time:")
+                            .font(.headline)
+                            .foregroundColor(Color("DarkPurple"))
                         ZStack {
                             RoundedRectangle(cornerRadius: 15)
-                                .foregroundStyle(
-                                    Gradient(colors: [.neonPink, .darkBlue])
-                                        .opacity(0.7)
-                                )
-                                .frame(width: 131, height: 110)
-
-                            Text("Voted! 👍")
-                                .foregroundStyle(.darkBlue)
-                                .padding()
-                                .cornerRadius(15)
+                                .foregroundStyle(.salmon.opacity(0.2))
+                                .frame(width: 131, height: 50)
+                            Text(waitTime)
+                                .foregroundColor(Color("DarkPurple"))
                                 .bold()
                         }
-                        .transition(.scale)
+                        Button {
+                            // send vote with current values
+                            Task {
+                                try? await BarStatusService.shared.submitVote(
+                                    barId: idx,
+                                    crowdSize: crowdSize,
+                                    waitTime: waitTime
+                                )
+                                await viewModel.loadBarData()
+                            }
+                            withAnimation(.spring(duration: 0.5, bounce: 0.3)) {
+                                waitButtonProperties.showMenu = true
+                                crowdButtonProperties.showMenu = false
+                            }
+                        } label: {
+                            Text("Vote wait time!")
+                                .bold()
+                                .underline()
+                                .foregroundColor(Color("DarkPurple"))
+                        }
+                        .disabled(waitButtonProperties.showMenu)
+                    }
+
+                    // Crowd‑size section
+                    VStack(spacing: 10) {
+                        Text("Crowd Size is:")
+                            .font(.headline)
+                            .foregroundColor(Color("DarkPurple"))
+                        ZStack {
+                            RoundedRectangle(cornerRadius: 15)
+                                .foregroundStyle(.salmon.opacity(0.2))
+                                .frame(width: 131, height: 50)
+                            HStack {
+                                Image(systemName: "flame.fill")
+                                Text(crowdSize)
+                            }
+                            .foregroundColor(Color("DarkPurple"))
+                            .bold()
+                        }
+                        Button {
+                            // send vote with current values
+                            Task {
+                                try? await BarStatusService.shared.submitVote(
+                                    barId: idx,
+                                    crowdSize: crowdSize,
+                                    waitTime: waitTime
+                                )
+                                await viewModel.loadBarData()
+                            }
+                            withAnimation(.spring(duration: 0.5, bounce: 0.3)) {
+                                crowdButtonProperties.showMenu = true
+                                waitButtonProperties.showMenu = false
+                            }
+                        } label: {
+                            Text("Vote crowd size!")
+                                .bold()
+                                .underline()
+                                .foregroundColor(Color("DarkPurple"))
+                        }
+                        .disabled(crowdButtonProperties.showMenu)
                     }
                 }
-                Spacer()
-                // Feedback view integrated here
-                Feedback(selectedMood: $selectedMood)
 
-                // Navigation button to SwipeView
+                Spacer()
+
+                // MARK: — Swipe Navigation
                 NavigationLink(destination: SwipeView()) {
                     HStack {
                         Text("Swipe")
@@ -167,84 +152,73 @@ struct BarDetailPopup: View {
                 }
             }
             .padding()
-
             .navigationBarItems(
-                trailing: Button("Done") {
-                    dismiss()
-                }
+                trailing: Button("Done") { dismiss() }
             )
             .navigationBarTitleDisplayMode(.inline)
         }
         .presentationDetents([.large])
         .presentationDragIndicator(.visible)
+        // MARK: — Remove old “Feedback” view; overlay existing vote menus
         .overlay {
+            // Wait‑time menu
             if waitButtonProperties.showMenu {
                 HStack {
-                    VoteWaitTimeView(
-                        properties: $waitButtonProperties)
-                    .offset(x: waitButtonProperties.offset)
-                    .padding(.leading)
-                    .gesture(
-                        DragGesture(minimumDistance: 0, coordinateSpace: .local)
-                            .onChanged { value in
-                                // Only able to swipe to the left
-                                if value.translation.width <= 0 {
-                                    withAnimation(.linear(duration: 0.1)) {
-                                        waitButtonProperties.offset = value.translation.width
+                    VoteWaitTimeView(properties: $waitButtonProperties)
+                        .offset(x: waitButtonProperties.offset)
+                        .padding(.leading)
+                        .gesture(
+                            DragGesture(minimumDistance: 0, coordinateSpace: .local)
+                                .onChanged { value in
+                                    if value.translation.width <= 0 {
+                                        withAnimation(.linear(duration: 0.1)) {
+                                            waitButtonProperties.offset = value.translation.width
+                                        }
                                     }
                                 }
-                            }
-                            .onEnded({ _ in
-                                // View will close when swiped to the left
-                                if waitButtonProperties.offset < -100 {
-                                    withAnimation(.snappy) {
-                                        waitButtonProperties.showMenu = false
+                                .onEnded { _ in
+                                    if waitButtonProperties.offset < -100 {
+                                        withAnimation(.snappy) {
+                                            waitButtonProperties.showMenu = false
+                                        }
+                                    }
+                                    withAnimation {
+                                        waitButtonProperties.offset = 0
                                     }
                                 }
-                                // Resets position when not swiped far enough
-                                withAnimation {
-                                    waitButtonProperties.offset = 0
-                                }
-                            }
-                            )
-                    )
-
+                        )
                     Spacer()
                 }
                 .transition(.move(edge: .leading))
             }
 
+            // Crowd‑size menu
             if crowdButtonProperties.showMenu {
                 HStack {
                     Spacer()
-                    VoteCrowdSizeView(
-                        buttonProperties: $crowdButtonProperties)
-                    .offset(x: crowdButtonProperties.offset)
-                    .padding(.trailing)
-                    .gesture(
-                        DragGesture(minimumDistance: 0, coordinateSpace: .local)
-                            .onChanged { value in
-                                // Only able to swipe to the right
-                                if value.translation.width > 0 {
-                                    withAnimation(.linear(duration: 0.1)) {
-                                        crowdButtonProperties.offset = value.translation.width
+                    VoteCrowdSizeView(buttonProperties: $crowdButtonProperties)
+                        .offset(x: crowdButtonProperties.offset)
+                        .padding(.trailing)
+                        .gesture(
+                            DragGesture(minimumDistance: 0, coordinateSpace: .local)
+                                .onChanged { value in
+                                    if value.translation.width > 0 {
+                                        withAnimation(.linear(duration: 0.1)) {
+                                            crowdButtonProperties.offset = value.translation.width
+                                        }
                                     }
                                 }
-                            }
-                            .onEnded({ _ in
-                                // View will close when swiped about halfways to the right
-                                if crowdButtonProperties.offset > 100 {
-                                    withAnimation(.snappy) {
-                                        crowdButtonProperties.showMenu = false
+                                .onEnded { _ in
+                                    if crowdButtonProperties.offset > 100 {
+                                        withAnimation(.snappy) {
+                                            crowdButtonProperties.showMenu = false
+                                        }
+                                    }
+                                    withAnimation {
+                                        crowdButtonProperties.offset = 0
                                     }
                                 }
-                                // Resets position when not swiped far enough
-                                withAnimation {
-                                    crowdButtonProperties.offset = 0
-                                }
-                            }
-                            )
-                    )
+                        )
                 }
                 .transition(.move(edge: .trailing))
             }
@@ -252,8 +226,14 @@ struct BarDetailPopup: View {
     }
 }
 
-#Preview("Bar Detail Popup") {
-    BarDetailPopup(name: "Hideaway")
-      .environmentObject(AuthViewModel())      // ← add this
+struct BarDetailPopup_Previews: PreviewProvider {
+    static var previews: some View {
+        BarDetailPopup(bar: Bar(
+            name: "Hideaway",
+            location: CLLocationCoordinate2D(latitude: 32.7961859,
+                                             longitude: -117.2558475)
+        ))
+        .environmentObject(MapViewModel())
+        .previewLayout(.sizeThatFits)
+    }
 }
-
