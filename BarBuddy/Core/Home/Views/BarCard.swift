@@ -4,8 +4,6 @@
 //
 //  Created by Andrew Betancourt on 2/25/25.
 //
-
-
 import SwiftUI
 import MapKit
 
@@ -13,7 +11,7 @@ struct BarCard: View {
     let bar: Bar
     @EnvironmentObject var viewModel: MapViewModel
     @Environment(\.colorScheme) var colorScheme
-    @State private var showingDetail = false
+    @State private var showingSwipe = false        // ← renamed state
 
     // Find this bar’s index in the static array
     private var idx: Int {
@@ -67,25 +65,20 @@ struct BarCard: View {
             }
             .frame(maxWidth: .infinity)
 
-            // Action Buttons
-            VStack(spacing: 10) {
-                ActionButton(text: "See who's there", icon: "person.2.fill") {
-                    showingDetail = true
-                }
-                ActionButton(text: "Check the line", icon: "antenna.radiowaves.left.and.right") {
-                    showingDetail = true
-                }
+            // Single “Meet People Here” button
+            ActionButton(text: "Meet People Here", icon: "person.2.fill") {
+                showingSwipe = true
             }
         }
         .padding()
         .background(colorScheme == .dark ? Color(.secondarySystemBackground) : .white)
         .cornerRadius(15)
         .shadow(radius: 5)
-        .onTapGesture { showingDetail = true }
-        .sheet(isPresented: $showingDetail) {
-            BarDetailPopup(bar: bar)
+        .sheet(isPresented: $showingSwipe) {
+            // Present the main swipe screen
+            SwipeView()
                 .environmentObject(viewModel)
-                .tint(.salmon)
+                // AuthViewModel is inherited from above
         }
     }
 }
@@ -102,5 +95,3 @@ struct BarCard_Previews: PreviewProvider {
         .padding()
     }
 }
-
-
