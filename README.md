@@ -20,7 +20,7 @@ For the time being, this documentation is temporary:
 To view the API documentation:
 
 1. Open [Swagger Editor](https://editor-next.swagger.io/).
-2. Copy and paste the contents of the [April 16.txt](https://github.com/user-attachments/files/19785386/April.16.txt)
+2. Copy and paste the contents of the [April17.txt](https://github.com/user-attachments/files/19808103/April17.copy.txt)
 file into the editor.
 
 ## Testing Authentication
