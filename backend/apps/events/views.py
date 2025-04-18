@@ -20,3 +20,11 @@ class EventViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(day_of_week=today)
 
         return queryset
+
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        if self.request.query_params.get("today") == "true":
+            today_name = timezone.now().strftime("%A")
+            qs = qs.filter(day_of_week=today_name)
+        return qs
