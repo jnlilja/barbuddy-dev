@@ -253,8 +253,7 @@ struct BarDetailPopup: View {
 }
 
 #Preview("Bar Detail Popup") {
-    HomeView()
-        .overlay {
-            BarDetailPopup(name: "Hideaway")
-        }
+    BarDetailPopup(name: "Hideaway")
+      .environmentObject(AuthViewModel())      // ← add this
 }
+

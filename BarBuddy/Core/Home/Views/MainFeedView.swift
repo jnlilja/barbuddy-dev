@@ -10,43 +10,30 @@ import MapKit
 import SwiftUI
 
 struct MainFeedView: View {
-    
-    /* IMPORTANT:
-        Set the coordinates to Latiude: 32.794 Longitude: -117.253 to see bars
-        on the map in the simulator. There doesn't seem to be a way to do this
-        in the preview.
-     */
-
-    // Camera automatically follows user's location
-    @State var bottomSheetPosition: BottomSheetPosition = .relative(0.86)
-    @State var selectedItem: UUID?
+    @StateObject private var viewModel = MapViewModel()
+    @State private var bottomSheetPosition: BottomSheetPosition = .relative(0.86)
+    @State private var selectedItem: UUID?
+    @State private var selectedBar = false
     @State private var searchText = ""
     @Environment(\.colorScheme) var colorScheme
-    @State private var selectedBar: Bool = false
-    @Bindable var viewModel = MapViewModel()
-
-    // Location manager
     let locationViewModel = LocationManager()
-    
-    // Grabs selected bar on map
+
     private var selectedPlace: Bar? {
-        if let selectedItem {
-            return viewModel.bars.first(where: { $0.id == selectedItem })
-        }
-        return nil
+        guard let id = selectedItem else { return nil }
+        return viewModel.bars.first { $0.id == id }
     }
-    
-    // Filter search results
-    var filteredBars: [Bar] {
-        viewModel.bars.filter({ $0.name.localizedCaseInsensitiveContains(searchText) || searchText.isEmpty })
+
+    private var filteredBars: [Bar] {
+        viewModel.bars.filter {
+            searchText.isEmpty || $0.name.localizedCaseInsensitiveContains(searchText)
+        }
     }
 
     var body: some View {
         NavigationStack {
             ZStack {
+                // Map
                 Map(position: $viewModel.cameraPosition, selection: $selectedItem) {
-                    
-                    // Display annotations for search results on map
                     ForEach(viewModel.bars) { bar in
                         Annotation(bar.name, coordinate: bar.location) {
                             ZStack {
@@ -56,92 +43,75 @@ struct MainFeedView: View {
                                         .foregroundStyle(.darkBlue)
                                 } else {
                                     Circle()
-                                        .stroke(style: StrokeStyle(lineWidth: 4))
+                                        .stroke(lineWidth: 4)
                                         .frame(width: 30, height: 30)
                                         .background(.darkBlue)
                                         .clipShape(Circle())
                                         .foregroundStyle(Gradient(colors: [.salmon, .neonPink]))
                                 }
-                               
                                 Image(systemName: "wineglass.fill")
-                                    .foregroundColor(.white)
                                     .font(.headline)
+                                    .foregroundColor(.white)
                             }
                         }
                     }
-                    
-                    // User's location marker on map
                     UserAnnotation()
                 }
-                // Listening for changes for bar selection on map
-                .onChange(of: selectedItem) { oldValue, newValue in
-                    selectedBar = newValue != nil
-                }
+                .onChange(of: selectedItem) { _, new in selectedBar = new != nil }
                 .mapControls {
-                    // Map control config
                     MapUserLocationButton()
                     MapCompass()
                     MapPitchToggle()
                 }
                 .ignoresSafeArea(.keyboard)
-                .onAppear {
-                    locationViewModel.startLocationServices()
+                .onAppear { locationViewModel.startLocationServices() }
+                .sheet(isPresented: $selectedBar) {
+                    BarDetailPopup(name: selectedPlace?.name ?? "")
                 }
-                .sheet(isPresented: $selectedBar,
-                       onDismiss: { withAnimation { selectedItem = nil } },
-                       content: { BarDetailPopup(name: selectedPlace?.name ?? "") })
                 .tint(.salmon)
-                
-                // Bottom sheet view
+
+                // Bottom sheet
                 .bottomSheet(
                     bottomSheetPosition: $bottomSheetPosition,
-                    switchablePositions: [
-                        .relativeBottom(0.21),
-                        .relative(0.86),
-                        .relativeTop(1),
-                    ]
-                    , headerContent: {
+                    switchablePositions: [.relativeBottom(0.21), .relative(0.86), .relativeTop(1)],
+                    headerContent: {
                         SearchBar(searchText: $searchText)
                             .padding([.horizontal, .bottom])
                             .onSubmit(of: .text) {
                                 bottomSheetPosition = .relativeBottom(0.21)
                                 Task { await viewModel.updateCameraPosition(bar: searchText) }
                             }
-                            .simultaneousGesture(TapGesture()
-                                .onEnded({
-                                    bottomSheetPosition = .relative(0.86)
-                                }))
-                        
-                    }) {
-                        VStack {
-                            // Navigation to Deals and Events using a NavigationLink
-                            NavigationLink(destination: DealsAndEventsView()) {
-                                EventCard()
+                            .simultaneousGesture(TapGesture().onEnded {
+                                bottomSheetPosition = .relative(0.86)
+                            })
+                    }
+                ) {
+                    VStack {
+                        NavigationLink(destination: DealsAndEventsView()) {
+                            EventCard()
+                                .padding([.horizontal, .bottom])
+                        }
+                        .buttonStyle(PlainButtonStyle())
+
+                        if filteredBars.isEmpty {
+                            Text("No results found")
+                                .foregroundColor(.white)
+                                .font(.title3)
+                        } else {
+                            ForEach(filteredBars) { bar in
+                                BarCard(bar: bar)
                                     .padding([.horizontal, .bottom])
                             }
-                            .buttonStyle(PlainButtonStyle()) // Prevents default button styling
-                            
-                            // Search Results
-                            if filteredBars.isEmpty {
-                                Text("No results found")
-                                    .foregroundColor(.white)
-                                    .font(.title3)
-                            }
-                            else {
-                                ForEach(filteredBars) {
-                                    BarCard(name: $0.name)
-                                        .padding([.horizontal, .bottom])
-                                }
-                                .transition(.opacity)
-                                .animation(.easeInOut, value: searchText)
-                            }
+                            .transition(.opacity)
+                            .animation(.easeInOut, value: searchText)
                         }
                     }
-                    .customBackground(.darkBlue.opacity(0.9))
-                    .dragIndicatorColor(bottomSheetPosition == .relativeTop(1) ? .clear : .white)
-                    .enableAppleScrollBehavior()
-                    .customAnimation(.snappy)
-                    .ignoresSafeArea(.keyboard)
+                }
+                .customBackground(.darkBlue.opacity(0.9))
+                .dragIndicatorColor(bottomSheetPosition == .relativeTop(1) ? .clear : .white)
+                .enableAppleScrollBehavior()
+                .customAnimation(.snappy)
+                .ignoresSafeArea(.keyboard)
             }
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackgroundVisibility(.hidden, for: .navigationBar)
@@ -151,19 +121,22 @@ struct MainFeedView: View {
                         .font(.title)
                         .fontDesign(.rounded)
                         .fontWeight(.heavy)
-                    
-                    // Changes color of title when in dark mode or sheet view takes up full screen
                         .foregroundStyle(
-                            colorScheme == .dark || bottomSheetPosition == .relativeTop(1)
-                            ? .salmon : .darkBlue
+                            (colorScheme == .dark || bottomSheetPosition == .relativeTop(1))
+                                ? .salmon : .darkBlue
                         )
                         .animation(.easeInOut, value: bottomSheetPosition)
                 }
             }
         }
+        .environmentObject(viewModel)
+        .task { await viewModel.loadBarData() }
     }
 }
 
-#Preview {
-    MainFeedView(bottomSheetPosition: .relative(0.21))
+struct MainFeedView_Previews: PreviewProvider {
+    static var previews: some View {
+        MainFeedView()
+            .environmentObject(MapViewModel())
+    }
 }

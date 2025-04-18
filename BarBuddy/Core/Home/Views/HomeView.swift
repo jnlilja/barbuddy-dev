@@ -10,7 +10,7 @@ import SwiftUI
 
 struct HomeView: View {
     @State private var selectedTab = 2
-    
+
     var body: some View {
         TabView(selection: $selectedTab) {
             SwipeView()
@@ -19,21 +19,21 @@ struct HomeView: View {
                     Text("Swipe")
                 }
                 .tag(0)
-            
+
             MessagesView()
                 .tabItem {
                     Image(systemName: "message.fill")
                     Text("Messages")
                 }
                 .tag(1)
-            
+
             MainFeedView()
                 .tabItem {
                     Image(systemName: "map.fill")
                     Text("Map")
                 }
                 .tag(2)
-            
+
             ProfileView()
                 .tabItem {
                     Image(systemName: "person.circle")
@@ -53,10 +53,11 @@ struct HomeView: View {
     }
 }
 
-
-// Preview with required environment object
-//profile page is buffering because no real user data is implemented yet, go to profile.swift to view data
+// Preview with the necessary environment objects:
+// - AuthViewModel for ProfileView
+// - MapViewModel for SwipeView / MainFeedView
 #Preview("Home Tab Bar") {
     HomeView()
         .environmentObject(AuthViewModel())
+        .environmentObject(MapViewModel())
 }
