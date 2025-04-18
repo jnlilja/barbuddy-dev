@@ -6,7 +6,7 @@ from apps.users.views import UserViewSet
 from apps.bars.views import BarViewSet, BarStatusViewSet, BarRatingViewSet
 from apps.events.views import EventViewSet
 from apps.matches.views import MatchViewSet
-from apps.messaging.views import MessageViewSet, GroupChatViewSet
+from apps.messaging.views import MessageViewSet, GroupChatViewSet, PusherViewSet
 from apps.swipes.views import SwipeViewSet
 from django.shortcuts import redirect
 # from .views import BarVoteViewSet
@@ -39,6 +39,9 @@ router.register(r'swipes', SwipeViewSet, basename='swipe')
 
 # MUST DO: Users
 router.register(r'users', UserViewSet, basename="users")
+
+# MUST DO: Pusher
+router.register(r'pusher', PusherViewSet, basename="pusher")
 
 
 
@@ -78,9 +81,6 @@ urlpatterns = [
 
     ##
 
-
-    #pusher
-    path('trigger/', send_pusher_message, name='trigger-message'),
 
     # Swagger / Redoc Docs
     re_path(r'^swagger(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0), name='schema-json'),

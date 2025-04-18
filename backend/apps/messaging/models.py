@@ -6,90 +6,91 @@ from django.core.exceptions import ValidationError
 
 class Message(models.Model):
     sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_messages')
-    receiver = models.ForeignKey(User, on_delete=models.CASCADE, related_name='received_messages', null=True,
-                                 blank=True)
-    message_text = models.TextField(max_length=5000)
+    recipient = models.ForeignKey(User, on_delete=models.CASCADE, related_name='received_messages')
+    content = models.TextField(max_length=5000)
     timestamp = models.DateTimeField(auto_now_add=True)
-    group_chat = models.ForeignKey('GroupChat', on_delete=models.CASCADE, related_name='messages', null=True,
-                                   blank=True)
+    is_read = models.BooleanField(default=False)
 
     class Meta:
         app_label = 'messaging'
+        ordering = ['-timestamp']
 
     def clean(self):
         super().clean()
-        # Message must have either a receiver or a group_chat, not both or neither
-        if (self.receiver is None and self.group_chat is None) or (
-                self.receiver is not None and self.group_chat is not None):
-            raise ValidationError("Message must have either a receiver or a group chat, not both or neither.")
+        # Ensure message isn't empty
+        if not self.content or len(self.content.strip()) == 0:
+            raise ValidationError({'content': 'Message content cannot be empty.'})
 
         # Prevent sending message to self
-        if self.receiver == self.sender:
+        if self.recipient == self.sender:
             raise ValidationError("You cannot send a message to yourself.")
 
-        # Ensure message isn't empty
-        if not self.message_text or len(self.message_text.strip()) == 0:
-            raise ValidationError({'message_text': 'Message text cannot be empty.'})
+    def mark_as_read(self):
+        """Mark the message as read"""
+        self.is_read = True
+        self.save()
 
-        # If sending to group chat, ensure sender is a member
-        if self.group_chat and not self.group_chat.users.filter(id=self.sender.id).exists():
-            raise ValidationError("You cannot send a message to a group chat you're not a member of.")
+    @classmethod
+    def get_unread_messages(cls, user):
+        """Get all unread messages for a user"""
+        return cls.objects.filter(recipient=user, is_read=False)
 
     def __str__(self):
-        if self.group_chat:
-            return f"From {self.sender} to group {self.group_chat.id}"
-        return f"From {self.sender} to {self.receiver}"
+        return f'Message from {self.sender.username} to {self.recipient.username}'
 
     def save(self, *args, **kwargs):
         self.clean()
         super().save(*args, **kwargs)
 
 class GroupChat(models.Model):
-    def generate_random_name(self):
-        return ''.join(random.choices(string.ascii_letters + string.digits, k=10))
-
-    name = models.CharField(max_length=255, blank=True)
-    bar = models.ForeignKey(Bar, on_delete=models.CASCADE, related_name='group_chats', null=True, blank=True)
-    creator = models.ForeignKey(User, on_delete=models.SET_NULL, related_name='created_group_chats', null=True)
-    users = models.ManyToManyField(User, related_name='group_chats')
+    name = models.CharField(max_length=255)
+    members = models.ManyToManyField(User, related_name='group_chats')
     created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        app_label = 'messaging'
+        ordering = ['-created_at']
 
     def clean(self):
         super().clean()
-        # Ensure group chat has at least 2 members when saving
-        if hasattr(self, 'pk') and self.users.count() < 2:
+        # Ensure group chat has at least 2 members
+        if hasattr(self, 'pk') and self.members.count() < 2:
             raise ValidationError("A group chat must have at least 2 members.")
 
-        # Ensure creator is a member of the group chat
-        if self.creator and hasattr(self, 'pk') and not self.users.filter(id=self.creator.id).exists():
-            raise ValidationError("The creator must be a member of the group chat.")
-
-        super().clean()
-
-    def get_display_name(self):
-        """Returns a display name for the group chat"""
-        if self.name:
-            return self.name
-        elif self.bar:
-            return f"Group at {self.bar.name}"
-        else:
-            # Get the first few members' names
-            members = self.users.all()[:3]
-            names = ", ".join(user.username for user in members)
-            if self.users.count() > 3:
-                names += f" and {self.users.count() - 3} others"
-            return names
-
-    def save(self, *args, **kwargs):
-        if self.users.count() < 2:
-            raise ValidationError("A group chat must have at least 2 members.")
-
-        if not self.name:
-            self.name = self.generate_random_name()
-
-        super().save(*args, **kwargs)
+        # Ensure name isn't empty
+        if not self.name or len(self.name.strip()) == 0:
+            raise ValidationError("Group chat name cannot be empty.")
 
     def __str__(self):
-        if self.name:
-            return f"{self.name} - {self.created_at}"
-        return f"Group chat {self.id} - {self.created_at}"
+        return self.name
+
+    def save(self, *args, **kwargs):
+        self.clean()
+        super().save(*args, **kwargs)
+
+class GroupMessage(models.Model):
+    group = models.ForeignKey(GroupChat, on_delete=models.CASCADE, related_name='messages')
+    sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='group_messages')
+    content = models.TextField(max_length=5000)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        app_label = 'messaging'
+        ordering = ['-timestamp']
+
+    def clean(self):
+        super().clean()
+        # Ensure message isn't empty
+        if not self.content or len(self.content.strip()) == 0:
+            raise ValidationError({'content': 'Message content cannot be empty.'})
+
+        # Ensure sender is a member of the group
+        if not self.group.members.filter(id=self.sender.id).exists():
+            raise ValidationError("You cannot send a message to a group chat you're not a member of.")
+
+    def __str__(self):
+        return f'Group message from {self.sender.username} in {self.group.name}'
+
+    def save(self, *args, **kwargs):
+        self.clean()
+        super().save(*args, **kwargs)
