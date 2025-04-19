@@ -54,9 +54,8 @@ class GroupChat(models.Model):
     members = models.ManyToManyField(User, related_name='group_chats')
     created_at = models.DateTimeField(auto_now_add=True)
 
-    class Meta:
-        app_label = 'messaging'
-        ordering = ['-created_at']
+    def __str__(self):
+        return self.name
 
     def clean(self):
         super().clean()
@@ -64,14 +63,19 @@ class GroupChat(models.Model):
             raise ValidationError("Group chat name cannot be empty.")
 
     def save(self, *args, **kwargs):
-        # First save to get an ID
+        self.full_clean()
         super().save(*args, **kwargs)
-        
-        # Then validate member count
-        if self.members.count() < 2:
-            # If validation fails, delete the object and raise error
-            self.delete()
+
+    @classmethod
+    def create_with_members(cls, name, members):
+        """Create a group chat with the specified members."""
+        if len(members) < 2:
             raise ValidationError("A group chat must have at least 2 members.")
+            
+        group_chat = cls(name=name)
+        group_chat.save()
+        group_chat.members.add(*members)
+        return group_chat
 
 class GroupMessage(models.Model):
     group = models.ForeignKey(GroupChat, on_delete=models.CASCADE, related_name='messages')

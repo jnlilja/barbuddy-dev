@@ -11,6 +11,7 @@ import json
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.test import APITestCase
 
 class MessageViewSetTests(TestCase):
     def setUp(self):
@@ -137,164 +138,164 @@ class MessageViewSetTests(TestCase):
         message.refresh_from_db()
         self.assertTrue(message.is_read)
 
-# class GroupChatViewSetTests(TestCase):
-#     def setUp(self):
-#         # Create test users
-#         self.user1 = User.objects.create_user(
-#             username='user1',
-#             password='testpass123'
-#         )
-#         self.user2 = User.objects.create_user(
-#             username='user2',
-#             password='testpass123'
-#         )
-#         self.user3 = User.objects.create_user(
-#             username='user3',
-#             password='testpass123'
-#         )
+class GroupChatViewSetTests(TestCase):
+    def setUp(self):
+        # Create test users
+        self.user1 = User.objects.create_user(
+            username='user1',
+            password='testpass123'
+        )
+        self.user2 = User.objects.create_user(
+            username='user2',
+            password='testpass123'
+        )
+        self.user3 = User.objects.create_user(
+            username='user3',
+            password='testpass123'
+        )
         
-#         # Create test client
-#         self.client = APIClient()
-#         self.client.force_authenticate(user=self.user1)
+        # Create test client
+        self.client = APIClient()
+        self.client.force_authenticate(user=self.user1)
         
-#         # URLs
-#         self.group_chat_list_url = reverse('group-chat-list')
-#         self.group_chat_detail_url = reverse('group-chat-detail', args=[1])  # Will be formatted with actual ID
+        # URLs
+        self.group_chat_list_url = reverse('group-chat-list')
+        self.group_chat_detail_url = reverse('group-chat-detail', args=[1])  # Will be formatted with actual ID
 
-#     def test_create_group_chat(self):
-#         """Test creating a new group chat"""
-#         data = {
-#             'name': 'Test Group',
-#             'members': [self.user2.id, self.user3.id]
-#         }
+    def test_create_group_chat(self):
+        """Test creating a new group chat"""
+        data = {
+            'name': 'Test Group',
+            'members': [self.user2.id, self.user3.id]
+        }
         
-#         response = self.client.post(
-#             self.group_chat_list_url,
-#             data=json.dumps(data),
-#             content_type='application/json'
-#         )
+        response = self.client.post(
+            self.group_chat_list_url,
+            data=json.dumps(data),
+            content_type='application/json'
+        )
         
-#         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-#         self.assertEqual(GroupChat.objects.count(), 1)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(GroupChat.objects.count(), 1)
         
-#         group_chat = GroupChat.objects.first()
-#         self.assertEqual(group_chat.name, 'Test Group')
-#         self.assertEqual(group_chat.members.count(), 3)  # Including creator
+        group_chat = GroupChat.objects.first()
+        self.assertEqual(group_chat.name, 'Test Group')
+        self.assertEqual(group_chat.members.count(), 3)  # Including creator
 
-#     def test_list_group_chats(self):
-#         """Test listing group chats"""
-#         group_chat = GroupChat.objects.create(name='Test Group')
-#         group_chat.members.add(self.user1, self.user2)
+    def test_list_group_chats(self):
+        """Test listing group chats"""
+        group_chat = GroupChat.objects.create(name='Test Group')
+        group_chat.members.add(self.user1, self.user2)
         
-#         response = self.client.get(self.group_chat_list_url)
+        response = self.client.get(self.group_chat_list_url)
         
-#         self.assertEqual(response.status_code, status.HTTP_200_OK)
-#         self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
 
-#     def test_retrieve_group_chat(self):
-#         """Test retrieving a specific group chat"""
-#         group_chat = GroupChat.objects.create(name='Test Group')
-#         group_chat.members.add(self.user1, self.user2)
+    def test_retrieve_group_chat(self):
+        """Test retrieving a specific group chat"""
+        group_chat = GroupChat.objects.create(name='Test Group')
+        group_chat.members.add(self.user1, self.user2)
         
-#         response = self.client.get(
-#             reverse('group-chat-detail', args=[group_chat.id])
-#         )
+        response = self.client.get(
+            reverse('group-chat-detail', args=[group_chat.id])
+        )
         
-#         self.assertEqual(response.status_code, status.HTTP_200_OK)
-#         self.assertEqual(response.data['name'], 'Test Group')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['name'], 'Test Group')
 
-# class PusherViewSetTests(TestCase):
-#     def setUp(self):
-#         # Create test user
-#         self.user = User.objects.create_user(
-#             username='testuser',
-#             password='testpass123'
-#         )
+class PusherViewSetTests(TestCase):
+    def setUp(self):
+        # Create test user
+        self.user = User.objects.create_user(
+            username='testuser',
+            password='testpass123'
+        )
         
-#         # Create test client
-#         self.client = APIClient()
-#         self.client.force_authenticate(user=self.user)
-        
-#         # URLs
-#         self.pusher_trigger_url = reverse('pusher-trigger')
-#         self.pusher_unsubscribe_url = reverse('pusher-unsubscribe')
+        # Create test client
+        self.client = APIClient()
+        self.client.force_authenticate(user=self.user)
 
-#     @patch('apps.services.pusher_client.send_message')
-#     def test_trigger_event(self, mock_send_message):
-#         """Test triggering a Pusher event"""
-#         data = {
-#             'channel': 'test-channel',
-#             'event': 'test-event',
-#             'data': {'message': 'Hello!'}
-#         }
-        
-#         response = self.client.post(
-#             self.pusher_trigger_url,
-#             data=json.dumps(data),
-#             content_type='application/json'
-#         )
-        
-#         self.assertEqual(response.status_code, status.HTTP_200_OK)
-#         mock_send_message.assert_called_once_with(
-#             'test-channel',
-#             'test-event',
-#             {'message': 'Hello!'}
-#         )
+        # URLs
+        self.pusher_trigger_url = reverse('pusher-trigger')
+        self.pusher_unsubscribe_url = reverse('pusher-unsubscribe')
 
-#     @patch('apps.services.pusher_client.unsubscribe_channel')
-#     def test_unsubscribe(self, mock_unsubscribe):
-#         """Test unsubscribing from a Pusher channel"""
-#         data = {
-#             'channel': 'test-channel'
-#         }
+    @patch('apps.messaging.views.send_message')
+    def test_trigger_event(self, mock_send_message):
+        """Test triggering a Pusher event"""
+        data = {
+            'channel': 'test-channel',
+            'event': 'test-event',
+            'data': {'message': 'Hello!'}
+        }
         
-#         response = self.client.post(
-#             self.pusher_unsubscribe_url,
-#             data=json.dumps(data),
-#             content_type='application/json'
-#         )
+        response = self.client.post(
+            self.pusher_trigger_url,
+            data=json.dumps(data),
+            content_type='application/json'
+        )
         
-#         self.assertEqual(response.status_code, status.HTTP_200_OK)
-#         mock_unsubscribe.assert_called_once_with('test-channel')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        mock_send_message.assert_called_once_with(
+            'test-channel',
+            'test-event',
+            {'message': 'Hello!'}
+        )
 
-# @api_view(['POST'])
-# @permission_classes([IsAuthenticated])
-# def send_pusher_message(request):
-#     """
-#     API endpoint to send a Pusher message.
-#     Required data:
-#     {
-#         "channel": "channel-name",
-#         "event": "event-name",
-#         "data": {
-#             "message": "message content",
-#             "other_data": "other content"
-#         }
-#     }
-#     """
-#     try:
-#         # Get required data from request
-#         channel = request.data.get('channel')
-#         event = request.data.get('event')
-#         data = request.data.get('data')
-
-#         # Validate required fields
-#         if not all([channel, event, data]):
-#             return Response(
-#                 {'error': 'Missing required fields: channel, event, data'},
-#                 status=status.HTTP_400_BAD_REQUEST
-#             )
-
-#         # Send message through Pusher
-#         send_message(channel, event, data)
+    @patch('apps.messaging.views.unsubscribe_channel')
+    def test_unsubscribe(self, mock_unsubscribe):
+        """Test unsubscribing from a Pusher channel"""
+        data = {
+            'channel': 'test-channel'
+        }
         
-#         return Response(
-#             {'status': 'Message sent successfully'},
-#             status=status.HTTP_200_OK
-#         )
+        response = self.client.post(
+            self.pusher_unsubscribe_url,
+            data=json.dumps(data),
+            content_type='application/json'
+        )
         
-#     except Exception as e:
-#         return Response(
-#             {'error': str(e)},
-#             status=status.HTTP_500_INTERNAL_SERVER_ERROR
-#         )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        mock_unsubscribe.assert_called_once_with('test-channel')
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def send_pusher_message(request):
+    """
+    API endpoint to send a Pusher message.
+    Required data:
+    {
+        "channel": "channel-name",
+        "event": "event-name",
+        "data": {
+            "message": "message content",
+            "other_data": "other content"
+        }
+    }
+    """
+    try:
+        # Get required data from request
+        channel = request.data.get('channel')
+        event = request.data.get('event')
+        data = request.data.get('data')
+
+        # Validate required fields
+        if not all([channel, event, data]):
+            return Response(
+                {'error': 'Missing required fields: channel, event, data'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Send message through Pusher
+        send_message(channel, event, data)
+        
+        return Response(
+            {'status': 'Message sent successfully'},
+            status=status.HTTP_200_OK
+        )
+        
+    except Exception as e:
+        return Response(
+            {'error': str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
