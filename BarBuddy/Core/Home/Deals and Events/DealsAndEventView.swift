@@ -113,25 +113,44 @@ let sampleDeals: [BarDeal] = [
         BarDeal(title: "Bottomless Mimosas", location: "Bar Ella", timeDescription: "11am - 2pm", description: "$16 Bottomless Mimosas", day: ["Sunday", "Saturday"])
 ]
 
-// MARK: - Deals & Events View
+// MARK: - View
 struct DealsAndEventsView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var searchText: String = ""
+    @State private var serverDate: Date = Date()
 
-    // Compute today's weekday name, e.g. "Friday"
-    private var todayName: String {
-        let formatter = DateFormatter()
-        formatter.locale = Locale.current
-        formatter.dateFormat = "EEEE"
-        return formatter.string(from: Date())
+    // Fetch server date via HTTP "Date" header
+    private func fetchServerDate() {
+        guard let url = URL(string: "https://your-api-host.com/events/") else { return }
+        URLSession.shared.dataTask(with: url) { _, response, _ in
+            guard let httpRes = response as? HTTPURLResponse,
+                  let dateHeader = httpRes.value(forHTTPHeaderField: "Date") else {
+                return
+            }
+            // Parse "Date" header directly
+            let formatter = DateFormatter()
+            formatter.locale = Locale(identifier: "en_US_POSIX")
+            formatter.dateFormat = "EEE, dd MMM yyyy HH:mm:ss zzz"
+            if let date = formatter.date(from: dateHeader) {
+                DispatchQueue.main.async { self.serverDate = date }
+            }
+        }.resume()
     }
 
-    // Filtered by search AND if the event occurs today
+    // Compute weekday from serverDate
+    private var todayName: String {
+        let df = DateFormatter()
+        df.locale = Locale.current
+        df.dateFormat = "EEEE"
+        return df.string(from: serverDate)
+    }
+
     private var filteredEvents: [BarEvent] {
         sampleEvents.filter { event in
             event.day.contains(todayName) && event.matchesSearch(query: searchText)
         }
     }
+
     private var filteredDeals: [BarDeal] {
         sampleDeals.filter { deal in
             deal.day.contains(todayName) && deal.matchesSearch(query: searchText)
@@ -140,8 +159,7 @@ struct DealsAndEventsView: View {
 
     var body: some View {
         ZStack {
-            Color("DarkBlue")
-                .ignoresSafeArea()
+            Color("DarkBlue").ignoresSafeArea()
 
             VStack(spacing: 0) {
                 // Search Bar
@@ -155,7 +173,6 @@ struct DealsAndEventsView: View {
 
                 ScrollView {
                     VStack(spacing: 30) {
-                        // Events Section
                         if !filteredEvents.isEmpty {
                             VStack(alignment: .leading, spacing: 12) {
                                 Text("Featured Events")
@@ -174,7 +191,6 @@ struct DealsAndEventsView: View {
                             }
                         }
 
-                        // Deals Section
                         if !filteredDeals.isEmpty {
                             VStack(alignment: .leading, spacing: 12) {
                                 Text("Happy Hours & Deals")
@@ -193,7 +209,6 @@ struct DealsAndEventsView: View {
                             }
                         }
 
-                        // No items placeholder
                         if filteredEvents.isEmpty && filteredDeals.isEmpty {
                             Text("No deals or events available for \(todayName).")
                                 .foregroundColor(.white.opacity(0.7))
@@ -207,7 +222,7 @@ struct DealsAndEventsView: View {
         .navigationBarBackButtonHidden(true)
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
-                Button(action: { dismiss() }) {
+                Button { dismiss() } label: {
                     HStack {
                         Image(systemName: "chevron.left")
                         Text("Map")
@@ -215,20 +230,16 @@ struct DealsAndEventsView: View {
                     .foregroundColor(Color("Salmon"))
                 }
             }
-
             ToolbarItem(placement: .principal) {
                 Text("Deals & Events")
                     .font(.headline)
                     .foregroundColor(.white)
             }
         }
+        .onAppear { fetchServerDate() }
     }
 }
 
-// MARK: - Preview
 #Preview("Deals and Events") {
-    NavigationStack {
-        DealsAndEventsView()
-    }
+    NavigationStack { DealsAndEventsView() }
 }
-
