@@ -57,59 +57,71 @@ class MessageModelTests(TestCase):
         self.assertEqual(message.recipient, user3)
 
 
-# class GroupChatModelTests(TestCase):
-#     def setUp(self):
-#         self.user1 = User.objects.create_user(username='user1', password='testpass123')
-#         self.user2 = User.objects.create_user(username='user2', password='testpass123')
-#         self.user3 = User.objects.create_user(username='user3', password='testpass123')
+class GroupChatModelTests(TestCase):
+    def setUp(self):
+        self.user1 = User.objects.create_user(username='user1', password='testpass123')
+        self.user2 = User.objects.create_user(username='user2', password='testpass123')
+        self.user3 = User.objects.create_user(username='user3', password='testpass123')
 
-#     def test_create_group_chat(self):
-#         group_chat = GroupChat.objects.create(name='Test Group')
-#         group_chat.members.set([self.user1, self.user2, self.user3])
-#         group_chat.save()  # validate after members are set
-#         self.assertEqual(group_chat.name, 'Test Group')
-#         self.assertEqual(group_chat.members.count(), 3)
+    def test_create_group_chat(self):
+        """Test creating a group chat with members."""
+        # Create a group chat with two members
+        group_chat = GroupChat.create_with_members(
+            name='Test Group',
+            members=[self.user1, self.user2]
+        )
+        
+        # Verify the group chat was created correctly
+        self.assertEqual(group_chat.name, 'Test Group')
+        self.assertEqual(group_chat.members.count(), 2)
+        self.assertTrue(self.user1 in group_chat.members.all())
+        self.assertTrue(self.user2 in group_chat.members.all())
+        
+        # Verify the group chat can be retrieved
+        retrieved_chat = GroupChat.objects.get(id=group_chat.id)
+        self.assertEqual(retrieved_chat.name, 'Test Group')
+        self.assertEqual(retrieved_chat.members.count(), 2)
 
-#     def test_group_chat_str_representation(self):
-#         group_chat = GroupChat.objects.create(name='Test Group')
-#         group_chat.members.set([self.user1, self.user2])
-#         group_chat.save()
-#         self.assertEqual(str(group_chat), 'Test Group')
+    def test_group_chat_str_representation(self):
+        group_chat = GroupChat.objects.create(name='Test Group')
+        group_chat.members.set([self.user1, self.user2])
+        group_chat.save()
+        self.assertEqual(str(group_chat), 'Test Group')
 
-#     def test_group_chat_validation(self):
-#         with self.assertRaises(ValidationError):
-#             GroupChat(name='').full_clean()
-#         with self.assertRaises(ValidationError):
-#             GroupChat(name='   ').full_clean()
+    def test_group_chat_validation(self):
+        with self.assertRaises(ValidationError):
+            GroupChat(name='').full_clean()
+        with self.assertRaises(ValidationError):
+            GroupChat(name='   ').full_clean()
 
 
-# class GroupMessageModelTests(TestCase):
-#     def setUp(self):
-#         self.user1 = User.objects.create_user(username='user1', password='testpass123')
-#         self.user2 = User.objects.create_user(username='user2', password='testpass123')
-#         self.group_chat = GroupChat.objects.create(name='Test Group')
-#         self.group_chat.members.set([self.user1, self.user2])
-#         self.group_chat.save()
+class GroupMessageModelTests(TestCase):
+    def setUp(self):
+        self.user1 = User.objects.create_user(username='user1', password='testpass123')
+        self.user2 = User.objects.create_user(username='user2', password='testpass123')
+        self.group_chat = GroupChat.objects.create(name='Test Group')
+        self.group_chat.members.set([self.user1, self.user2])
+        self.group_chat.save()
 
-#     def test_create_group_message(self):
-#         message = GroupMessage.objects.create(group=self.group_chat, sender=self.user1, content='Hello everyone!')
-#         self.assertEqual(message.group, self.group_chat)
-#         self.assertEqual(message.sender, self.user1)
-#         self.assertEqual(message.content, 'Hello everyone!')
-#         self.assertIsNotNone(message.timestamp)
+    def test_create_group_message(self):
+        message = GroupMessage.objects.create(group=self.group_chat, sender=self.user1, content='Hello everyone!')
+        self.assertEqual(message.group, self.group_chat)
+        self.assertEqual(message.sender, self.user1)
+        self.assertEqual(message.content, 'Hello everyone!')
+        self.assertIsNotNone(message.timestamp)
 
-#     def test_group_message_str_representation(self):
-#         message = GroupMessage.objects.create(group=self.group_chat, sender=self.user1, content='Hello!')
-#         expected_str = f'Group message from {self.user1.username} in {self.group_chat.name}'
-#         self.assertEqual(str(message), expected_str)
+    def test_group_message_str_representation(self):
+        message = GroupMessage.objects.create(group=self.group_chat, sender=self.user1, content='Hello!')
+        expected_str = f'Group message from {self.user1.username} in {self.group_chat.name}'
+        self.assertEqual(str(message), expected_str)
 
-#     def test_group_message_validation(self):
-#         with self.assertRaises(ValidationError):
-#             GroupMessage.objects.create(group=self.group_chat, sender=self.user1, content='')
+    def test_group_message_validation(self):
+        with self.assertRaises(ValidationError):
+            GroupMessage.objects.create(group=self.group_chat, sender=self.user1, content='')
 
-#         with self.assertRaises(ValidationError):
-#             GroupMessage.objects.create(group=self.group_chat, sender=self.user1, content='   ')
+        with self.assertRaises(ValidationError):
+            GroupMessage.objects.create(group=self.group_chat, sender=self.user1, content='   ')
 
-#         user3 = User.objects.create_user(username='user3', password='testpass123')
-#         with self.assertRaises(ValidationError):
-#             GroupMessage.objects.create(group=self.group_chat, sender=user3, content='Hey!')
+        user3 = User.objects.create_user(username='user3', password='testpass123')
+        with self.assertRaises(ValidationError):
+            GroupMessage.objects.create(group=self.group_chat, sender=user3, content='Hey!')
