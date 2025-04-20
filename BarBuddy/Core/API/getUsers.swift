@@ -120,6 +120,11 @@ struct ContentViewGet: View {
     }
 }
 
+extension GetUser {
+    static let MOCK_DATA = GetUser(id: 0, username: "Test User", first_name: "Andrew", last_name: "Betancourt", email: "mail@mail.com", password: "", date_of_birth: "", hometown: "", job_or_university: "", favorite_drink: "", location: "Hideaway", matches: "", swipes: "", vote_weight: 1, account_type: "", sexual_preference: "")
+
+}
+
 struct ContentViewGet_Previews: PreviewProvider {
     static var previews: some View { ContentViewGet() }
 }
