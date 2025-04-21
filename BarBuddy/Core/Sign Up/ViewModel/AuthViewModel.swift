@@ -13,6 +13,16 @@ final class AuthViewModel: ObservableObject {
     // MARK: - Published state
     @Published private(set) var authUser: FirebaseAuth.User?
     @Published var currentUser: GetUser?
+    
+    /*  Checks to see if user has signed in previously
+        which automatically signs in the user on app's
+        initial launch
+     
+        Comment out initilizer to force "sign out"
+     */
+    init() {
+        self.authUser = Auth.auth().currentUser
+    }
 
     // MARK: - Sign‑in (existing account)
     func signIn(email: String, password: String) async {

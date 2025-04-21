@@ -7,7 +7,7 @@
 import SwiftUI
 
 struct MessagesView: View {
-    var hasMessages: Bool = false // Only for testing purposes
+    var hasMessages: Bool = true  // Only for testing purposes
     var body: some View {
         NavigationStack {
             ZStack {
@@ -16,53 +16,36 @@ struct MessagesView: View {
 
                 if !hasMessages {
                     NoMessagesView()
-                }
-                else {
+                } else {
                     // Decided to change to list since it has better pagentation support
                     List {
-                        Section(
-                            header: Text("Groups")
-                                .font(.title)  // Larger font
-                                .foregroundColor(.white)
-                                .bold()
-                        ) {
-                            ForEach(0..<1) { _ in
-                                // Group Cards
-                                GroupChatCard(
-                                    groupName: "Golden Girls 💕",
-                                    message:
-                                        "This app is insane",
-                                    memberImages: ["", "", ""]
-                                )
+                        ForEach([GetUser.MOCK_DATA], id: \.self) { user in
+                            
+                            DirectMessageRow(
+                                name: user.first_name,
+                                message: "Hey man, how's it going?",
+                                location: "Hideaway"
                                 
+                            )
+                            .overlay {
+                                NavigationLink("") {
+                                    ConversationView(recipient: user.first_name)
+                                        .navigationBarBackButtonHidden()
+                                }
+                                .opacity(0)
                             }
-                            .listRowBackground(Color("DarkBlue"))
                         }
-                        
-                        Section(
-                            header: Text("DM's")
-                                .font(.title)
-                                .foregroundColor(.white)
-                                .bold()
-                        ) {
-                            ForEach([GetUser.MOCK_DATA], id: \.self) { user in
-                                DirectMessageRow(
-                                    name: user.first_name + " " + "Betancourt",
-                                    message: "Hey man, how's it going?",
-                                    location: "Hideaway"
-                                )
-                            }
-                            .listRowBackground(Color("DarkBlue"))
-                        }
+                        .listRowBackground(Color("DarkBlue"))
                     }
                     .listStyle(.plain)
                     .listRowSeparator(.hidden)
-                    .navigationBarTitleDisplayMode(.inline)
-                    .toolbarBackground(.darkBlue, for: .navigationBar)
-                    .toolbarBackground(.visible, for: .navigationBar)
-                    .scrollContentBackground(.hidden)
                 }
+                
             }
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbarBackground(.darkBlue, for: .navigationBar)
+            .toolbarBackground(.visible, for: .navigationBar)
+            .scrollContentBackground(.hidden)
             .toolbar {
                 //Header
                 ToolbarItem(placement: .navigation) {
@@ -73,7 +56,8 @@ struct MessagesView: View {
                 }
                 ToolbarItem(placement: .topBarTrailing) {
                     NavigationLink {
-                        CreateNewMessageView()
+                        ComposeMessageView()
+                            .navigationBarBackButtonHidden()
                     } label: {
                         Image(systemName: "plus.message.fill")
                             .foregroundStyle(.salmon)
