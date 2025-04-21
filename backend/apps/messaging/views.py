@@ -14,13 +14,12 @@ from rest_framework.response import Response
 from apps.matches.models import Match
 from rest_framework.exceptions import PermissionDenied
 from django.db import models
-from rest_framework.permissions import IsAuthenticated
 
 class PusherViewSet(viewsets.ViewSet):
     """
     ViewSet for handling Pusher-related operations.
     """
-    permission_classes = [IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated]
 
     @action(detail=False, methods=['post'])
     def trigger(self, request):
