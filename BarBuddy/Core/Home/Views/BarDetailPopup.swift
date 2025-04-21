@@ -127,10 +127,11 @@ struct BarDetailPopup: View {
                         .disabled(crowdButtonProperties.showMenu)
                     }
                 }
-                WebImage(url: URL(string: ""))
+                WebImage(url: URL(string: "https://media.istockphoto.com/id/1040303026/photo/draught-beer-in-glasses.jpg?s=612x612&w=0&k=20&c=MvDv_YtiG4l1bh9vNJv5Hyb-l8ZSCsMDbxutWnCh-78="))
                     .resizable()
                     .frame(width: 350, height: 250)
-                    .clipped()
+                    .clipShape(RoundedRectangle(cornerRadius: 20))
+                    
                     
                 // MARK: — Swipe Navigation
                 NavigationLink(destination: SwipeView()) {
