@@ -52,9 +52,7 @@ In Swift, you can grab the token with:
 GET /api/events/?today=true
 Authorization: Bearer <token>
 
-### Pusher API Documentation
-
-## Overview
+## Pusher API Overview
 The BarBuddy application uses Pusher for real-time messaging functionality. Pusher is integrated to handle both direct messages between users and group chat messages.
 
 ## Configuration
