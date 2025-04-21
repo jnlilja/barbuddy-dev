@@ -64,11 +64,23 @@ class GroupChatModelTests(TestCase):
         self.user3 = User.objects.create_user(username='user3', password='testpass123')
 
     def test_create_group_chat(self):
-        group_chat = GroupChat.objects.create(name='Test Group')
-        group_chat.members.set([self.user1, self.user2, self.user3])
-        group_chat.save()  # validate after members are set
+        """Test creating a group chat with members."""
+        # Create a group chat with two members
+        group_chat = GroupChat.create_with_members(
+            name='Test Group',
+            members=[self.user1, self.user2]
+        )
+        
+        # Verify the group chat was created correctly
         self.assertEqual(group_chat.name, 'Test Group')
-        self.assertEqual(group_chat.members.count(), 3)
+        self.assertEqual(group_chat.members.count(), 2)
+        self.assertTrue(self.user1 in group_chat.members.all())
+        self.assertTrue(self.user2 in group_chat.members.all())
+        
+        # Verify the group chat can be retrieved
+        retrieved_chat = GroupChat.objects.get(id=group_chat.id)
+        self.assertEqual(retrieved_chat.name, 'Test Group')
+        self.assertEqual(retrieved_chat.members.count(), 2)
 
     def test_group_chat_str_representation(self):
         group_chat = GroupChat.objects.create(name='Test Group')

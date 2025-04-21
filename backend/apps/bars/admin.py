@@ -16,25 +16,17 @@ except ImportError:
 
 
 class BarAdminForm(forms.ModelForm):
-    latitude = forms.FloatField(
-        label="Latitude",
-        required=True,
-        help_text="Decimal coordinates (e.g. 40.7128)"
-    )
-    longitude = forms.FloatField(
-        label="Longitude",
-        required=True,
-        help_text="Decimal coordinates (e.g. -74.0060)"
-    )
+    latitude = forms.FloatField(label="Latitude", required=False)
+    longitude = forms.FloatField(label="Longitude", required=False)
 
     class Meta:
         model = Bar
         fields = (
             "name", "address", "average_price",
+            "location",  # keep the GIS field so that, if the map widget is available, it still shows
             "latitude", "longitude",
             "users_at_bar",
         )
-        exclude = ('location',)  # Hide the GIS field from the form
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -46,12 +38,9 @@ class BarAdminForm(forms.ModelForm):
         cleaned = super().clean()
         lat = cleaned.get("latitude")
         lon = cleaned.get("longitude")
-        
-        if lat is None or lon is None:
-            raise ValidationError("Both latitude and longitude are required")
-            
-        # Always create the Point object for the location field
-        cleaned["location"] = Point(lon, lat, srid=4326)
+        # if the admin filled both, override the GIS Point
+        if lat is not None and lon is not None:
+            cleaned["location"] = Point(lon, lat, srid=4326)
         return cleaned
 
 
