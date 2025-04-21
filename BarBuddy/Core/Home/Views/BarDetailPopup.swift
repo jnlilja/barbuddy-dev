@@ -5,6 +5,8 @@
 //
 import SwiftUI
 import MapKit
+import SDWebImageSwiftUI
+
 struct BarDetailPopup: View {
     @Environment(\.dismiss) var dismiss
     @EnvironmentObject var viewModel: MapViewModel
@@ -125,7 +127,11 @@ struct BarDetailPopup: View {
                         .disabled(crowdButtonProperties.showMenu)
                     }
                 }
-                Spacer()
+                WebImage(url: URL(string: ""))
+                    .resizable()
+                    .frame(width: 350, height: 250)
+                    .clipped()
+                    
                 // MARK: — Swipe Navigation
                 NavigationLink(destination: SwipeView()) {
                     HStack {
