@@ -41,6 +41,7 @@ struct LoginView: View {
 
                 TextField("Email", text: $email)
                     .autocapitalization(.none)
+                    .keyboardType(.emailAddress)
                     .padding()
                     .frame(width: 300, height: 50)
                     .background(Color.white)
