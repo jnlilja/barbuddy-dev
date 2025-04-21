@@ -10,7 +10,7 @@ import MapKit
 import SwiftUI
 
 struct MainFeedView: View {
-    @StateObject private var viewModel = MapViewModel()
+    @EnvironmentObject var viewModel: MapViewModel
     @State private var bottomSheetPosition: BottomSheetPosition = .relative(0.86)
     @State private var selectedItem: UUID?
     @State private var isDetailPresented = false
@@ -135,6 +135,7 @@ struct MainFeedView: View {
             } else {
                 ForEach(filteredBars) { bar in
                     BarCard(bar: bar)
+                        .environmentObject(viewModel)
                         .padding([.horizontal, .bottom])
                 }
                 .transition(.opacity)
