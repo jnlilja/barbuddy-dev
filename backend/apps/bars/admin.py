@@ -62,6 +62,7 @@ class BarAdmin(GeoAdminBase):
             {
                 "model": BarImage,
                 "extra": 1,
+                "fields": ("image", "caption"),
                 "readonly_fields": ("uploaded_at",),
             },
         ),
@@ -79,5 +80,5 @@ class BarRatingAdmin(admin.ModelAdmin):
 
 @admin.register(BarImage)
 class BarImageAdmin(admin.ModelAdmin):
-    list_display    = ("bar", "caption", "uploaded_at")
+    list_display = ("bar", "caption", "uploaded_at")
     readonly_fields = ("uploaded_at",)
