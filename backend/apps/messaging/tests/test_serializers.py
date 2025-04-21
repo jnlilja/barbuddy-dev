@@ -54,107 +54,107 @@ class MessageSerializerTests(TestCase):
         self.assertEqual(message.content, 'New message')
         self.assertFalse(message.is_read)
 
-# class GroupChatSerializerTests(TestCase):
-#     def setUp(self):
-#         self.user1 = User.objects.create_user(
-#             username='user1',
-#             password='testpass123'
-#         )
-#         self.user2 = User.objects.create_user(
-#             username='user2',
-#             password='testpass123'
-#         )
-#         self.group_chat = GroupChat.objects.create(name='Test Group')
-#         self.group_chat.members.add(self.user1, self.user2)
+class GroupChatSerializerTests(TestCase):
+    def setUp(self):
+        self.user1 = User.objects.create_user(
+            username='user1',
+            password='testpass123'
+        )
+        self.user2 = User.objects.create_user(
+            username='user2',
+            password='testpass123'
+        )
+        self.group_chat = GroupChat.objects.create(name='Test Group')
+        self.group_chat.members.add(self.user1, self.user2)
 
-#     def test_group_chat_serialization(self):
-#         """Test serializing a group chat"""
-#         serializer = GroupChatSerializer(self.group_chat)
-#         data = serializer.data
+    def test_group_chat_serialization(self):
+        """Test serializing a group chat"""
+        serializer = GroupChatSerializer(self.group_chat)
+        data = serializer.data
         
-#         self.assertEqual(data['id'], self.group_chat.id)
-#         self.assertEqual(data['name'], 'Test Group')
-#         self.assertEqual(len(data['members']), 2)
-#         self.assertIn(self.user1.id, data['members'])
-#         self.assertIn(self.user2.id, data['members'])
-#         self.assertIn('created_at', data)
+        self.assertEqual(data['id'], self.group_chat.id)
+        self.assertEqual(data['name'], 'Test Group')
+        self.assertEqual(len(data['members']), 2)
+        self.assertIn(self.user1.id, data['members'])
+        self.assertIn(self.user2.id, data['members'])
+        self.assertIn('created_at', data)
 
-#     def test_group_chat_deserialization(self):
-#         """Test deserializing group chat data"""
-#         data = {
-#             'name': 'New Group',
-#             'members': [self.user1.id, self.user2.id]
-#         }
-#         serializer = GroupChatSerializer(data=data)
-#         self.assertTrue(serializer.is_valid())
+    def test_group_chat_deserialization(self):
+        """Test deserializing group chat data"""
+        data = {
+            'name': 'New Group',
+            'members': [self.user1.id, self.user2.id]
+        }
+        serializer = GroupChatSerializer(data=data)
+        self.assertTrue(serializer.is_valid())
         
-#         group_chat = serializer.save()
-#         self.assertEqual(group_chat.name, 'New Group')
-#         self.assertEqual(group_chat.members.count(), 2)
-#         self.assertIn(self.user1, group_chat.members.all())
-#         self.assertIn(self.user2, group_chat.members.all())
+        group_chat = serializer.save()
+        self.assertEqual(group_chat.name, 'New Group')
+        self.assertEqual(group_chat.members.count(), 2)
+        self.assertIn(self.user1, group_chat.members.all())
+        self.assertIn(self.user2, group_chat.members.all())
 
-# class GroupMessageSerializerTests(TestCase):
-#     def setUp(self):
-#         self.user1 = User.objects.create_user(
-#             username='user1',
-#             password='testpass123'
-#         )
-#         self.user2 = User.objects.create_user(
-#             username='user2',
-#             password='testpass123'
-#         )
-#         self.group_chat = GroupChat.objects.create(name='Test Group')
-#         self.group_chat.members.add(self.user1, self.user2)
-#         self.message = GroupMessage.objects.create(
-#             group=self.group_chat,
-#             sender=self.user1,
-#             content='Hello everyone!'
-#         )
+class GroupMessageSerializerTests(TestCase):
+    def setUp(self):
+        self.user1 = User.objects.create_user(
+            username='user1',
+            password='testpass123'
+        )
+        self.user2 = User.objects.create_user(
+            username='user2',
+            password='testpass123'
+        )
+        self.group_chat = GroupChat.objects.create(name='Test Group')
+        self.group_chat.members.add(self.user1, self.user2)
+        self.message = GroupMessage.objects.create(
+            group=self.group_chat,
+            sender=self.user1,
+            content='Hello everyone!'
+        )
 
-#     def test_group_message_serialization(self):
-#         """Test serializing a group message"""
-#         serializer = GroupMessageSerializer(self.message)
-#         data = serializer.data
+    def test_group_message_serialization(self):
+        """Test serializing a group message"""
+        serializer = GroupMessageSerializer(self.message)
+        data = serializer.data
         
-#         self.assertEqual(data['id'], self.message.id)
-#         self.assertEqual(data['group'], self.group_chat.id)
-#         self.assertEqual(data['sender'], self.user1.id)
-#         self.assertEqual(data['content'], 'Hello everyone!')
-#         self.assertEqual(data['sender_username'], 'user1')
-#         self.assertIn('timestamp', data)
+        self.assertEqual(data['id'], self.message.id)
+        self.assertEqual(data['group'], self.group_chat.id)
+        self.assertEqual(data['sender'], self.user1.id)
+        self.assertEqual(data['content'], 'Hello everyone!')
+        self.assertEqual(data['sender_username'], 'user1')
+        self.assertIn('timestamp', data)
 
-#     def test_group_message_deserialization(self):
-#         """Test deserializing group message data"""
-#         data = {
-#             'group': self.group_chat.id,
-#             'content': 'New message'
-#         }
-#         serializer = GroupMessageSerializer(data=data)
-#         self.assertTrue(serializer.is_valid())
+    def test_group_message_deserialization(self):
+        """Test deserializing group message data"""
+        data = {
+            'group': self.group_chat.id,
+            'content': 'New message'
+        }
+        serializer = GroupMessageSerializer(data=data)
+        self.assertTrue(serializer.is_valid())
         
-#         message = serializer.save(sender=self.user1)
-#         self.assertEqual(message.group, self.group_chat)
-#         self.assertEqual(message.sender, self.user1)
-#         self.assertEqual(message.content, 'New message')
+        message = serializer.save(sender=self.user1)
+        self.assertEqual(message.group, self.group_chat)
+        self.assertEqual(message.sender, self.user1)
+        self.assertEqual(message.content, 'New message')
 
-# class PusherSerializerTests(TestCase):
-#     def test_pusher_event_serialization(self):
-#         """Test serializing Pusher event data"""
-#         data = {
-#             'channel': 'test-channel',
-#             'event': 'test-event',
-#             'data': {'message': 'Hello!'}
-#         }
-#         serializer = PusherEventSerializer(data=data)
-#         self.assertTrue(serializer.is_valid())
-#         self.assertEqual(serializer.validated_data, data)
+class PusherSerializerTests(TestCase):
+    def test_pusher_event_serialization(self):
+        """Test serializing Pusher event data"""
+        data = {
+            'channel': 'test-channel',
+            'event': 'test-event',
+            'data': {'message': 'Hello!'}
+        }
+        serializer = PusherEventSerializer(data=data)
+        self.assertTrue(serializer.is_valid())
+        self.assertEqual(serializer.validated_data, data)
 
-#     def test_pusher_unsubscribe_serialization(self):
-#         """Test serializing Pusher unsubscribe data"""
-#         data = {
-#             'channel': 'test-channel'
-#         }
-#         serializer = PusherUnsubscribeSerializer(data=data)
-#         self.assertTrue(serializer.is_valid())
-#         self.assertEqual(serializer.validated_data, data)
+    def test_pusher_unsubscribe_serialization(self):
+        """Test serializing Pusher unsubscribe data"""
+        data = {
+            'channel': 'test-channel'
+        }
+        serializer = PusherUnsubscribeSerializer(data=data)
+        self.assertTrue(serializer.is_valid())
+        self.assertEqual(serializer.validated_data, data)

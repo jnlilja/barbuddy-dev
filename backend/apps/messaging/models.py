@@ -64,13 +64,11 @@ class GroupChat(models.Model):
             raise ValidationError("Group chat name cannot be empty.")
 
     def save(self, *args, **kwargs):
-        # First save to get an ID
+        is_new = self.pk is None
         super().save(*args, **kwargs)
-        
-        # Then validate member count
+
+        # Only validate member count AFTER save (so self.members is ready)
         if self.members.count() < 2:
-            # If validation fails, delete the object and raise error
-            self.delete()
             raise ValidationError("A group chat must have at least 2 members.")
 
 class GroupMessage(models.Model):

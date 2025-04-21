@@ -6,7 +6,7 @@ from apps.users.views import UserViewSet
 from apps.bars.views import BarViewSet, BarStatusViewSet, BarRatingViewSet, BarImageViewSet
 from apps.events.views import EventViewSet
 from apps.matches.views import MatchViewSet
-from apps.messaging.views import MessageViewSet, GroupChatViewSet, PusherViewSet, GroupMessageViewSet
+from apps.messaging.views import MessageViewSet, GroupChatViewSet, PusherViewSet
 from apps.swipes.views import SwipeViewSet
 from django.shortcuts import redirect
 # from .views import BarVoteViewSet
@@ -34,9 +34,7 @@ router.register(r'events', EventViewSet, basename="events")
 router.register(r'matches', MatchViewSet, basename="matches")
 
 #MUST DO: MESSAGING
-router.register(r'messages', MessageViewSet, basename='message')
-router.register(r'group-chats', GroupChatViewSet, basename='group-chat')
-router.register(r'group-messages', GroupMessageViewSet, basename='group-message')
+router.register(r'messages', MessageViewSet, basename="messages")
 
 # MUST DO: SWIPES
 router.register(r'swipes', SwipeViewSet, basename='swipe')
@@ -46,6 +44,7 @@ router.register(r'users', UserViewSet, basename="users")
 
 # MUST DO: Pusher
 router.register(r'pusher', PusherViewSet, basename="pusher")
+
 
 
 from django.urls import path, re_path

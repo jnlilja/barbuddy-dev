@@ -12,7 +12,6 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from pathlib import Path
 import environ, os, sys
-import pusher
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -39,20 +38,6 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
-# Pusher Configuration
-PUSHER_APP_ID = env('PUSHER_APP_ID')
-PUSHER_KEY = env('PUSHER_KEY')
-PUSHER_SECRET = env('PUSHER_SECRET')
-PUSHER_CLUSTER = env('PUSHER_CLUSTER')
-
-# Initialize Pusher client
-PUSHER_CLIENT = pusher.Pusher(
-    app_id=PUSHER_APP_ID,
-    key=PUSHER_KEY,
-    secret=PUSHER_SECRET,
-    cluster=PUSHER_CLUSTER,
-    ssl=True
-)
 
 # Application definition
 
@@ -76,6 +61,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'drf_yasg',
     'pusher',
+
 ]
 
 
@@ -124,9 +110,6 @@ DATABASES = {
         'PASSWORD': env('DB_PASSWORD'),
         'HOST': env('DB_HOST'),
         'PORT': env('DB_PORT'),
-        'OPTIONS': {
-            'sslmode': 'require',  # Required for Google Cloud SQL
-        },
     }
 }
 
@@ -169,6 +152,9 @@ TIME_ZONE = "UTC"
 USE_I18N = True
 
 USE_TZ = True
+
+# CORS_ALLOW_ALL_ORIGINS = True
+
 
 
 # Static files (CSS, JavaScript, Images)
