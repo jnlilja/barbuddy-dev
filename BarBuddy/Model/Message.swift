@@ -17,3 +17,10 @@ struct Message: Identifiable, Codable {
     var senderUsername: String
     var recepientUsername: String
 }
+
+// Only for testing
+struct MockMessage: Identifiable, Codable {
+    let id = UUID()
+    let text: String
+    let isIncoming: Bool
+}
