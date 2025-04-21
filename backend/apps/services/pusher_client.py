@@ -1,41 +1,33 @@
-from dotenv import load_dotenv
 from datetime import datetime
-
-# Load environment variables from .env file
-load_dotenv()
-
-import pusher
-import os
-
-
-#going to use .env file to store the pusher credentials
-pusher_client = pusher.Pusher(
-
-
-  app_id=os.getenv('PUSHER_APP_ID'),
-  key=os.getenv('PUSHER_KEY'),
-  secret=os.getenv('PUSHER_SECRET'),
-  cluster=os.getenv('PUSHER_CLUSTER'),
-  ssl=True
-
-)
+from django.conf import settings
 
 def send_message(channel, event, data):
-  pusher_client.trigger(channel, event, data)
+    """
+    Send a message through Pusher.
+    
+    Args:
+        channel (str): The channel to send the message to
+        event (str): The event name
+        data (dict): The data to send
+    """
+    settings.PUSHER_CLIENT.trigger(channel, event, data)
 
 def unsubscribe_channel(channel_name):
     """
     Unsubscribe all users from a channel.
     This effectively 'deletes' the channel by removing all subscribers.
+    
+    Args:
+        channel_name (str): The name of the channel to unsubscribe from
     """
     try:
         # Get channel info
-        channel_info = pusher_client.channel_info(channel_name)
+        channel_info = settings.PUSHER_CLIENT.channel_info(channel_name)
         
         # If channel exists and has subscribers
         if channel_info and channel_info.get('occupied'):
             # Trigger a 'channel-deleted' event to notify subscribers
-            pusher_client.trigger(channel_name, 'channel-deleted', {
+            settings.PUSHER_CLIENT.trigger(channel_name, 'channel-deleted', {
                 'message': 'This chat has been deleted',
                 'timestamp': datetime.now().isoformat()
             })

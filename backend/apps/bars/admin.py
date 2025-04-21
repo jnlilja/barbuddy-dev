@@ -16,21 +16,14 @@ except ImportError:
 
 
 class BarAdminForm(forms.ModelForm):
-    latitude = forms.FloatField(
-        label="Latitude",
-        required=True,
-        help_text="Decimal coordinates (e.g. 40.7128)"
-    )
-    longitude = forms.FloatField(
-        label="Longitude",
-        required=True,
-        help_text="Decimal coordinates (e.g. -74.0060)"
-    )
+    latitude = forms.FloatField(label="Latitude", required=False)
+    longitude = forms.FloatField(label="Longitude", required=False)
 
     class Meta:
         model = Bar
         fields = (
             "name", "address", "average_price",
+            "location",  # keep the GIS field so that, if the map widget is available, it still shows
             "latitude", "longitude",
             "users_at_bar",
         )
@@ -42,23 +35,16 @@ class BarAdminForm(forms.ModelForm):
             self.fields["longitude"].initial = self.instance.location.x
 
     def clean(self):
-        cleaned_data = super().clean()
-        lat = cleaned_data.get("latitude")
-        lon = cleaned_data.get("longitude")
+        cleaned = super().clean()
+        lat = cleaned.get("latitude")
+        lon = cleaned.get("longitude")
         
         if lat is None or lon is None:
             raise ValidationError("Both latitude and longitude are required")
             
-        # Create Point object and add it to cleaned_data
-        cleaned_data["location"] = Point(lon, lat, srid=4326)
-        return cleaned_data
-
-    def save(self, commit=True):
-        instance = super().save(commit=False)
-        instance.location = self.cleaned_data["location"]
-        if commit:
-            instance.save()
-        return instance
+        # Always create the Point object for the location field
+        cleaned["location"] = Point(lon, lat, srid=4326)
+        return cleaned
 
 
 @admin.register(Bar)

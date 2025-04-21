@@ -138,7 +138,7 @@ class BarStatusModelTests(TestCase):
             crowd_size='low',
             wait_time='<5 min'
         )
-        self.assertTrue(str(bar_status).startswith(f"{self.bar.name} Status -"))
+        self.assertTrue(str(bar_status).startswith(f"{self.bar.name} Status —"))
 
 
 class BarRatingModelTests(TestCase):

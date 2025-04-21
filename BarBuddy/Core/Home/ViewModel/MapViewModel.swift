@@ -269,7 +269,7 @@ final class MapViewModel: ObservableObject {
     private func fetchBarLocation(_ bar: String) async
         -> CLLocationCoordinate2D?
     {
-        var req = MKLocalSearch.Request()
+        let req = MKLocalSearch.Request()
         req.naturalLanguageQuery = bar
         req.region = .init(
             center: pacificBeachCoordinate,

@@ -10,7 +10,7 @@ User = get_user_model()
 class BarImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = BarImage
-        fields = ['id', 'image_url', 'caption', 'uploaded_at']
+        fields = ['id', 'image', 'caption', 'uploaded_at']
 
 
 class BarSerializer(serializers.ModelSerializer):
@@ -20,14 +20,14 @@ class BarSerializer(serializers.ModelSerializer):
     )
     current_status = serializers.SerializerMethodField()
     average_rating = serializers.SerializerMethodField()
-    images = BarImageSerializer(many=True, read_only=True)    # ← NEW
+    images = BarImageSerializer(many=True, read_only=True)
 
     class Meta:
         model = Bar
         fields = [
             'id', 'name', 'address', 'average_price',
             'location', 'users_at_bar', 'current_status',
-            'average_rating', 'images',                   # ← NEW
+            'average_rating', 'images',
         ]
 
     def get_location(self, obj):

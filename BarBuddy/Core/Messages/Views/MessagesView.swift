@@ -104,8 +104,6 @@ struct MessagesView: View {
 }
 
 // Preview with dummy environment
-struct MessagesView_Previews: PreviewProvider {
-    static var previews: some View {
-        MessagesView()
-    }
+#Preview {
+    MessagesView()
 }

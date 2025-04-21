@@ -8,7 +8,7 @@ import Foundation
 
 // Make the type returned by Auth.signIn(...) explicitly Sendable so it can
 // cross actor boundaries when using async/await.
-extension AuthDataResult: @unchecked Sendable {}
+extension AuthDataResult: @unchecked @retroactive Sendable {}
 
 /// Lightweight helper for login screens.
 /// You can use this directly or just route everything through `AuthViewModel`.

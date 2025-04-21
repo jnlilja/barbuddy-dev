@@ -13,7 +13,7 @@ struct SettingsView: View {
         NavigationStack {
             Button {
                 Task {
-                    try viewModel.signOut()
+                    viewModel.signOut()
                 }
             }label: {
                 ZStack {

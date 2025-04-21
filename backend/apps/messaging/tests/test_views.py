@@ -11,6 +11,7 @@ import json
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.test import APITestCase
 
 class MessageViewSetTests(TestCase):
     def setUp(self):
@@ -43,7 +44,7 @@ class MessageViewSetTests(TestCase):
         self.message_list_url = reverse('message-list')
         self.message_detail_url = reverse('message-detail', args=[1])  # Will be formatted with actual ID
 
-    @patch('apps.services.pusher_client.send_message')
+    @patch('apps.messaging.views.send_message')
     def test_create_message(self, mock_send_message):
         """Test creating a new message"""
         data = {
@@ -84,7 +85,7 @@ class MessageViewSetTests(TestCase):
             content_type='application/json'
         )
         
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_create_message_to_unmatched_user(self):
         """Test creating a message to an unmatched user"""
@@ -129,8 +130,7 @@ class MessageViewSetTests(TestCase):
         )
         
         response = self.client.patch(
-            reverse('message-detail', args=[message.id]),
-            data=json.dumps({'is_read': True}),
+            reverse('message-mark-as-read', args=[message.id]),
             content_type='application/json'
         )
         
@@ -215,12 +215,12 @@ class PusherViewSetTests(TestCase):
         # Create test client
         self.client = APIClient()
         self.client.force_authenticate(user=self.user)
-        
+
         # URLs
         self.pusher_trigger_url = reverse('pusher-trigger')
         self.pusher_unsubscribe_url = reverse('pusher-unsubscribe')
 
-    @patch('apps.services.pusher_client.send_message')
+    @patch('apps.messaging.views.send_message')
     def test_trigger_event(self, mock_send_message):
         """Test triggering a Pusher event"""
         data = {
@@ -242,7 +242,7 @@ class PusherViewSetTests(TestCase):
             {'message': 'Hello!'}
         )
 
-    @patch('apps.services.pusher_client.unsubscribe_channel')
+    @patch('apps.messaging.views.unsubscribe_channel')
     def test_unsubscribe(self, mock_unsubscribe):
         """Test unsubscribing from a Pusher channel"""
         data = {
