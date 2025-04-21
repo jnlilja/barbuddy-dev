@@ -10,6 +10,7 @@ import SwiftUI
 
 struct HomeView: View {
     @State private var selectedTab = 2
+    @StateObject private var viewModel = MapViewModel()
 
     var body: some View {
         TabView(selection: $selectedTab) {
@@ -33,6 +34,7 @@ struct HomeView: View {
                     Text("Map")
                 }
                 .tag(2)
+                .environmentObject(viewModel)
 
             ProfileView()
                 .tabItem {
