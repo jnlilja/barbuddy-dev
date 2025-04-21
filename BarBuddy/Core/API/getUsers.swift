@@ -36,7 +36,7 @@ final class GetUserAPIService {
     private let baseURL = URL(string: "https://YOUR_API_BASE_URL")!   // ← Replace
 
     /// GET /users – returns the full users list
-    func fetchUsers(completion: @escaping (Result<[GetUser], APIError>) -> Void) {
+    func fetchUsers(completion: @escaping @Sendable (Result<[GetUser], APIError>) -> Void) {
         guard let currentUser = Auth.auth().currentUser else {
             return completion(.failure(.noToken))
         }
@@ -86,12 +86,14 @@ final class UsersViewModel: ObservableObject {
 
     func loadUsers() {
         GetUserAPIService.shared.fetchUsers { [weak self] result in
-            switch result {
-            case .success(let list):
-                self?.users = list
-            case .failure(let err):
-                self?.errorMessage = err.localizedDescription
-                self?.showingError = true
+            Task { @MainActor in
+                switch result {
+                case .success(let list):
+                    self?.users = list
+                case .failure(let err):
+                    self?.errorMessage = err.localizedDescription
+                    self?.showingError = true
+                }
             }
         }
     }
