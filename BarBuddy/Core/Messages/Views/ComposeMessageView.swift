@@ -1,10 +1,11 @@
 import SwiftUI
+import FirebaseAuth
 
 struct ComposeMessageView: View {
     @State private var messageText: String = ""
-    @State private var recipient: String = ""
-    @State private var messages: [MockMessage] = []  // Using Message model now
+    @State private var numericRecipientID: String = ""
     @FocusState private var isInputFocused: Bool
+    @StateObject private var messaging = MessagingService.shared
 
     var body: some View {
         ZStack {
@@ -24,53 +25,14 @@ struct ComposeMessageView: View {
                             .foregroundColor(.darkBlue)
                             .font(.headline)
 
-                        TextField("", text: $recipient)
+                        TextField("User ID", text: $numericRecipientID)
                             .frame(width: 300)
+                            .keyboardType(.numberPad)
                     }
                     .padding(.horizontal)
                 }
 
-                ZStack {
-                    Color.salmon.opacity(0.15)
-                    ScrollView {
-                        VStack(alignment: .leading, spacing: 10) {
-                            
-                            ForEach(messages) { message in
-                                HStack {
-                                    if message.isIncoming {
-                                        // Incoming bubble
-                                        Text(message.text)
-                                            .padding()
-                                            .background(Color.gray.opacity(0.2))
-                                            .foregroundColor(.white)
-                                            .cornerRadius(16)
-                                            .frame(
-                                                maxWidth: 250,
-                                                alignment: .leading
-                                            )
-                                        Spacer()
-                                    } else {
-                                        // Outgoing bubble
-                                        Spacer()
-                                        Text(message.text)
-                                            .padding()
-                                            .background(Color.salmon)
-                                            .foregroundColor(.white)
-                                            .cornerRadius(16)
-                                            .frame(
-                                                maxWidth: 250,
-                                                alignment: .trailing
-                                            )
-                                    }
-                                }
-                                .padding(.horizontal)
-                            }
-                        }
-                        .padding(.vertical, 8)
-                    }
-                    .defaultScrollAnchor(.bottom)
-                    .padding(.bottom)
-                }
+                Spacer()
 
                 HStack {
                     TextField("Type a message...", text: $messageText)
@@ -96,27 +58,22 @@ struct ComposeMessageView: View {
     }
 
     private func sendMessage() {
-        let trimmed = messageText.trimmingCharacters(
-            in: .whitespacesAndNewlines
-        )
-        guard !trimmed.isEmpty else { return }
-
-        // Outgoing message
-        messages.append(MockMessage(text: trimmed, isIncoming: false))
-
-        // Simulate an incoming reply after a short delay
-        // Only for testing purposes
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-            messages.append(
-                MockMessage(text: "Reply to: \(trimmed)", isIncoming: true)
-            )
+        let trimmedText = messageText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let rid = Int(numericRecipientID.trimmingCharacters(in: .whitespacesAndNewlines)),
+              !trimmedText.isEmpty else {
+            return
         }
-
+        Task {
+            await messaging.send(recipientID: rid, content: trimmedText)
+        }
         messageText = ""
         isInputFocused = false
     }
 }
 
-#Preview {
-    ComposeMessageView()
+// Preview
+struct ComposeMessageView_Previews: PreviewProvider {
+    static var previews: some View {
+        ComposeMessageView()
+    }
 }
