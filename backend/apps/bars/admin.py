@@ -34,7 +34,6 @@ class BarAdminForm(forms.ModelForm):
             "latitude", "longitude",
             "users_at_bar",
         )
-        exclude = ('location',)  # Hide the GIS field from the form
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -43,16 +42,23 @@ class BarAdminForm(forms.ModelForm):
             self.fields["longitude"].initial = self.instance.location.x
 
     def clean(self):
-        cleaned = super().clean()
-        lat = cleaned.get("latitude")
-        lon = cleaned.get("longitude")
+        cleaned_data = super().clean()
+        lat = cleaned_data.get("latitude")
+        lon = cleaned_data.get("longitude")
         
         if lat is None or lon is None:
             raise ValidationError("Both latitude and longitude are required")
             
-        # Always create the Point object for the location field
-        cleaned["location"] = Point(lon, lat, srid=4326)
-        return cleaned
+        # Create Point object and add it to cleaned_data
+        cleaned_data["location"] = Point(lon, lat, srid=4326)
+        return cleaned_data
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        instance.location = self.cleaned_data["location"]
+        if commit:
+            instance.save()
+        return instance
 
 
 @admin.register(Bar)
