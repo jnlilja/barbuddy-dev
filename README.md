@@ -55,12 +55,12 @@ Authorization: Bearer <token>
 ## Pusher API Overview
 The BarBuddy application uses Pusher for real-time messaging functionality. Pusher is integrated to handle both direct messages between users and group chat messages.
 
-## Configuration
+### Configuration
 Backend Setup:
 1. Install the Pusher Python SDK:
 2. Configure Pusher credentials in your .env file:
 
-## API Endpoints
+### API Endpoints
 1. Send Message
 Endpoint: /api/trigger/
 Method: POST
@@ -74,7 +74,7 @@ user_id: ID of the other user in the conversation
 Endpoint: /api/group-chats/{group_id}/get_channel_name/
 Method: GET
 
-## Channel Naming Convention
+### Channel Naming Convention
 1. Direct Messages
 Format: private-chat-{user1_id}-{user2_id}
 Example: private-chat-1-2
@@ -86,7 +86,7 @@ Example: group-chat-5
 Message Format
 When a message is sent through Pusher, it includes the following data:
 
-## Security
+### Security
 - All Pusher channels are private and require authentication
 - Messages are encrypted using SSL
 - Channel names are generated based on user IDs to ensure privacy
