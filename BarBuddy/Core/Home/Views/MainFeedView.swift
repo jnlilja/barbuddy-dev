@@ -18,8 +18,6 @@ struct MainFeedView: View {
     @Environment(\.colorScheme) var colorScheme
     let locationViewModel = LocationManager()
 
-    // MARK: — Body
-
     var body: some View {
         NavigationStack {
             ZStack {
@@ -33,8 +31,6 @@ struct MainFeedView: View {
         .environmentObject(viewModel)
         .task { await viewModel.loadBarData() }
     }
-
-    // MARK: — Map Layer
 
     private var mapLayer: some View {
         Map(position: $viewModel.cameraPosition, selection: $selectedItem) {
@@ -89,11 +85,9 @@ struct MainFeedView: View {
         return viewModel.bars.first { $0.id == id }
     }
 
-    // MARK: — Bottom Sheet Layer
-
     private var sheetLayer: some View {
-        Map(position: .constant(.userLocation(fallback: .automatic)), selection: .constant(nil)) { /* hack to satisfy type */ }
-            .hidden()            // dummy so we can attach .bottomSheet
+        Map(position: .constant(.userLocation(fallback: .automatic)), selection: .constant(nil)) { }
+            .hidden()
             .bottomSheet(
                 bottomSheetPosition: $bottomSheetPosition,
                 switchablePositions: [.relativeBottom(0.21), .relative(0.86), .relativeTop(1)],
@@ -134,9 +128,13 @@ struct MainFeedView: View {
                     .font(.title3)
             } else {
                 ForEach(filteredBars) { bar in
-                    BarCard(bar: bar)
-                        .environmentObject(viewModel)
-                        .padding([.horizontal, .bottom])
+                    NavigationLink(destination: BarDetailPopup(bar: bar)
+                                    .environmentObject(viewModel)) {
+                        BarCard(bar: bar)
+                            .environmentObject(viewModel)
+                            .padding([.horizontal, .bottom])
+                    }
+                    .buttonStyle(PlainButtonStyle())
                 }
                 .transition(.opacity)
                 .animation(.easeInOut, value: searchText)
@@ -149,8 +147,6 @@ struct MainFeedView: View {
             searchText.isEmpty || $0.name.localizedCaseInsensitiveContains(searchText)
         }
     }
-
-    // MARK: — Toolbar
 
     private var toolbarContent: some ToolbarContent {
         ToolbarItem(placement: .principal) {
