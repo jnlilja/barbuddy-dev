@@ -76,15 +76,13 @@ Method: GET
 
 ### Channel Naming Convention
 1. Direct Messages
-Format: private-chat-{user1_id}-{user2_id}
-Example: private-chat-1-2
+Format: private-chat-{user1_id}-{user2_id} \n
+Example: private-chat-1-2 \n
 Note: User IDs are sorted to ensure consistent channel names
 
 2. Group Chats
-Format: group-chat-{group_id}
+Format: group-chat-{group_id} \n
 Example: group-chat-5
-Message Format
-When a message is sent through Pusher, it includes the following data:
 
 ### Security
 - All Pusher channels are private and require authentication
