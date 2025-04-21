@@ -61,18 +61,18 @@ Backend Setup:
 2. Configure Pusher credentials in your .env file:
 
 ### API Endpoints
-1. Send Message
-Endpoint: /api/trigger/
-Method: POST
-Description: Sends a message through Pusher
-3. Get Direct Message Channel Name
-Endpoint: /api/messages/get_channel_name/
-Method: GET
-Query Parameters:
-user_id: ID of the other user in the conversation
-4. Get Group Chat Channel Name
-Endpoint: /api/group-chats/{group_id}/get_channel_name/
-Method: GET
+1. Send Message  
+Endpoint: /api/trigger/  
+Method: POST  
+Description: Sends a message through Pusher  
+3. Get Direct Message Channel Name  
+Endpoint: /api/messages/get_channel_name/  
+Method: GET  
+Query Parameters:  
+user_id: ID of the other user in the conversation  
+4. Get Group Chat Channel Name  
+Endpoint: /api/group-chats/{group_id}/get_channel_name/  
+Method: GET  
 
 ### Channel Naming Convention
 1. Direct Messages
