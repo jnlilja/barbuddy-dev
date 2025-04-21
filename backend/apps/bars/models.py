@@ -152,7 +152,7 @@ class BarVote(models.Model):
 
 class BarImage(models.Model):
     bar = models.ForeignKey(Bar, on_delete=models.CASCADE, related_name='images')
-    image = models.ImageField(upload_to='bar_images/%Y/%m/%d/')
+    image_url = models.URLField(max_length=500)  # Changed from ImageField to URLField
     caption = models.CharField(max_length=255, blank=True)
     uploaded_at = models.DateTimeField(auto_now_add=True)
 
@@ -161,3 +161,8 @@ class BarImage(models.Model):
 
     def __str__(self):
         return f"Image for {self.bar.name} @ {self.uploaded_at}"
+
+    def clean(self):
+        super().clean()
+        if not self.image_url:
+            raise ValidationError({'image_url': 'Image URL cannot be empty.'})
