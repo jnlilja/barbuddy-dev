@@ -7,10 +7,15 @@
 
 
 import SwiftUI
+import FirebaseAuth
 
 struct HomeView: View {
     @State private var selectedTab = 2
     @StateObject private var viewModel = MapViewModel()
+
+    /// Numeric backend ID for the signed‑in user
+    @State private var currentUserID: Int? = nil
+    @State private var isLoadingUserID = true
 
     var body: some View {
         TabView(selection: $selectedTab) {
@@ -21,12 +26,31 @@ struct HomeView: View {
                 }
                 .tag(0)
 
-            MessagesView()
-                .tabItem {
-                    Image(systemName: "message.fill")
-                    Text("Messages")
+            // Messages tab: show loader until we have an ID
+            Group {
+                if let userID = currentUserID {
+                    MessagesView(currentUserID: userID)
+                } else if isLoadingUserID {
+                    ZStack {
+                        Color.darkBlue
+                            .ignoresSafeArea()
+                        ProgressView("Loading Messages…")
+                            .foregroundColor(.white)
+                    }
+                } else {
+                    ZStack {
+                        Color.darkBlue
+                            .ignoresSafeArea()
+                        Text("Unable to load Messages")
+                            .foregroundColor(.white)
+                    }
                 }
-                .tag(1)
+            }
+            .tabItem {
+                Image(systemName: "message.fill")
+                Text("Messages")
+            }
+            .tag(1)
 
             MainFeedView()
                 .tabItem {
@@ -45,21 +69,39 @@ struct HomeView: View {
         }
         .accentColor(Color("Salmon"))
         .onAppear {
-            // Set tab bar to be white with transparency
+            // Tab bar styling
             let appearance = UITabBarAppearance()
             appearance.configureWithTransparentBackground()
             appearance.backgroundColor = UIColor.white.withAlphaComponent(0.95)
             UITabBar.appearance().standardAppearance = appearance
             UITabBar.appearance().scrollEdgeAppearance = appearance
         }
+        .task {
+            await fetchCurrentUserID()
+        }
+    }
+
+    /// Fetch backend user list, match on Firebase UID, store numeric ID
+    private func fetchCurrentUserID() async {
+        guard let firebaseUID = Auth.auth().currentUser?.uid else {
+            isLoadingUserID = false
+            return
+        }
+        do {
+            let users = try await GetUserAPIService.shared.fetchUsers()
+            if let me = users.first(where: { $0.username == firebaseUID }) {
+                currentUserID = me.id
+            }
+        } catch {
+            print("⚠️ fetchCurrentUserID error: \(error)")
+        }
+        isLoadingUserID = false
     }
 }
 
-// Preview with the necessary environment objects:
-// - AuthViewModel for ProfileView
-// - MapViewModel for SwipeView / MainFeedView
 #Preview("Home Tab Bar") {
     HomeView()
         .environmentObject(AuthViewModel())
         .environmentObject(MapViewModel())
 }
+

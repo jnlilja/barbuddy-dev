@@ -10,6 +10,7 @@
 		1BBB5B712D979D0400A5E2E8 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 1BBB5B702D979D0400A5E2E8 /* FirebaseAuth */; };
 		1BEC0A212DB0825F00ED74F0 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 1BEC0A202DB0825F00ED74F0 /* FirebaseFirestore */; };
 		1BF7EF472D79161D001786D8 /* BottomSheet in Frameworks */ = {isa = PBXBuildFile; productRef = 1BF7EF462D79161D001786D8 /* BottomSheet */; };
+		8B49C6F62DB6AEF400B6A8B0 /* PusherSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 8B49C6F52DB6AEF400B6A8B0 /* PusherSwift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -74,6 +75,7 @@
 				1BF7EF472D79161D001786D8 /* BottomSheet in Frameworks */,
 				1BBB5B712D979D0400A5E2E8 /* FirebaseAuth in Frameworks */,
 				1BEC0A212DB0825F00ED74F0 /* FirebaseFirestore in Frameworks */,
+				8B49C6F62DB6AEF400B6A8B0 /* PusherSwift in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -137,6 +139,7 @@
 				1BF7EF462D79161D001786D8 /* BottomSheet */,
 				1BBB5B702D979D0400A5E2E8 /* FirebaseAuth */,
 				1BEC0A202DB0825F00ED74F0 /* FirebaseFirestore */,
+				8B49C6F52DB6AEF400B6A8B0 /* PusherSwift */,
 			);
 			productName = BarBuddy;
 			productReference = 599153B12D540523004B2832 /* BarBuddy.app */;
@@ -223,6 +226,7 @@
 			packageReferences = (
 				1BF7EF452D79161D001786D8 /* XCRemoteSwiftPackageReference "BottomSheet" */,
 				1BBB5B6F2D979D0400A5E2E8 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+				8B49C6F42DB6AEF400B6A8B0 /* XCRemoteSwiftPackageReference "pusher-websocket-swift" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 599153B22D540523004B2832 /* Products */;
@@ -605,6 +609,14 @@
 				minimumVersion = 3.1.1;
 			};
 		};
+		8B49C6F42DB6AEF400B6A8B0 /* XCRemoteSwiftPackageReference "pusher-websocket-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/pusher/pusher-websocket-swift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 10.1.5;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -622,6 +634,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 1BF7EF452D79161D001786D8 /* XCRemoteSwiftPackageReference "BottomSheet" */;
 			productName = BottomSheet;
+		};
+		8B49C6F52DB6AEF400B6A8B0 /* PusherSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 8B49C6F42DB6AEF400B6A8B0 /* XCRemoteSwiftPackageReference "pusher-websocket-swift" */;
+			productName = PusherSwift;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

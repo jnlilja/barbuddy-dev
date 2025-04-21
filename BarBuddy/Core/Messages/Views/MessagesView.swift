@@ -5,54 +5,55 @@
 //  Created by Andrew Betancourt on 2/25/25.
 //
 import SwiftUI
+import FirebaseAuth
 
 struct MessagesView: View {
-    var hasMessages: Bool = true  // Only for testing purposes
+    @StateObject private var vm = UsersViewModel()
+    
+    /// The signed‑in user’s numeric ID.
+    /// TODO: Replace this default with the actual authenticated user ID.
+    let currentUserID: Int
+
     var body: some View {
         NavigationStack {
             ZStack {
-                Color(.darkBlue)  // Dark blue background
+                Color.darkBlue
                     .ignoresSafeArea()
 
-                if !hasMessages {
+                if vm.users.isEmpty {
                     NoMessagesView()
                 } else {
-                    // Decided to change to list since it has better pagentation support
-                    List {
-                        ForEach([GetUser.MOCK_DATA], id: \.self) { user in
-                            
+                    List(vm.users) { user in
+                        NavigationLink {
+                            ConversationView(
+                                currentUserID: currentUserID,
+                                otherUserID: user.id,
+                                otherUsername: user.first_name
+                            )
+                            .navigationBarBackButtonHidden()
+                        } label: {
                             DirectMessageRow(
                                 name: user.first_name,
                                 message: "Hey man, how's it going?",
-                                location: "Hideaway"
-                                
+                                location: user.location
                             )
-                            .overlay {
-                                NavigationLink("") {
-                                    ConversationView(recipient: user.first_name)
-                                        .navigationBarBackButtonHidden()
-                                }
-                                .opacity(0)
-                            }
                         }
                         .listRowBackground(Color("DarkBlue"))
+                        .listRowSeparator(.hidden)
                     }
                     .listStyle(.plain)
-                    .listRowSeparator(.hidden)
+                    .scrollContentBackground(.hidden)
                 }
-                
             }
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(.darkBlue, for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
-            .scrollContentBackground(.hidden)
             .toolbar {
-                //Header
                 ToolbarItem(placement: .navigation) {
                     Text("Messages")
-                        .font(.largeTitle)  // Larger font
+                        .font(.largeTitle)
                         .bold()
-                        .foregroundColor(.white)  // Changed to white for contrast
+                        .foregroundColor(.white)
                 }
                 ToolbarItem(placement: .topBarTrailing) {
                     NavigationLink {
@@ -66,9 +67,15 @@ struct MessagesView: View {
                 }
             }
         }
+        .onAppear {
+            vm.loadUsers()
+        }
     }
 }
 
-#Preview {
-    MessagesView()
+// Preview with a sample user ID
+struct MessagesView_Previews: PreviewProvider {
+    static var previews: some View {
+        MessagesView(currentUserID: 123)
+    }
 }
