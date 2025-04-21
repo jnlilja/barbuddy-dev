@@ -10,7 +10,7 @@ User = get_user_model()
 class BarImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = BarImage
-        fields = ['id', 'image', 'caption', 'uploaded_at']
+        fields = ['id', 'image_url', 'caption', 'uploaded_at']
 
 
 class BarSerializer(serializers.ModelSerializer):
