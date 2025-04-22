@@ -29,7 +29,6 @@ router.register(r'bars', BarViewSet, basename="bars")
 router.register(r'bar-status', BarStatusViewSet, basename="bar-status")
 router.register(r'bar-votes', BarVoteViewSet, basename='barvote')  
 router.register(r'events', EventViewSet, basename="events")
-
 # MUST DO: MATCHES
 router.register(r'matches', MatchViewSet, basename="matches")
 

@@ -6,10 +6,7 @@ backend/venv-3.11.8
 # Ignore the virtual environment
 env/
 venv/
-.venv/
-
-
-backend/entrypoint.sh
+backend/.dockerignore
 
 # Ignore other common Python files
 __pycache__/
@@ -35,3 +32,12 @@ xcuserdata/
 **/xcshareddata/WorkspaceSettings.xcsettings
 
 backend/firebase
+
+*.json
+
+*.log
+*.db
+.env
+firebase/
+.DS_Store
+*.sqlite3

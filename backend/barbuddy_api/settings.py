@@ -11,8 +11,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 from pathlib import Path
-import environ, os, sys
-import pusher
+import environ, os, sys, pusher, platform
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -20,12 +19,17 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 sys.path.append(os.path.join(BASE_DIR, 'apps'))
 
 # GDAL configuration for macOS
-GDAL_LIBRARY_PATH = "/opt/homebrew/lib/libgdal.dylib"
-GEOS_LIBRARY_PATH = "/opt/homebrew/lib/libgeos_c.dylib"
+if platform.system() == 'Darwin':  # macOS
+    os.environ["GDAL_LIBRARY_PATH"] = "/opt/homebrew/lib/libgdal.dylib"
+    os.environ["GEOS_LIBRARY_PATH"] = "/opt/homebrew/lib/libgeos_c.dylib"
+    os.environ["DYLD_LIBRARY_PATH"] = "/opt/homebrew/lib:" + os.environ.get("DYLD_LIBRARY_PATH", "")
+elif platform.system() == 'Linux':  # Cloud Run container
+    os.environ["GDAL_LIBRARY_PATH"] = "/usr/lib/libgdal.so"
+    os.environ["GEOS_LIBRARY_PATH"] = "/usr/lib/libgeos_c.so"
 
 # Set environment variables before any GDAL imports
-os.environ["GDAL_LIBRARY_PATH"] = GDAL_LIBRARY_PATH
-os.environ["GEOS_LIBRARY_PATH"] = GEOS_LIBRARY_PATH
+os.environ["GDAL_LIBRARY_PATH"] = os.environ.get("GDAL_LIBRARY_PATH", "/usr/lib/libgdal.so")
+os.environ["GEOS_LIBRARY_PATH"] = os.environ.get("GEOS_LIBRARY_PATH", "/usr/lib/libgeos_c.so")
 os.environ["DYLD_LIBRARY_PATH"] = "/opt/homebrew/lib:" + os.environ.get("DYLD_LIBRARY_PATH", "")
 
 # SECURITY WARNING: keep the secret key used in production secret!
@@ -35,9 +39,10 @@ environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
 SECRET_KEY = env('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = []
+
+ALLOWED_HOSTS = ['barbuddy-backend-148659891217.us-central1.run.app']
 
 # Pusher Configuration
 PUSHER_APP_ID = env('PUSHER_APP_ID')
@@ -175,7 +180,6 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
 STATIC_URL = "static/"
-
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
