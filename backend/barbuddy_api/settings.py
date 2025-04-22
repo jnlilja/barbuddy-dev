@@ -35,9 +35,9 @@ environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
 SECRET_KEY = env('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['https://barbuddy-backend-148659891217.us-central1.run.app']
 
 # Pusher Configuration
 PUSHER_APP_ID = env('PUSHER_APP_ID')
