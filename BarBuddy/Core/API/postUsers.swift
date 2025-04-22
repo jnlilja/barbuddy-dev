@@ -32,8 +32,7 @@ final class PostUserAPIService {
     private let baseURL = URL(string: "https://YOUR_API_BASE_URL")!   // ← Edit
 
     /// POST /users – create a profile document in your backend
-    func create(user: PostUser,
-                completion: @escaping @Sendable (Result<Void, APIError>) -> Void) {
+    func create(user: PostUser, completion: @escaping @Sendable (Result<Void, APIError>) -> Void) {
         guard let currentUser = Auth.auth().currentUser else {
             return completion(.failure(.noToken))
         }

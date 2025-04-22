@@ -59,24 +59,24 @@ final class SignUpViewModel: ObservableObject {
         guard newPassword == confirmPassword else { return fire("Passwords do not match.") }
 
         // 2) Build profile & call Auth + API
-        let profile = PostUser(
-            username: newUsername,
-            first_name: firstName,
-            last_name: lastName,
-            email: email,
-            password: newPassword,      // store hashed in backend, plain here only to send
-            date_of_birth: dateOfBirth,
-            hometown: hometown,
-            job_or_university: jobOrUniversity,
-            favorite_drink: favoriteDrink,
-            profile_pictures: [:],
-            account_type: "regular",
-            sexual_preference: sexualPreference
-        )
-
-        Task {
-            await signUp(profile: profile)
-        }
+//        let profile = PostUser(
+//            username: newUsername,
+//            first_name: firstName,
+//            last_name: lastName,
+//            email: email,
+//            password: newPassword,      // store hashed in backend, plain here only to send
+//            date_of_birth: dateOfBirth,
+//            hometown: hometown,
+//            job_or_university: jobOrUniversity,
+//            favorite_drink: favoriteDrink,
+//            profile_pictures: [:],
+//            account_type: "regular",
+//            sexual_preference: sexualPreference
+//        )
+//
+//        Task {
+//            await signUp(profile: profile)
+//        }
     }
 
     // MARK: - Sign‑up flow
