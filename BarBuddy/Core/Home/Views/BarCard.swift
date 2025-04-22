@@ -1,4 +1,3 @@
-//
 //  BarCard.swift
 //  BarBuddy
 //
@@ -6,29 +5,11 @@
 //
 import SwiftUI
 import MapKit
-
 struct BarCard: View {
     let bar: Bar
     @EnvironmentObject var viewModel: MapViewModel
     @Environment(\.colorScheme) var colorScheme
-    @State private var showingSwipe = false        // ← renamed state
-
-    // Find this bar’s index in the static array
-    private var idx: Int {
-        viewModel.bars.firstIndex(where: { $0.id == bar.id }) ?? -1
-    }
-
-    // Dynamic values from the view model
-    private var musicType: String {
-        viewModel.music[idx] ?? "–"
-    }
-    private var crowdSize: String {
-        viewModel.statuses[idx]?.crowd_size ?? "–"
-    }
-    private var priceRange: String {
-        viewModel.pricing[idx] ?? "–"
-    }
-
+    @State private var showingSwipe = false
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             // Bar Header
@@ -37,34 +18,24 @@ struct BarCard: View {
                     .font(.system(size: 32, weight: .bold))
                     .foregroundColor(colorScheme == .dark ? .neonPink : Color("DarkBlue"))
                 Spacer()
-                HStack {
-                    Image(systemName: "flame.fill")
-                        .font(.system(size: 24))
-                        .foregroundColor(Color("NeonPink"))
-                    Text("Trending")
-                        .font(.system(size: 20, weight: .semibold))
-                        .foregroundColor(colorScheme == .dark ? .nude : Color("DarkPurple"))
-                }
+                // Dynamic trending badge
+                Trending(barName: bar.name)
             }
-
             // Open Hours
-            Text("Open 11am – 2am")
+            Text("Open 11am – 2am")
                 .foregroundColor(colorScheme == .dark ? .nude : Color("DarkPurple"))
-
             // Image placeholder
             Rectangle()
                 .fill(Color("DarkPurple").opacity(0.3))
                 .frame(height: 200)
                 .cornerRadius(10)
-
             // Dynamic Quick‑Info Bubbles
             HStack(spacing: 12) {
-                InfoTag(icon: "music.note",        text: musicType)
-                InfoTag(icon: "person.3.fill",     text: crowdSize)
-                InfoTag(icon: "dollarsign.circle", text: priceRange)
+                InfoTag(icon: "music.note",        text: viewModel.music[index] ?? "–")
+                InfoTag(icon: "person.3.fill",     text: viewModel.statuses[index]?.crowd_size ?? "–")
+                InfoTag(icon: "dollarsign.circle", text: viewModel.pricing[index] ?? "–")
             }
             .frame(maxWidth: .infinity)
-
             // Single “Meet People Here” button
             ActionButton(text: "Meet People Here", icon: "person.2.fill") {
                 showingSwipe = true
@@ -75,14 +46,15 @@ struct BarCard: View {
         .cornerRadius(15)
         .shadow(radius: 5)
         .sheet(isPresented: $showingSwipe) {
-            // Present the main swipe screen
             SwipeView()
                 .environmentObject(viewModel)
-                // AuthViewModel is inherited from above
         }
     }
+    // Helper to find this bar’s index
+    private var index: Int {
+        viewModel.bars.firstIndex(where: { $0.id == bar.id }) ?? -1
+    }
 }
-
 struct BarCard_Previews: PreviewProvider {
     static var previews: some View {
         BarCard(bar: Bar(
@@ -95,3 +67,4 @@ struct BarCard_Previews: PreviewProvider {
         .padding()
     }
 }
+

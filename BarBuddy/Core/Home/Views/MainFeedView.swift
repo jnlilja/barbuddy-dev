@@ -1,14 +1,11 @@
-//
 //  MapPreviewSection.swift
 //  BarBuddy
 //
 //  Created by Andrew Betancourt on 2/26/25.
 //
-
 import BottomSheet
 import MapKit
 import SwiftUI
-
 struct MainFeedView: View {
     @EnvironmentObject var viewModel: MapViewModel
     @State private var bottomSheetPosition: BottomSheetPosition = .relative(0.86)
@@ -17,7 +14,6 @@ struct MainFeedView: View {
     @State private var searchText = ""
     @Environment(\.colorScheme) var colorScheme
     let locationViewModel = LocationManager()
-
     var body: some View {
         NavigationStack {
             ZStack {
@@ -31,7 +27,7 @@ struct MainFeedView: View {
         .environmentObject(viewModel)
         .task { await viewModel.loadBarData() }
     }
-
+    // MARK: — Map Layer
     private var mapLayer: some View {
         Map(position: $viewModel.cameraPosition, selection: $selectedItem) {
             ForEach(viewModel.bars) { bar in
@@ -59,7 +55,6 @@ struct MainFeedView: View {
         }
         .tint(.salmon)
     }
-
     private func annotationView(for bar: Bar) -> some View {
         ZStack {
             if bar.events.isEmpty {
@@ -79,12 +74,11 @@ struct MainFeedView: View {
                 .foregroundColor(.white)
         }
     }
-
     private var selectedBar: Bar? {
         guard let id = selectedItem else { return nil }
         return viewModel.bars.first { $0.id == id }
     }
-
+    // MARK: — Bottom Sheet Layer
     private var sheetLayer: some View {
         Map(position: .constant(.userLocation(fallback: .automatic)), selection: .constant(nil)) { }
             .hidden()
@@ -101,7 +95,6 @@ struct MainFeedView: View {
             .customAnimation(.snappy)
             .ignoresSafeArea(.keyboard)
     }
-
     private var headerView: some View {
         SearchBar(searchText: $searchText)
             .padding([.horizontal, .bottom])
@@ -113,7 +106,6 @@ struct MainFeedView: View {
                 bottomSheetPosition = .relative(0.86)
             })
     }
-
     private var contentList: some View {
         VStack {
             NavigationLink(destination: DealsAndEventsView()) {
@@ -121,7 +113,6 @@ struct MainFeedView: View {
                     .padding([.horizontal, .bottom])
             }
             .buttonStyle(PlainButtonStyle())
-
             if filteredBars.isEmpty {
                 Text("No results found")
                     .foregroundColor(.white)
@@ -141,13 +132,12 @@ struct MainFeedView: View {
             }
         }
     }
-
     private var filteredBars: [Bar] {
         viewModel.bars.filter {
             searchText.isEmpty || $0.name.localizedCaseInsensitiveContains(searchText)
         }
     }
-
+    // MARK: — Toolbar
     private var toolbarContent: some ToolbarContent {
         ToolbarItem(placement: .principal) {
             Text("Pacific Beach")
@@ -160,7 +150,6 @@ struct MainFeedView: View {
         }
     }
 }
-
 struct MainFeedView_Previews: PreviewProvider {
     static var previews: some View {
         MainFeedView()
