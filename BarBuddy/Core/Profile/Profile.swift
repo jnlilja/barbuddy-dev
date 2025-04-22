@@ -210,6 +210,14 @@ struct ProfileView: View {
                 .zIndex(1)
             }
             .toolbar {
+                // Temporary signout view
+                ToolbarItem(placement: .navigation) {
+                    NavigationLink {
+                        SettingsView()
+                    } label: {
+                        Image(systemName: "gear")
+                    }
+                }
                 ToolbarItem(placement: .navigationBarLeading) {
                     NavigationLink(destination: RequestsView()) {
                         Label("Friend Requests", systemImage: "person.crop.circle.badge.plus")
