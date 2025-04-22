@@ -31,6 +31,10 @@ At the BarBuddy login screen enter the following:
 
 The messege "Sign in Successful" should be printed to console if it's working properly.
 
+**Logout:**
+
+There is now a logout button in the profile view to sign out easier. Just a temporary fix for testing.
+
 
 ### April 16
 I added a `sexual_preference` field to the user model. Options are:
