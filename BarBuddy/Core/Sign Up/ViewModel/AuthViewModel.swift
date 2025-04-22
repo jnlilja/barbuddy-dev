@@ -40,8 +40,7 @@ final class AuthViewModel: ObservableObject {
     /// Creates a Firebase Auth account and stores the profile in your backend.
     func signUp(profile: PostUser, password: String) async {
         do {
-            let result: AuthDataResult = try await Auth.auth().createUser(withEmail: profile.email,
-                                                                         password: password)
+            let result = try await Auth.auth().createUser(withEmail: profile.email, password: password)
             authUser = result.user
 
             // Store profile through REST POST
