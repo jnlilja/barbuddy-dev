@@ -25,6 +25,8 @@ xcuserdata/
 *.xcscmblueprint
 *.xccheckout
 
+backend/staticfiles/
+
 ### Xcode Patch ###
 *.xcodeproj/*
 !*.xcodeproj/project.pbxproj
@@ -35,3 +37,4 @@ xcuserdata/
 **/xcshareddata/WorkspaceSettings.xcsettings
 
 backend/firebase
+
