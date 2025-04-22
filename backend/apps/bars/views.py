@@ -12,6 +12,10 @@ from .serializers import (
 )
 from apps.bars.services.voting import aggregate_bar_votes
 
+from django.contrib.gis.db.models.functions import Distance
+from django.contrib.gis.geos import Point
+from django.contrib.gis.measure import D
+
 User = get_user_model()
 
 
@@ -24,8 +28,30 @@ class BarViewSet(viewsets.ModelViewSet):
     serializer_class = BarSerializer
 
     def get_queryset(self):
-        # You can hook in location- or preference-based filtering here
-        return Bar.objects.all()
+        queryset = Bar.objects.all()
+        
+        # Get location parameters
+        latitude = self.request.query_params.get('latitude')
+        longitude = self.request.query_params.get('longitude')
+        radius = self.request.query_params.get('radius', 5)  # Default 5km
+        
+        if latitude and longitude:
+            try:
+                user_location = Point(
+                    float(longitude),  # x coordinate
+                    float(latitude),   # y coordinate
+                    srid=4326
+                )
+                # Annotate with distance and filter within radius
+                queryset = queryset.annotate(
+                    distance=Distance('location', user_location)
+                ).filter(
+                    location__distance_lte=(user_location, D(km=float(radius)))
+                ).order_by('distance')
+            except (ValueError, TypeError):
+                pass
+        
+        return queryset
 
     @action(detail=True, methods=['get'], url_path='aggregated-vote')
     def aggregated_vote(self, request, pk=None):

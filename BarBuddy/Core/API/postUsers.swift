@@ -33,7 +33,7 @@ final class PostUserAPIService {
 
     /// POST /users – create a profile document in your backend
     func create(user: PostUser,
-                completion: @escaping (Result<Void, APIError>) -> Void) {
+                completion: @escaping @Sendable (Result<Void, APIError>) -> Void) {
         guard let currentUser = Auth.auth().currentUser else {
             return completion(.failure(.noToken))
         }
@@ -62,7 +62,7 @@ final class PostUserAPIService {
     /// completion‑based location update (needed for async wrapper)
     func updateLocation(lat: Double,
                         lon: Double,
-                        completion: @escaping (Result<Void, APIError>) -> Void) {
+                        completion: @escaping @Sendable (Result<Void, APIError>) -> Void) {
         guard let currentUser = Auth.auth().currentUser else {
             return completion(.failure(.noToken))
         }
@@ -146,11 +146,13 @@ class PostUserViewModel: ObservableObject {
 
     func post(user: PostUser) {
         PostUserAPIService.shared.create(user: user) { [weak self] result in
-            switch result {
-            case .success:
-                self?.statusMessage = "✅ User successfully posted."
-            case .failure(let err):
-                self?.statusMessage = err.localizedDescription
+            Task { @MainActor in
+                switch result {
+                case .success:
+                    self?.statusMessage = "✅ User successfully posted."
+                case .failure(let err):
+                    self?.statusMessage = err.localizedDescription
+                }
             }
         }
     }

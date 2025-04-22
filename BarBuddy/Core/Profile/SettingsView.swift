@@ -10,27 +10,25 @@ import SwiftUI
 struct SettingsView: View {
     @EnvironmentObject var viewModel: AuthViewModel
     var body: some View {
-        NavigationStack {
-            Button {
-                Task {
-                    try viewModel.signOut()
-                }
-            }label: {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 15)
-                        .frame(width: 150, height: 50)
-                        .foregroundStyle(.salmon)
-                    HStack {
-                        // Figure walk right to left
-                        Image(systemName: "figure.walk")
-                            .environment(\.layoutDirection, .rightToLeft)
-                        Text("Log Out")
-                    }
-                    .font(.headline)
-                    .foregroundColor(.white)
-                }
+
+        Button {
+            Task {
+                viewModel.signOut()
             }
-            .navigationTitle("Settings")
+        } label: {
+            ZStack {
+                RoundedRectangle(cornerRadius: 15)
+                    .frame(width: 150, height: 50)
+                    .foregroundStyle(.salmon)
+                HStack {
+                    // Figure walk right to left
+                    Image(systemName: "figure.walk")
+                        .environment(\.layoutDirection, .rightToLeft)
+                    Text("Log Out")
+                }
+                .font(.headline)
+                .foregroundColor(.white)
+            }
         }
     }
 }

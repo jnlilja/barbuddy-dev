@@ -117,12 +117,15 @@ public final class MessagingService: ObservableObject {
         pusher = Pusher(key: "YOUR_PUSHER_KEY", options: options)
         channel = pusher?.subscribe(channelName)
 
-        channel?.bind(eventName: "new-message") { [weak self] data in
+        channel?.bind(eventName: "new-message") { [weak self] event in
             guard
-                let dict = data as? [String: Any],
-                let json = try? JSONSerialization.data(withJSONObject: dict),
+                let payload = event.data,
+                let json = payload.data(using: .utf8),
                 let msg = try? JSONDecoder().decode(ChatMessage.self, from: json)
-            else { return }
+            else {
+                print("↘️ Failed to parse PusherEvent:", event.data ?? "no data")
+                return
+            }
             DispatchQueue.main.async {
                 self?.messages.append(msg)
             }

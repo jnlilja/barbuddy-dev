@@ -152,7 +152,7 @@ class BarVote(models.Model):
 
 class BarImage(models.Model):
     bar = models.ForeignKey(Bar, on_delete=models.CASCADE, related_name='images')
-    image = models.ImageField(upload_to='bar_images/%Y/%m/%d/')
+    image = models.URLField(max_length=500)  # Using URLField for storing image URLs
     caption = models.CharField(max_length=255, blank=True)
     uploaded_at = models.DateTimeField(auto_now_add=True)
 

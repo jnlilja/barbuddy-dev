@@ -133,15 +133,11 @@ class MessageViewSet(viewsets.ModelViewSet):
         return Response({'status': 'Message marked as read'})
 
 class GroupChatViewSet(viewsets.ModelViewSet):
-    """
-    ViewSet for managing group chats. Users can create, join, and leave group chats.
-    """
-    queryset = GroupChat.objects.all()
     serializer_class = GroupChatSerializer
-    permission_classes = [permissions.IsAuthenticated, IsGroupMember]
-
+    
     def get_queryset(self):
-        """Return group chats where the user is a member"""
+        if getattr(self, 'swagger_fake_view', False):  # handle Swagger schema generation
+            return GroupChat.objects.none()
         return GroupChat.objects.filter(members=self.request.user)
 
     def perform_create(self, serializer):
@@ -157,15 +153,11 @@ class GroupChatViewSet(viewsets.ModelViewSet):
         return Response({'channel': channel})
 
 class GroupMessageViewSet(viewsets.ModelViewSet):
-    """
-    ViewSet for managing group messages. Users can send and retrieve messages in group chats.
-    """
-    queryset = GroupMessage.objects.all()
     serializer_class = GroupMessageSerializer
-    permission_classes = [permissions.IsAuthenticated, IsGroupMember]
-
+    
     def get_queryset(self):
-        """Return messages from groups where the user is a member"""
+        if getattr(self, 'swagger_fake_view', False):  # handle Swagger schema generation
+            return GroupMessage.objects.none()
         return GroupMessage.objects.filter(group__members=self.request.user)
 
     def perform_create(self, serializer):

@@ -14,6 +14,9 @@ class BarImageSerializer(serializers.ModelSerializer):
 
 
 class BarSerializer(serializers.ModelSerializer):
+    # Add latitude/longitude fields to the serializer
+    latitude = serializers.FloatField(write_only=True)
+    longitude = serializers.FloatField(write_only=True)
     location = serializers.SerializerMethodField()
     users_at_bar = serializers.PrimaryKeyRelatedField(
         many=True, queryset=User.objects.all(), required=False
@@ -26,7 +29,8 @@ class BarSerializer(serializers.ModelSerializer):
         model = Bar
         fields = [
             'id', 'name', 'address', 'average_price',
-            'location', 'users_at_bar', 'current_status',
+            'latitude', 'longitude', 'location',  # Add lat/lon to fields
+            'users_at_bar', 'current_status',
             'average_rating', 'images',
         ]
 
@@ -48,21 +52,35 @@ class BarSerializer(serializers.ModelSerializer):
     def validate_users_at_bar(self, value):
         return value  # front‑end managed
 
-    def to_internal_value(self, data):
-        iv = super().to_internal_value(data)
-        loc = data.get("location")
-        if isinstance(loc, dict):
-            try:
-                lat = float(loc["latitude"])
-                lon = float(loc["longitude"])
-                iv["location"] = Point(lon, lat, srid=4326)
-            except Exception:
-                raise serializers.ValidationError({
-                    "location": "Latitude and longitude must be valid numbers."
-                })
-        return iv
+    def validate(self, data):
+        """Ensure both latitude and longitude are provided."""
+        latitude = data.get('latitude')
+        longitude = data.get('longitude')
+        
+        if latitude is None or longitude is None:
+            raise serializers.ValidationError({
+                "location": "Both latitude and longitude are required."
+            })
+
+        # Create Point object from coordinates
+        data['location'] = Point(
+            x=longitude,  # longitude goes first (x)
+            y=latitude,   # latitude goes second (y)
+            srid=4326     # standard GPS coordinate system
+        )
+        
+        return data
+
+    def create(self, validated_data):
+        # Remove lat/lon since they're not model fields
+        latitude = validated_data.pop('latitude', None)
+        longitude = validated_data.pop('longitude', None)
+        return super().create(validated_data)
 
     def update(self, instance, validated_data):
+        # Remove lat/lon since they're not model fields
+        latitude = validated_data.pop('latitude', None)
+        longitude = validated_data.pop('longitude', None)
         users = validated_data.pop('users_at_bar', None)
         for attr, val in validated_data.items():
             setattr(instance, attr, val)

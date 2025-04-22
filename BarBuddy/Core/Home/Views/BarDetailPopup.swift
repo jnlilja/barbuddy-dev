@@ -1,26 +1,22 @@
-//
 //  BarDetailPopup.swift
 //  BarBuddy
 //
 //  Created by Andrew Betancourt on 2/25/25.
 //
-
 import SwiftUI
 import MapKit
+import SDWebImageSwiftUI
 
 struct BarDetailPopup: View {
     @Environment(\.dismiss) var dismiss
     @EnvironmentObject var viewModel: MapViewModel
-
     let bar: Bar
     @State private var waitButtonProperties = ButtonProperties(type: "wait")
     @State private var crowdButtonProperties = ButtonProperties(type: "crowd")
-
     // Helper to find this bar’s index in the viewModel
     private var idx: Int {
         viewModel.bars.firstIndex { $0.id == bar.id } ?? -1
     }
-
     // Dynamic values from your endpoints
     private var musicType: String {
         viewModel.music[idx] ?? "–"
@@ -34,7 +30,6 @@ struct BarDetailPopup: View {
     private var waitTime: String {
         viewModel.statuses[idx]?.wait_time ?? "–"
     }
-
     var body: some View {
         NavigationView {
             VStack(spacing: 25) {
@@ -46,18 +41,16 @@ struct BarDetailPopup: View {
                     HStack {
                         Text("Open")
                             .foregroundColor(.red)
-                        Text("11am – 2am")
+                        Text("11am – 2am")
                             .foregroundColor(Color("DarkPurple"))
                     }
                 }
-
                 // MARK: — Quick‑info bubbles (music, crowd, price)
                 HStack(spacing: 15) {
                     InfoBubble(icon: "music.note",      text: musicType)
                     InfoBubble(icon: "flame.fill",      text: crowdSize)
                     InfoBubble(icon: "dollarsign.circle", text: priceRange)
                 }
-
                 // MARK: — Wait time & crowd voting
                 HStack(spacing: 30) {
                     // Wait‑time section
@@ -95,7 +88,6 @@ struct BarDetailPopup: View {
                         }
                         .disabled(waitButtonProperties.showMenu)
                     }
-
                     // Crowd‑size section
                     VStack(spacing: 10) {
                         Text("Crowd Size is:")
@@ -135,9 +127,12 @@ struct BarDetailPopup: View {
                         .disabled(crowdButtonProperties.showMenu)
                     }
                 }
-
-                Spacer()
-
+                WebImage(url: URL(string: "https://media.istockphoto.com/id/1040303026/photo/draught-beer-in-glasses.jpg?s=612x612&w=0&k=20&c=MvDv_YtiG4l1bh9vNJv5Hyb-l8ZSCsMDbxutWnCh-78="))
+                    .resizable()
+                    .frame(width: 350, height: 250)
+                    .clipShape(RoundedRectangle(cornerRadius: 20))
+                    
+                    
                 // MARK: — Swipe Navigation
                 NavigationLink(destination: SwipeView()) {
                     HStack {
@@ -152,9 +147,6 @@ struct BarDetailPopup: View {
                 }
             }
             .padding()
-            .navigationBarItems(
-                trailing: Button("Done") { dismiss() }
-            )
             .navigationBarTitleDisplayMode(.inline)
         }
         .presentationDetents([.large])
@@ -191,7 +183,6 @@ struct BarDetailPopup: View {
                 }
                 .transition(.move(edge: .leading))
             }
-
             // Crowd‑size menu
             if crowdButtonProperties.showMenu {
                 HStack {
@@ -225,7 +216,6 @@ struct BarDetailPopup: View {
         }
     }
 }
-
 struct BarDetailPopup_Previews: PreviewProvider {
     static var previews: some View {
         BarDetailPopup(bar: Bar(

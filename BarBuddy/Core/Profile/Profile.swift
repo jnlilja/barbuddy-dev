@@ -76,6 +76,7 @@ struct ProfileView: View {
                                 TabButton(text: "Photos", isSelected: selectedTab == 0) { selectedTab = 0 }
                                 TabButton(text: "Info",    isSelected: selectedTab == 1) { selectedTab = 1 }
                                 TabButton(text: "Friends", isSelected: selectedTab == 2) { selectedTab = 2 }
+                                TabButton(text: "Settings", isSelected: selectedTab == 3) { selectedTab = 3 }
                             }
                             .background(Color.white.opacity(0.1))
                             .cornerRadius(25)
@@ -138,7 +139,7 @@ struct ProfileView: View {
                                 }
                                 .padding(.horizontal, 16)
 
-                            default:
+                            case 2:
                                 // Friends list
                                 if userFriends.friends.isEmpty {
                                     Text("No friends yet.")
@@ -151,6 +152,8 @@ struct ProfileView: View {
                                         }
                                     }
                                 }
+                            default:
+                                SettingsView()
                             }
                         }
                         .padding(.bottom, 20)

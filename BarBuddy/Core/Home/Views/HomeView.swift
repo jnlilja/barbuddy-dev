@@ -47,7 +47,7 @@ struct HomeView: View {
         .accentColor(Color("Salmon"))
         .onAppear {
             // Set tab bar appearance to white with slight transparency
-            var appearance = UITabBarAppearance()
+            let appearance = UITabBarAppearance()
             appearance.configureWithTransparentBackground()
             appearance.backgroundColor = UIColor.white.withAlphaComponent(0.95)
             UITabBar.appearance().standardAppearance = appearance

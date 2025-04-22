@@ -4,5 +4,7 @@
 <dict>
 	<key>UILaunchStoryboardName</key>
 	<string>Launch Screen</string>
+	<key>UIUserInterfaceStyle</key>
+	<string>Light</string>
 </dict>
 </plist>
