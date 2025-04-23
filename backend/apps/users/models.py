@@ -11,7 +11,6 @@ class User(AbstractUser):
     job_or_university = models.CharField(max_length=255, blank=True)
     favorite_drink = models.CharField(max_length=100, blank=True)
     location = gis.PointField(geography=True, srid=4326, null=True, blank=True)
-    profile_pictures = models.JSONField(default=list, blank=True)
     vote_weight = models.IntegerField(default=1)
     friends = models.ManyToManyField('self', symmetrical=True, blank=True)
 
@@ -88,3 +87,18 @@ class FriendRequest(models.Model):
 
     def __str__(self):
         return f"{self.from_user} -> {self.to_user} [{self.status}]"
+
+
+class ProfilePicture(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="profile_pictures")
+    image = models.ImageField(upload_to="profile_pictures/")  # This creates local URLs
+    is_primary = models.BooleanField(default=False)
+
+    def save(self, *args, **kwargs):
+        if self.is_primary:
+            # Ensure only one primary picture per user
+            ProfilePicture.objects.filter(user=self.user, is_primary=True).update(is_primary=False)
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.user.username}'s Profile Picture"

@@ -7,16 +7,22 @@ from apps.matches.models import Match
 from apps.swipes.models import Swipe
 from apps.swipes.serializers import SwipeSerializer
 from apps.matches.serializers import MatchSerializer
-from .models import FriendRequest
+from .models import FriendRequest, ProfilePicture
 
 
 User = get_user_model()
+
+class ProfilePictureSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProfilePicture
+        fields = ["id", "image", "is_primary"]
 
 class UserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=True)
     location = serializers.SerializerMethodField()
     matches = serializers.SerializerMethodField()
     swipes = serializers.SerializerMethodField()
+    profile_pictures = ProfilePictureSerializer(many=True, read_only=True)
 
     class Meta:
         model = User

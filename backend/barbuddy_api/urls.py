@@ -96,5 +96,5 @@ urlpatterns = [
 
     # Root path handler 
     path('', lambda request: redirect('schema-swagger-ui', permanent=False)),
-]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

@@ -11,8 +11,8 @@ from .serializers import UserSerializer, UserLocationUpdateSerializer
 from .permissions import IsOwnerOrReadOnly
 from .authentication import FirebaseAuthentication
 
-from .models import FriendRequest
-from .serializers import FriendRequestSerializer
+from .models import FriendRequest, ProfilePicture
+from .serializers import FriendRequestSerializer, ProfilePictureSerializer
 
 
 User = get_user_model()
@@ -123,3 +123,30 @@ class UserViewSet(viewsets.ModelViewSet):
         user.profile_pictures.remove(url_to_remove)
         user.save()
         return Response({"status": "Profile picture removed."})
+
+    @action(detail=False, methods=["post"], permission_classes=[permissions.IsAuthenticated])
+    def upload_profile_picture(self, request):
+        serializer = ProfilePictureSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(user=request.user)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=True, methods=["patch"], permission_classes=[permissions.IsAuthenticated])
+    def set_primary_picture(self, request, pk=None):
+        try:
+            picture = ProfilePicture.objects.get(pk=pk, user=request.user)
+            picture.is_primary = True
+            picture.save()
+            return Response({"status": "Primary picture updated."})
+        except ProfilePicture.DoesNotExist:
+            return Response({"error": "Picture not found."}, status=404)
+
+    @action(detail=True, methods=["delete"], permission_classes=[permissions.IsAuthenticated])
+    def delete_profile_picture(self, request, pk=None):
+        try:
+            picture = ProfilePicture.objects.get(pk=pk, user=request.user)
+            picture.delete()
+            return Response({"status": "Picture deleted."})
+        except ProfilePicture.DoesNotExist:
+            return Response({"error": "Picture not found."}, status=404)
