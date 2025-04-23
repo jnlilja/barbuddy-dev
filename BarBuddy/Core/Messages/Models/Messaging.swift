@@ -35,7 +35,7 @@ private struct MessageRequest: Codable {
 public final class MessagingService: ObservableObject {
     public static let shared = MessagingService()
 
-    private let baseURL = URL(string: "https://YOUR_API_BASE_URL/")!
+    private let baseURL = URL(string: "barbuddy-backend-148659891217.us-central1.run.app/api")!
     private var pusher: Pusher?
     private var channel: PusherChannel?
 

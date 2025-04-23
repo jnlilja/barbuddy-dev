@@ -53,7 +53,7 @@ final class UsersFeedService {
     static let shared = UsersFeedService()
 
     /// Replace with your real base URL, **without** the trailing “/users”.
-    private let baseURL = URL(string: "https://YOUR_API_BASE_URL")!
+    private let baseURL = URL(string: "barbuddy-backend-148659891217.us-central1.run.app/api")!
 
     private init() { }
 

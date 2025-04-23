@@ -29,7 +29,7 @@ struct PostUser: Codable {
 @MainActor
 final class PostUserAPIService {
     static let shared = PostUserAPIService()
-    private let baseURL = URL(string: "https://YOUR_API_BASE_URL")!   // ← Edit
+    private let baseURL = URL(string: "barbuddy-backend-148659891217.us-central1.run.app/api")!   // ← Edit
 
     /// POST /users – create a profile document in your backend
     func create(user: PostUser, completion: @escaping @Sendable (Result<Void, APIError>) -> Void) {

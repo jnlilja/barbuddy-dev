@@ -33,7 +33,7 @@ struct GetUser: Codable, Identifiable, Hashable {
 @MainActor
 final class GetUserAPIService {
     static let shared = GetUserAPIService()
-    private let baseURL = URL(string: "https://YOUR_API_BASE_URL")!   // ← Replace
+    private let baseURL = URL(string: "barbuddy-backend-148659891217.us-central1.run.app/api")!   // ← Replace
 
     /// GET /users – returns the full users list
     func fetchUsers(completion: @escaping @Sendable (Result<[GetUser], APIError>) -> Void) {
