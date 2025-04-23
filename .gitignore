@@ -8,6 +8,8 @@ env/
 venv/
 .venv/
 
+# Environment file
+.env
 
 backend/entrypoint.sh
 
