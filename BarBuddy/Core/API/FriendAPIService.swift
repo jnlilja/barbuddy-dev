@@ -10,7 +10,7 @@ import Foundation
 import FirebaseAuth
 
 /// Handles all friend-related API calls with Firebase Auth
-class FriendAPIService {
+class FriendAPIService: @unchecked Sendable {
     @MainActor static let shared = FriendAPIService()
     private let baseURL = "barbuddy-backend-148659891217.us-central1.run.app/api"
 
