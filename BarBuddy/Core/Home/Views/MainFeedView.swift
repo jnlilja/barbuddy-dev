@@ -87,7 +87,17 @@ struct MainFeedView: View {
                 switchablePositions: [.relativeBottom(0.21), .relative(0.86), .relativeTop(1)],
                 headerContent: { headerView }
             ) {
-                contentList
+                ScrollView {
+                    contentList
+                        .gesture(
+                            DragGesture().onChanged { value in
+                                // Allow drag gesture to dismiss the bottom sheet
+                                if value.translation.height > 0 {
+                                    bottomSheetPosition = .relativeBottom(0.21)
+                                }
+                            }
+                        )
+                }
             }
             .customBackground(.darkBlue.opacity(0.9))
             .dragIndicatorColor(bottomSheetPosition == .relativeTop(1) ? .clear : .white)
