@@ -57,17 +57,19 @@ struct DrinkPreferenceView: View {
                     }
                     .padding(.horizontal)
 
-                    Button("Continue") {
+                    Button(action: {
                         viewModel.favoriteDrink = favoriteDrink
                         path.append(SignUpNavigation.photoPrompt)
+                    }) {
+                        Text("Continue")
+                            .font(.headline)
+                            .foregroundColor(.white)
+                            .opacity(favoriteDrink.isEmpty ? 0.6 : 1) // Dim text when disabled
+                            .frame(width: 300, height: 50)
+                            .background(Color("DarkPurple"))
+                            .cornerRadius(10)
                     }
-                    .disabled(favoriteDrink.isEmpty)
-                    .opacity(favoriteDrink.isEmpty ? 0.6 : 1)
-                    .font(.headline)
-                    .foregroundColor(.white)
-                    .frame(width: 300, height: 50)
-                    .background(Color("DarkPurple"))
-                    .cornerRadius(10)
+                    .disabled(favoriteDrink.isEmpty) // Prevent interaction when disabled
                 }
 
                 Spacer()

@@ -71,7 +71,7 @@ struct PhotoUploadView: View {
 
                 Spacer()
 
-                Button("Let's go!") {
+                Button(action: {
                     withAnimation { isLoading = true }
                     Task {
                         let profile = signUpViewModel.buildProfile()
@@ -80,14 +80,16 @@ struct PhotoUploadView: View {
                             password: signUpViewModel.newPassword
                         )
                     }
+                }) {
+                    Text("Let's go!")
+                        .font(.headline)
+                        .foregroundColor(.white)
+                        .opacity(selectedImages.count < minPhotos ? 0.6 : 1) // Dim text when disabled
+                        .frame(width: 300, height: 50)
+                        .background(Color("DarkPurple"))
+                        .cornerRadius(10)
                 }
-                .disabled(selectedImages.count < minPhotos)
-                .opacity(selectedImages.count < minPhotos ? 0.6 : 1)
-                .font(.headline)
-                .foregroundColor(.white)
-                .frame(width: 300, height: 50)
-                .background(Color("DarkPurple"))
-                .cornerRadius(10)
+                .disabled(selectedImages.count < minPhotos) // Prevent interaction when disabled
                 .padding(.bottom, 50)
             }
 

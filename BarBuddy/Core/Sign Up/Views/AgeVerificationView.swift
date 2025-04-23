@@ -48,7 +48,7 @@ struct AgeVerificationView: View {
                 .cornerRadius(10)
                 .padding()
 
-                Button("Verify Age") {
+                Button(action: {
                     // 1) run the check
                     viewModel.verifyAge()
 
@@ -61,12 +61,17 @@ struct AgeVerificationView: View {
                         
                         path.append(SignUpNavigation.nameEntry)
                     }
+                }) {
+                    Text("Verify Age")
+                        .font(.headline)
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .padding()
                 }
-                .font(.headline)
-                .foregroundColor(.white)
                 .frame(width: 300, height: 50)
                 .background(Color("DarkPurple"))
                 .cornerRadius(10)
+                .contentShape(Rectangle()) // Ensures the tappable area matches the button's frame
             }
             .padding()
             .alert(

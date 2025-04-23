@@ -79,7 +79,6 @@ let sampleEvents: [BarEvent] = [
 let sampleDeals: [BarDeal] = [
     BarDeal(title: "Happy Hour", location: "Hideaway", timeDescription: "3pm - 6:30pm", description: "+$1 to make any cocktail double shot + double sized, +$1 to size up any beer to 32oz, ½ off shots & bottles/cans of beer", day: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]),
     BarDeal(title: "Sunday Swim Club", location: "Firehouse", timeDescription: "", description: "$18 Bottle of Bubbles, $10 frozen drinks", day: ["Sunday"]),
-    BarDeal(title: "Happy Hour", location: "Hideaway", timeDescription: "3pm - 6:30pm", description: "+$1 to make any cocktail double shot + double sized, +$1 to size up any beer to 32oz, ½ off shots & bottles/cans of beer", day: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]),
         BarDeal(title: "Sunday Swim Club", location: "Firehouse", timeDescription: "", description: "$18 Bottle of Bubbles, $10 frozen drinks", day: ["Sunday"]),
         BarDeal(title: "Taco Tuesday", location: "Firehouse", timeDescription: "", description: "$5 Pacificos, $10 Margaritas", day: ["Tuesday"]),
         BarDeal(title: "Wine Wednesday", location: "Firehouse", timeDescription: "", description: "½ off bottle wine and charcuterie", day: ["Wednesday"]),
@@ -175,7 +174,7 @@ struct DealsAndEventsView: View {
                     VStack(spacing: 30) {
                         if !filteredEvents.isEmpty {
                             VStack(alignment: .leading, spacing: 12) {
-                                Text("Featured Events")
+                                Text("Today's Events")
                                     .font(.system(size: 32, weight: .bold))
                                     .foregroundColor(.white)
                                     .padding(.horizontal)
