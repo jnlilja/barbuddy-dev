@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.urls import path, include, re_path
-from rest_framework.routers import DefaultRouter
+# from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from apps.users.views import UserViewSet
 from apps.bars.views import BarViewSet, BarStatusViewSet, BarRatingViewSet, BarImageViewSet
@@ -11,15 +11,18 @@ from apps.swipes.views import SwipeViewSet
 from django.shortcuts import redirect
 # from .views import BarVoteViewSet
 from apps.bars.views import BarVoteViewSet
-from rest_framework_nested.routers import NestedDefaultRouter
+# from rest_framework_nested.routers import NestedSimpleRouter
 from django.conf import settings
 from django.conf.urls.static import static
+
+from rest_framework_nested.routers import SimpleRouter, NestedSimpleRouter
+
 
 
 
 from .views import FirebaseAuthTestView
 # Initialize the router
-router = DefaultRouter()
+router = SimpleRouter()
 
 # Register endpoints using the actual ViewSet classes
 
@@ -67,7 +70,7 @@ schema_view = get_schema_view(
     permission_classes=(permissions.AllowAny,),
 )
 
-bars_router = NestedDefaultRouter(router, r'bars', lookup='bar')
+bars_router = NestedSimpleRouter(router, r'bars', lookup='bar')
 bars_router.register(r'images', BarImageViewSet, basename='bar-images')
 
 urlpatterns = [

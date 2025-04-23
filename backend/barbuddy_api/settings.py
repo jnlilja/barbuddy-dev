@@ -42,7 +42,7 @@ SECRET_KEY = env('SECRET_KEY')
 DEBUG = False
 
 
-ALLOWED_HOSTS = ['barbuddy-backend-148659891217.us-central1.run.app']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'barbuddy-backend-148659891217.us-central1.run.app']
 
 # Pusher Configuration
 PUSHER_APP_ID = env('PUSHER_APP_ID')
@@ -132,7 +132,7 @@ DATABASES = {
         'PORT': env('DB_PORT'),
         'CONN_MAX_AGE': 60,
         'OPTIONS': {
-            'sslmode': 'require',  # Required for Google Cloud SQL
+            # 'sslmode': 'require',  # Required for Google Cloud SQL
             'connect_timeout': 5, # time out if db connection can't be established in 5 seconds
         },
     }

@@ -1,6 +1,6 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from rest_framework_nested.routers import NestedDefaultRouter
+from rest_framework_nested.routers import SimpleRouter, NestedSimpleRouter
 
 from .views import (
     BarViewSet, BarStatusViewSet, BarVoteViewSet,
@@ -8,13 +8,13 @@ from .views import (
 )
 
 router = DefaultRouter()
-router.register(r'', BarViewSet,    basename='bar')
-router.register(r'status', BarStatusViewSet,  basename='bar-status')
-router.register(r'votes',  BarVoteViewSet,    basename='bar-vote')
-router.register(r'ratings',BarRatingViewSet,  basename='bar-rating')
+router.register(r'', BarViewSet, basename='bar')
+router.register(r'status', BarStatusViewSet, basename='bar-status')
+router.register(r'votes', BarVoteViewSet, basename='bar-vote')
+router.register(r'ratings', BarRatingViewSet, basename='bar-rating')
 
-# nested under the “bar” prefix
-bars_router = NestedDefaultRouter(router, r'', lookup='bar')
+# Changed to NestedSimpleRouter
+bars_router = NestedSimpleRouter(router, r'', lookup='bar')
 bars_router.register(r'images', BarImageViewSet, basename='bar-images')
 
 urlpatterns = [
