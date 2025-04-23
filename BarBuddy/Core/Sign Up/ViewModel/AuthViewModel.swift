@@ -12,7 +12,7 @@ import Foundation
 final class AuthViewModel: ObservableObject {
     // MARK: - Published state
     @Published private(set) var authUser: FirebaseAuth.User?
-    @Published var currentUser: GetUser?
+    @Published var currentUser: User?
     
     /*  Checks to see if user has signed in previously
         which automatically signs in the user on app's
@@ -38,7 +38,7 @@ final class AuthViewModel: ObservableObject {
 
     // MARK: - Sign‑up (new account)
     /// Creates a Firebase Auth account and stores the profile in your backend.
-    func signUp(profile: PostUser, password: String) async {
+    func signUp(profile: User, password: String) async {
         do {
             let result = try await Auth.auth().createUser(withEmail: profile.email, password: password)
             authUser = result.user
@@ -83,7 +83,7 @@ final class AuthViewModel: ObservableObject {
 
 extension PostUserAPIService {
     /// Async/await wrapper around the completion‑handler version of create(user:…)
-    func create(user: PostUser) async throws {
+    func create(user: User) async throws {
         try await withCheckedThrowingContinuation { cont in
             self.create(user: user) { result in
                 cont.resume(with: result)

@@ -23,7 +23,7 @@ struct ProfileView: View {
         return (screenWidth - padding) / 3
     }
 
-    private var filteredFriends: [GetUser] {
+    private var filteredFriends: [User] {
         guard !searchText.isEmpty else { return userFriends.friends }
         let q = searchText.lowercased()
         let first = userFriends.friends.filter { $0.first_name.lowercased().contains(q) }
@@ -45,8 +45,7 @@ struct ProfileView: View {
                         VStack(spacing: 25) {
                             // Profile header
                             Group {
-                                if let key = user.profile_pictures?.keys.first,
-                                   let pic = user.profile_pictures?[key] {
+                                if let pic = user.profile_pictures?.first {
                                     Image(pic)
                                         .resizable()
                                         .scaledToFill()
@@ -92,7 +91,7 @@ struct ProfileView: View {
                                     GridItem(.fixed(gridCellWidth), spacing: 15),
                                     GridItem(.fixed(gridCellWidth))
                                 ], spacing: 15) {
-                                    ForEach(user.profile_pictures?.values.sorted() ?? [], id: \.self) { img in
+                                    ForEach(user.profile_pictures ?? [], id: \.self) { img in
                                         ZStack(alignment: .topTrailing) {
                                             Image(img)
                                                 .resizable()
@@ -241,10 +240,10 @@ struct ProfileView: View {
 // ───────── Helper Views ─────────
 
 struct FriendRow: View {
-    let friend: GetUser
+    let friend: User
     var body: some View {
         HStack {
-            Image(friend.profile_pictures?.values.first ?? "")
+            Image(friend.profile_pictures?.first ?? "")
                 .resizable()
                 .scaledToFill()
                 .frame(width: 60, height: 60)
@@ -324,7 +323,7 @@ struct InfoItem: Identifiable {
       .environmentObject({
           // build & seed your AuthViewModel in one expression
           let vm = AuthViewModel()
-          vm.currentUser = GetUser(
+          vm.currentUser = User(
             id: 1,
             username: "jdoe",
             first_name: "John",
@@ -336,7 +335,7 @@ struct InfoItem: Identifiable {
             job_or_university: "Example U",
             favorite_drink: "Coffee",
             location: "Springfield",
-            profile_pictures: ["pic1":"TestImage"],
+            profile_pictures: [],
             matches: "",
             swipes: "",
             vote_weight: 0,

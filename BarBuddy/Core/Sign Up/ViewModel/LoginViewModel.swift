@@ -14,12 +14,12 @@ extension AuthDataResult: @unchecked @retroactive Sendable {}
 /// You can use this directly or just route everything through `AuthViewModel`.
 @MainActor
 final class LoginViewModel: ObservableObject {
-    @Published var currentUser: GetUser?
+    @Published var currentUser: User?
     @Published var errorMessage = ""
 
     /// Attempts Firebase Auth sign‑in, then fetches the matching profile
     /// from your REST API. Returns the profile so calling views can react.
-    func login(email: String, password: String) async -> GetUser? {
+    func login(email: String, password: String) async -> User? {
         do {
             // Firebase authentication
             _ = try await Auth.auth().signIn(withEmail: email, password: password)

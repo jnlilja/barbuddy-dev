@@ -5,9 +5,9 @@ import FirebaseAuth
 struct RequestsView: View {
     @StateObject private var friendService = FriendService.shared
     @State private var searchText: String = ""
-    @State private var allUsers: [GetUser] = []
+    @State private var allUsers: [User] = []
 
-    private var filteredSearchUsers: [GetUser] {
+    private var filteredSearchUsers: [User] {
         let q = searchText.lowercased()
         return allUsers.filter { $0.username.lowercased().contains(q) }
     }
@@ -49,7 +49,7 @@ struct RequestsView: View {
                         Section(header: Text("Added Me").foregroundColor(.white)) {
                             ForEach(friendService.friendRequests) { user in
                                 HStack {
-                                    AsyncImage(url: URL(string: user.profile_pictures?.values.first ?? "")) { phase in
+                                    AsyncImage(url: URL(string: user.profile_pictures?.first ?? "")) { phase in
                                         switch phase {
                                         case .success(let img): img.resizable().scaledToFill()
                                         default: Image(systemName: "person.crop.circle.fill").resizable().scaledToFill()

@@ -12,7 +12,7 @@ import FirebaseAuth
 /// Handles all friend-related API calls with Firebase Auth
 class FriendAPIService: @unchecked Sendable {
     @MainActor static let shared = FriendAPIService()
-    private let baseURL = "barbuddy-backend-148659891217.us-central1.run.app/api"
+    private let baseURL = "https://barbuddy-backend-148659891217.us-central1.run.app/api"
 
     /// Attaches Firebase ID token to the request headers
     private func authorizedRequest(url: URL, method: String = "GET", body: Data? = nil) async throws -> URLRequest {
@@ -35,14 +35,14 @@ class FriendAPIService: @unchecked Sendable {
     
 
     /// Sends a friend request from the current user to another user
-    func sendFriendRequest(from currentUserId: Int, to user: GetUser) async throws -> GetUser {
+    func sendFriendRequest(from currentUserId: Int, to user: User) async throws -> User {
         guard let url = URL(string: "\(baseURL)/\(currentUserId)/send_friend_request/") else {
             throw URLError(.badURL)
         }
         let body = try JSONEncoder().encode(user)
         let request = try await authorizedRequest(url: url, method: "POST", body: body)
         let (data, _) = try await URLSession.shared.data(for: request)
-        return try JSONDecoder().decode(GetUser.self, from: data)
+        return try JSONDecoder().decode(User.self, from: data)
     }
 
     /// Responds to a pending friend request (accept or decline)
@@ -54,9 +54,9 @@ class FriendAPIService: @unchecked Sendable {
 
     func respondToFriendRequest(
       currentUserId: Int,
-      from user: GetUser,
+      from user: User,
       accept: Bool
-    ) async throws -> GetUser {
+    ) async throws -> User {
         // Build URL
         guard let url = URL(string: "\(baseURL)/\(currentUserId)/respond_friend_request/") else {
             throw URLError(.badURL)
@@ -72,30 +72,30 @@ class FriendAPIService: @unchecked Sendable {
             body: bodyData
         )
         let (data, _) = try await URLSession.shared.data(for: request)
-        return try JSONDecoder().decode(GetUser.self, from: data)
+        return try JSONDecoder().decode(User.self, from: data)
     }
 
 
     /// Fetches the current user's friends
-    func fetchFriends() async throws -> [GetUser] {
+    func fetchFriends() async throws -> [User] {
         guard let currentUser = Auth.auth().currentUser,
               let url = URL(string: "\(baseURL)/\(currentUser.uid)/friends/") else {
             throw URLError(.badURL)
         }
         let request = try await authorizedRequest(url: url)
         let (data, _) = try await URLSession.shared.data(for: request)
-        return try JSONDecoder().decode([GetUser].self, from: data)
+        return try JSONDecoder().decode([User].self, from: data)
     }
 
     /// Fetches pending friend requests for the current user
-    func fetchPendingRequests() async throws -> [GetUser] {
+    func fetchPendingRequests() async throws -> [User] {
         guard let currentUser = Auth.auth().currentUser,
               let url = URL(string: "\(baseURL)/\(currentUser.uid)/requests/") else {
             throw URLError(.badURL)
         }
         let request = try await authorizedRequest(url: url)
         let (data, _) = try await URLSession.shared.data(for: request)
-        return try JSONDecoder().decode([GetUser].self, from: data)
+        return try JSONDecoder().decode([User].self, from: data)
     }
 }
 

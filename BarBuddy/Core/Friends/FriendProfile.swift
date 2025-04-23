@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct FriendProfile: View {
-    let user: GetUser
+    let user: User
         @StateObject private var friendService = FriendService.shared
 
         var isFriend: Bool {
@@ -20,7 +20,7 @@ struct FriendProfile: View {
             VStack(spacing: 0) {
                 // Photo Gallery
                 TabView {
-                    ForEach(user.profile_pictures?.values.sorted() ?? [], id: \.self) { imageName in
+                    ForEach(user.profile_pictures ?? [], id: \.self) { imageName in
                         Image(imageName)
                             .resizable()
                             .scaledToFill()
@@ -115,7 +115,7 @@ struct FriendProfile_Previews: PreviewProvider {
     static var previews: some View {
         NavigationView {
             FriendProfile(
-                user: GetUser(
+                user: User(
                     id: 1,
                     username: "sampleuser",
                     first_name: "Sample",
@@ -127,7 +127,7 @@ struct FriendProfile_Previews: PreviewProvider {
                     job_or_university: "Example University",
                     favorite_drink: "Coffee",
                     location: "Springfield",
-                    profile_pictures: ["profilePic": "TestImage"],
+                    profile_pictures: [],
                     matches: "Loves SwiftUI",
                     swipes: "",
                     vote_weight: 0,

@@ -11,7 +11,7 @@ import Foundation
 class UserFriends: ObservableObject {
     static let shared = UserFriends()
 
-    @Published var friends: [GetUser] = []
+    @Published var friends: [User] = []
 
     private init() { }
 
@@ -24,7 +24,7 @@ class UserFriends: ObservableObject {
         }
     }
 
-    func addFriend(_ user: GetUser) {
+    func addFriend(_ user: User) {
         guard !friends.contains(where: { $0.id == user.id }) else { return }
         friends.append(user)
     }

@@ -9,7 +9,7 @@ import SwiftUI
 import FirebaseAuth
 
 // MARK: - Model matching server response
-struct GetUser: Codable, Identifiable, Hashable {
+struct User: Codable, Identifiable, Hashable {
     var id: Int
     var username: String
     var first_name: String
@@ -21,7 +21,7 @@ struct GetUser: Codable, Identifiable, Hashable {
     var job_or_university: String
     var favorite_drink: String
     var location: String
-    var profile_pictures: [String: String]?
+    var profile_pictures: [String]?
     var matches: String
     var swipes: String
     var vote_weight: Int
@@ -36,7 +36,7 @@ final class GetUserAPIService {
     private let baseURL = URL(string: "barbuddy-backend-148659891217.us-central1.run.app/api")!   // ← Replace
 
     /// GET /users – returns the full users list
-    func fetchUsers(completion: @escaping @Sendable (Result<[GetUser], APIError>) -> Void) {
+    func fetchUsers(completion: @escaping @Sendable (Result<[User], APIError>) -> Void) {
         guard let currentUser = Auth.auth().currentUser else {
             return completion(.failure(.noToken))
         }
@@ -55,7 +55,7 @@ final class GetUserAPIService {
                 guard let data = data else { return completion(.success([])) }
 
                 do {
-                    let users = try JSONDecoder().decode([GetUser].self, from: data)
+                    let users = try JSONDecoder().decode([User].self, from: data)
                     completion(.success(users))
                 } catch {
                     completion(.failure(.decoding(error)))
@@ -67,7 +67,7 @@ final class GetUserAPIService {
 // MARK: - Async/Await convenience
 extension GetUserAPIService {
     /// Async wrapper around the callback‑based fetchUsers.
-    func fetchUsers() async throws -> [GetUser] {
+    func fetchUsers() async throws -> [User] {
         try await withCheckedThrowingContinuation { continuation in
             self.fetchUsers { result in
                 continuation.resume(with: result)
@@ -80,7 +80,7 @@ extension GetUserAPIService {
 // MARK: - ViewModel
 @MainActor
 final class UsersViewModel: ObservableObject {
-    @Published var users: [GetUser] = []
+    @Published var users: [User] = []
     @Published var errorMessage = ""
     @Published var showingError = false
 
@@ -122,8 +122,8 @@ struct ContentViewGet: View {
     }
 }
 
-extension GetUser {
-    static let MOCK_DATA = GetUser(id: 0, username: "user123", first_name: "Rob", last_name: "Smith", email: "mail@mail.com", password: "", date_of_birth: "", hometown: "", job_or_university: "", favorite_drink: "", location: "Hideaway", matches: "", swipes: "", vote_weight: 1, account_type: "", sexual_preference: "")
+extension User {
+    static let MOCK_DATA = User(id: 0, username: "user123", first_name: "Rob", last_name: "Smith", email: "mail@mail.com", password: "", date_of_birth: "", hometown: "", job_or_university: "", favorite_drink: "", location: "Hideaway", profile_pictures: [""], matches: "", swipes: "", vote_weight: 1, account_type: "", sexual_preference: "")
 
 }
 

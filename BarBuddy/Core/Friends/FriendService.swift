@@ -13,8 +13,8 @@ import FirebaseAuth
 @MainActor
 class FriendService: ObservableObject {
     static let shared = FriendService()
-    @Published var friends: [GetUser] = []
-    @Published var friendRequests: [GetUser] = []
+    @Published var friends: [User] = []
+    @Published var friendRequests: [User] = []
 
     private init() {}
 
@@ -39,7 +39,7 @@ class FriendService: ObservableObject {
     }
 
     /// Send a friend request to another user
-    func sendFriendRequest(to user: GetUser) async {
+    func sendFriendRequest(to user: User) async {
         guard let currentUser = Auth.auth().currentUser,
               let currentUserId = Int(currentUser.uid) else { return }
         do {
@@ -51,7 +51,7 @@ class FriendService: ObservableObject {
     }
 
     /// Accept or decline a friend request
-    func respond(to user: GetUser, accept: Bool) async {
+    func respond(to user: User, accept: Bool) async {
         guard let currentUser = Auth.auth().currentUser,
               let currentUserId = Int(currentUser.uid) else { return }
         do {

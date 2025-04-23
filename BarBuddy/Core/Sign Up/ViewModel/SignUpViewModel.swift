@@ -31,8 +31,9 @@ final class SignUpViewModel: ObservableObject {
     @Published var alertMessage     = ""
     @Published var showingAlert     = false
     
-    func buildProfile() -> PostUser {
-            PostUser(
+    func buildProfile() -> User {
+            User(
+                id: 0,
                 username: newUsername,
                 first_name: firstName,
                 last_name: lastName,
@@ -42,7 +43,11 @@ final class SignUpViewModel: ObservableObject {
                 hometown: hometown,
                 job_or_university: jobOrUniversity,
                 favorite_drink: favoriteDrink,
-                profile_pictures: [:],
+                location: "",
+                profile_pictures: [],
+                matches: "",
+                swipes: "",
+                vote_weight: 0,
                 account_type: "regular",
                 sexual_preference: sexualPreference
             )
@@ -80,7 +85,7 @@ final class SignUpViewModel: ObservableObject {
     }
 
     // MARK: - Sign‑up flow
-    private func signUp(profile: PostUser) async {
+    private func signUp(profile: User) async {
         do {
             // 1) Create Firebase Auth account
             _ = try await Auth.auth().createUser(withEmail: profile.email,

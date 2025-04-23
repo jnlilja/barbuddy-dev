@@ -10,29 +10,29 @@ import SwiftUI
 @preconcurrency import FirebaseAuth
 
 // MARK: - Data model sent to backend
-struct PostUser: Codable {
-    var username: String
-    var first_name: String
-    var last_name: String
-    var email: String
-    var password: String
-    var date_of_birth: String
-    var hometown: String
-    var job_or_university: String
-    var favorite_drink: String
-    var profile_pictures: [String: String]?
-    var account_type: String
-    var sexual_preference: String
-}
+//struct PostUser: Codable {
+//    var username: String
+//    var first_name: String
+//    var last_name: String
+//    var email: String
+//    var password: String
+//    var date_of_birth: String
+//    var hometown: String
+//    var job_or_university: String
+//    var favorite_drink: String
+//    var profile_pictures: [String: String]?
+//    var account_type: String
+//    var sexual_preference: String
+//}
 
 // MARK: - Networking service
 @MainActor
 final class PostUserAPIService {
     static let shared = PostUserAPIService()
-    private let baseURL = URL(string: "barbuddy-backend-148659891217.us-central1.run.app/api")!   // ← Edit
+    private let baseURL = URL(string: "https://barbuddy-backend-148659891217.us-central1.run.app/api")!   // ← Edit
 
     /// POST /users – create a profile document in your backend
-    func create(user: PostUser, completion: @escaping @Sendable (Result<Void, APIError>) -> Void) {
+    func create(user: User, completion: @escaping @Sendable (Result<Void, APIError>) -> Void) {
         guard let currentUser = Auth.auth().currentUser else {
             return completion(.failure(.noToken))
         }
@@ -103,7 +103,7 @@ extension PostUserAPIService {
 
 extension GetUserAPIService {
     /// GET /users/{id}/ – async helper to fetch a single user record by id
-    func fetchUser(id: Int) async throws -> GetUser {
+    func fetchUser(id: Int) async throws -> User {
         try await withCheckedThrowingContinuation { cont in
             guard let holder = Auth.auth().currentUser else {
                 return cont.resume(throwing: APIError.noToken)
@@ -127,7 +127,7 @@ extension GetUserAPIService {
                         return cont.resume(throwing: APIError.badURL)
                     }
                     do {
-                        let user = try JSONDecoder().decode(GetUser.self, from: data)
+                        let user = try JSONDecoder().decode(User.self, from: data)
                         cont.resume(returning: user)
                     } catch {
                         cont.resume(throwing: APIError.decoding(error))
@@ -143,7 +143,7 @@ extension GetUserAPIService {
 class PostUserViewModel: ObservableObject {
     @Published var statusMessage = ""
 
-    func post(user: PostUser) {
+    func post(user: User) {
         PostUserAPIService.shared.create(user: user) { [weak self] result in
             Task { @MainActor in
                 switch result {
