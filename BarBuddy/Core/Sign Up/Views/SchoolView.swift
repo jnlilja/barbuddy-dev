@@ -59,18 +59,20 @@ struct SchoolView: View {
                     .padding(.horizontal)
                     .foregroundColor(.white)
 
-                    Button("Continue") {
-                        // write back into shared view‑model
+                    Button(action: {
+                        // Write back into shared view‑model
                         viewModel.jobOrUniversity = school
                         path.append(SignUpNavigation.drink)
+                    }) {
+                        Text("Continue")
+                            .font(.headline)
+                            .foregroundColor(.white)
+                            .opacity(school.isEmpty || (currentlyAttending && major.isEmpty) ? 0.6 : 1) // Dim text when disabled
+                            .frame(width: 300, height: 50)
+                            .background(Color("DarkPurple"))
+                            .cornerRadius(10)
                     }
-                    .disabled(school.isEmpty || (currentlyAttending && major.isEmpty))
-                    .opacity(school.isEmpty || (currentlyAttending && major.isEmpty) ? 0.6 : 1)
-                    .font(.headline)
-                    .foregroundColor(.white)
-                    .frame(width: 300, height: 50)
-                    .background(Color("DarkPurple"))
-                    .cornerRadius(10)
+                    .disabled(school.isEmpty || (currentlyAttending && major.isEmpty)) // Prevent interaction when disabled
                 }
 
                 Spacer()

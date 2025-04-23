@@ -36,19 +36,21 @@ struct NameEntryView: View {
                     TextField("Last Name", text: $lastName)
                         .textFieldStyle(CustomTextFieldStyle())
 
-                    Button("Continue") {
-                        // write back into shared view‑model
+                    Button(action: {
+                        // Navigate to the next step
                         viewModel.firstName = firstName
-                        viewModel.lastName  = lastName
+                        viewModel.lastName = lastName
                         path.append(SignUpNavigation.location)
+                    }) {
+                        Text("Continue")
+                            .font(.headline)
+                            .foregroundColor(.white)
+                            .frame(width: 300, height: 50)
+                            .background(Color("DarkPurple"))
+                            .cornerRadius(10)
                     }
                     .disabled(firstName.isEmpty || lastName.isEmpty)
-                    .opacity(firstName.isEmpty || lastName.isEmpty ? 0.6 : 1)
-                    .font(.headline)
-                    .foregroundColor(.white)
-                    .frame(width: 300, height: 50)
-                    .background(Color("DarkPurple"))
-                    .cornerRadius(10)
+                    .opacity(firstName.isEmpty || lastName.isEmpty ? 0.6 : 1) // Visual feedback for disabled state
                 }
 
                 Spacer()
