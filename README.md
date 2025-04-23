@@ -20,7 +20,7 @@ For the time being, this documentation is temporary:
 To view the API documentation:
 
 1. Open [Swagger Editor](https://editor-next.swagger.io/).
-2. Copy and paste the contents of the [April19.txt](https://github.com/user-attachments/files/19839784/April19.txt) file into the editor.
+2. Copy and paste the contents of the [April22.txt](https://github.com/user-attachments/files/19857910/April22.txt) file into the editor.
 
 ## Testing Authentication
 At the BarBuddy login screen enter the following:
