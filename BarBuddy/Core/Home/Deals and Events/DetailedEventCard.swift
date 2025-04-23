@@ -24,14 +24,17 @@ struct DetailedEventCard: View {
             Text("@ \(location)")
                 .font(.title3)
                 .foregroundColor(Color("DarkPurple"))
+                .multilineTextAlignment(.center)
 
             Text(description)
                 .font(.subheadline)
                 .foregroundColor(.gray)
+                .multilineTextAlignment(.center)
 
             Text(time)
                 .font(.headline)
                 .foregroundColor(Color("DarkPurple"))
+                .multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity)
         .padding()
