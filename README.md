@@ -86,10 +86,19 @@ Note: User IDs are sorted to ensure consistent channel names
 
 2. Group Chats
 Format: group-chat-{group_id}  
-Example: group-chat-5  
+Example: group-chat-5
+
 
 ### Security
 - All Pusher channels are private and require authentication
 - Messages are encrypted using SSL
 - Channel names are generated based on user IDs to ensure privacy
 - Access to channels is controlled by backend permissions
+
+
+
+## API endpoints: 
+#### API DOCS: 
+https://barbuddy-backend-148659891217.us-central1.run.app/swagger/
+#### Base URL: 
+https://barbuddy-backend-148659891217.us-central1.run.app
