@@ -2,6 +2,7 @@ from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from django.contrib.gis.geos import Point
 from datetime import date
+from django.core.validators import RegexValidator
 
 from apps.matches.models import Match
 from apps.swipes.models import Swipe
@@ -18,7 +19,16 @@ class ProfilePictureSerializer(serializers.ModelSerializer):
         fields = ["id", "image", "is_primary"]
 
 class UserSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True, required=True)
+    username = serializers.CharField(
+        validators=[
+            RegexValidator(
+                regex='^[a-zA-Z0-9_]{3,30}$',
+                message='Username must be 3-30 characters long and contain only letters, numbers, and underscores'
+            )
+        ]
+    )
+    email = serializers.EmailField()
+    password = serializers.CharField(write_only=True, min_length=8)
     location = serializers.SerializerMethodField()
     matches = serializers.SerializerMethodField()
     swipes = serializers.SerializerMethodField()
@@ -34,7 +44,12 @@ class UserSerializer(serializers.ModelSerializer):
         ]
         extra_kwargs = {
             "password": {"write_only": True},
-            "email": {"write_only": True}
+            "email": {"write_only": True},
+            "date_of_birth": {"required": True},
+            "hometown": {"required": True},
+            "job_or_university": {"required": True},
+            "favorite_drink": {"required": True},
+            "sexual_preference": {"required": True}
         }
         read_only_fields = ["vote_weight"]
 
@@ -69,20 +84,23 @@ class UserSerializer(serializers.ModelSerializer):
         return validated_data
 
     def validate_date_of_birth(self, value):
-        today = date.today()
-        age = today.year - value.year - ((today.month, today.day) < (value.month, value.day))
+        from dateutil.relativedelta import relativedelta
+        
+        age = relativedelta(date.today(), value).years
         if age < 18:
-            raise serializers.ValidationError("You must be at least 18 years old.")
-        if age > 120:
-            raise serializers.ValidationError("Age cannot exceed 120.")
+            raise serializers.ValidationError("User must be at least 18 years old")
         return value
 
+    def validate_sexual_preference(self, value):
+        valid_preferences = ['straight', 'gay', 'bisexual', 'other']
+        if value.lower() not in valid_preferences:
+            raise serializers.ValidationError(
+                f"Sexual preference must be one of: {', '.join(valid_preferences)}"
+            )
+        return value.lower()
+
     def create(self, validated_data):
-        password = validated_data.pop("password", None)
-        user = User(**validated_data)
-        if password:
-            user.set_password(password)
-        user.save()
+        user = User.objects.create_user(**validated_data)
         return user
 
     def update(self, instance, validated_data):
