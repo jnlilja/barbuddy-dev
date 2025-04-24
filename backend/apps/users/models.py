@@ -13,13 +13,6 @@ class User(AbstractUser):
     location = gis.PointField(geography=True, srid=4326, null=True, blank=True)
     vote_weight = models.IntegerField(default=1)
     friends = models.ManyToManyField('self', symmetrical=True, blank=True)
-    profile_picture = models.ImageField(
-        upload_to="profile_pictures/",
-        blank=True,
-        null=True
-    )
-
-
 
     SEXUAL_PREFERENCE_CHOICES = [
         ('straight', 'Straight'),
@@ -113,9 +106,6 @@ class ProfilePicture(models.Model):
         elif not ProfilePicture.objects.filter(user=self.user).exists():
             self.is_primary = True
         super().save(*args, **kwargs)
-
-    def __str__(self):
-        return f"{self.user.username}'s picture ({'primary' if self.is_primary else 'secondary'})"
 
     class Meta:
         ordering = ['-is_primary', '-uploaded_at']
