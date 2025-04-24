@@ -24,6 +24,8 @@ class BarSerializer(serializers.ModelSerializer):
     current_status = serializers.SerializerMethodField()
     average_rating = serializers.SerializerMethodField()
     images = BarImageSerializer(many=True, read_only=True)
+    current_user_count = serializers.SerializerMethodField()
+    activity_level = serializers.SerializerMethodField()
 
     class Meta:
         model = Bar
@@ -32,6 +34,8 @@ class BarSerializer(serializers.ModelSerializer):
             'latitude', 'longitude', 'location',  # Add lat/lon to fields
             'users_at_bar', 'current_status',
             'average_rating', 'images',
+            'current_user_count',
+            'activity_level'
         ]
 
     def get_location(self, obj):
@@ -48,6 +52,12 @@ class BarSerializer(serializers.ModelSerializer):
     def get_average_rating(self, obj):
         avg = obj.ratings.aggregate(Avg("rating"))["rating__avg"]
         return round(avg, 2) if avg is not None else None
+
+    def get_current_user_count(self, obj):
+        return obj.current_user_count
+
+    def get_activity_level(self, obj):
+        return obj.get_activity_level()
 
     def validate_users_at_bar(self, value):
         return value  # front‑end managed

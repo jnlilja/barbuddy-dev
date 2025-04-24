@@ -22,7 +22,7 @@ class UserSerializer(serializers.ModelSerializer):
     location = serializers.SerializerMethodField()
     matches = serializers.SerializerMethodField()
     swipes = serializers.SerializerMethodField()
-    profile_pictures = ProfilePictureSerializer(many=True, read_only=True)
+    profile_pictures = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -53,6 +53,14 @@ class UserSerializer(serializers.ModelSerializer):
     def get_swipes(self, obj):
         swipes = Swipe.objects.filter(swiper=obj)
         return SwipeSerializer(swipes, many=True).data
+
+    def get_profile_pictures(self, obj):
+        pictures = obj.profile_pictures.all()
+        return [{
+            'id': pic.id,
+            'url': pic.image.url,
+            'is_primary': pic.is_primary
+        } for pic in pictures]
 
     def to_internal_value(self, data):
         validated_data = super().to_internal_value(data)
@@ -114,13 +122,4 @@ class FriendRequestSerializer(serializers.ModelSerializer):
         model = FriendRequest
         fields = ['id', 'from_user', 'to_user', 'status', 'timestamp']
         read_only_fields = ['from_user', 'timestamp', 'status']
-
-
-class ProfilePictureUpdateSerializer(serializers.Serializer):
-    profile_picture = serializers.ImageField()
-
-    def update(self, instance, validated_data):
-        instance.profile_picture = validated_data['profile_picture']
-        instance.save()
-        return instance
 

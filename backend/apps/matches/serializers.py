@@ -5,10 +5,19 @@ from django.contrib.auth import get_user_model
 User = get_user_model()
 
 class MatchUserSerializer(serializers.ModelSerializer):
-    """Simplified user representation for matches"""
+    profile_pictures = serializers.SerializerMethodField()
+
     class Meta:
         model = User
-        fields = ['id', 'username', 'first_name', 'last_name', 'profile_picture']  # Updated field
+        fields = ['id', 'username', 'profile_pictures']  # remove 'profile_picture' field
+
+    def get_profile_pictures(self, obj):
+        pictures = obj.profile_pictures.all()
+        return [{
+            'id': pic.id,
+            'url': pic.image.url,
+            'is_primary': pic.is_primary
+        } for pic in pictures]
 
 
 class MatchSerializer(serializers.ModelSerializer):

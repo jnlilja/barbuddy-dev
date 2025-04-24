@@ -7,7 +7,7 @@ from django.db.models import Q
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from apps.matches.models import Match
 from apps.matches.serializers import MatchSerializer
-from .serializers import UserSerializer, UserLocationUpdateSerializer, ProfilePictureUpdateSerializer, ProfilePictureSerializer
+from .serializers import UserSerializer, UserLocationUpdateSerializer, ProfilePictureSerializer
 from .permissions import IsOwnerOrReadOnly
 from .authentication import FirebaseAuthentication
 
@@ -95,14 +95,6 @@ class UserViewSet(viewsets.ModelViewSet):
         friends = request.user.friends.all()
         data = UserSerializer(friends, many=True).data
         return Response(data)
-
-    @action(detail=False, methods=["post"], permission_classes=[permissions.IsAuthenticated])
-    def update_profile_picture(self, request):
-        serializer = ProfilePictureUpdateSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.update(request.user, serializer.validated_data)
-            return Response({"status": "Profile picture updated successfully."})
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=False, methods=['POST'], permission_classes=[permissions.IsAuthenticated])
     def upload_picture(self, request):
