@@ -7,23 +7,29 @@ from apps.matches.models import Match
 from apps.swipes.models import Swipe
 from apps.swipes.serializers import SwipeSerializer
 from apps.matches.serializers import MatchSerializer
-from .models import FriendRequest, User
+from .models import FriendRequest, User, ProfilePicture  # Add ProfilePicture to imports
 
 
-User = get_user_model()
+class ProfilePictureSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProfilePicture
+        fields = ['id', 'image', 'is_primary', 'uploaded_at']
+        read_only_fields = ['uploaded_at']
+
 
 class UserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=True)
     location = serializers.SerializerMethodField()
     matches = serializers.SerializerMethodField()
     swipes = serializers.SerializerMethodField()
+    profile_pictures = ProfilePictureSerializer(many=True, read_only=True)
 
     class Meta:
         model = User
         fields = [
             "id", "username", "first_name", "last_name", "email", "password", "date_of_birth",
             "hometown", "job_or_university", "favorite_drink", "location",
-            "profile_picture", "matches", "swipes", "vote_weight", "account_type",
+            "profile_pictures", "matches", "swipes", "vote_weight", "account_type",
             "sexual_preference", "phone_number"
         ]
         extra_kwargs = {
@@ -33,7 +39,7 @@ class UserSerializer(serializers.ModelSerializer):
         read_only_fields = ["vote_weight"]
 
     def get_location(self, obj):
-        if obj.location:
+        if (obj.location):
             return {
                 "latitude": obj.location.y,
                 "longitude": obj.location.x

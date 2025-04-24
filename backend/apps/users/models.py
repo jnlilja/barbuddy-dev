@@ -99,17 +99,23 @@ from django.contrib.auth import get_user_model
 
 User = get_user_model()
 
-# class ProfilePicture(models.Model):
-#     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="profile_pictures")
-#     image = models.ImageField(upload_to="profile_pictures/")  # Stored in GCS
-#     is_primary = models.BooleanField(default=False)
+class ProfilePicture(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="profile_pictures")
+    image = models.ImageField(upload_to="profile_pictures/")
+    is_primary = models.BooleanField(default=False)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
 
-#     def save(self, *args, **kwargs):
-#         if self.is_primary:
-#             # Ensure only one primary picture per user
-#             ProfilePicture.objects.filter(user=self.user, is_primary=True).update(is_primary=False)
-#         super().save(*args, **kwargs)
+    def save(self, *args, **kwargs):
+        if self.is_primary:
+            # Set all other pictures of this user to not primary
+            ProfilePicture.objects.filter(user=self.user, is_primary=True).update(is_primary=False)
+        # If this is the user's first picture, make it primary
+        elif not ProfilePicture.objects.filter(user=self.user).exists():
+            self.is_primary = True
+        super().save(*args, **kwargs)
 
-#     @property
-#     def image_url(self):
-#         return self.image.url  # Returns the GCS URL
+    def __str__(self):
+        return f"{self.user.username}'s picture ({'primary' if self.is_primary else 'secondary'})"
+
+    class Meta:
+        ordering = ['-is_primary', '-uploaded_at']

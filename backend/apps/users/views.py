@@ -7,11 +7,11 @@ from django.db.models import Q
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from apps.matches.models import Match
 from apps.matches.serializers import MatchSerializer
-from .serializers import UserSerializer, UserLocationUpdateSerializer, ProfilePictureUpdateSerializer
+from .serializers import UserSerializer, UserLocationUpdateSerializer, ProfilePictureUpdateSerializer, ProfilePictureSerializer
 from .permissions import IsOwnerOrReadOnly
 from .authentication import FirebaseAuthentication
 
-from .models import FriendRequest
+from .models import FriendRequest, ProfilePicture
 
 User = get_user_model()
 
@@ -103,3 +103,42 @@ class UserViewSet(viewsets.ModelViewSet):
             serializer.update(request.user, serializer.validated_data)
             return Response({"status": "Profile picture updated successfully."})
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=False, methods=['POST'], permission_classes=[permissions.IsAuthenticated])
+    def upload_picture(self, request):
+        """Upload a new profile picture"""
+        serializer = ProfilePictureSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(user=request.user)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=False, methods=['PUT'], permission_classes=[permissions.IsAuthenticated])
+    def set_primary_picture(self, request):
+        """Set a picture as primary"""
+        picture_id = request.data.get('picture_id')
+        try:
+            picture = ProfilePicture.objects.get(id=picture_id, user=request.user)
+            picture.is_primary = True
+            picture.save()
+            return Response({'status': 'Primary picture updated successfully'})
+        except ProfilePicture.DoesNotExist:
+            return Response({'error': 'Picture not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    @action(detail=False, methods=['DELETE'], permission_classes=[permissions.IsAuthenticated])
+    def delete_picture(self, request):
+        """Delete a profile picture"""
+        picture_id = request.data.get('picture_id')
+        try:
+            picture = ProfilePicture.objects.get(id=picture_id, user=request.user)
+            picture.delete()
+            return Response({'status': 'Picture deleted successfully'})
+        except ProfilePicture.DoesNotExist:
+            return Response({'error': 'Picture not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    @action(detail=False, methods=['GET'], permission_classes=[permissions.IsAuthenticated])
+    def get_pictures(self, request):
+        """Get all profile pictures for the current user"""
+        pictures = ProfilePicture.objects.filter(user=request.user)
+        serializer = ProfilePictureSerializer(pictures, many=True)
+        return Response(serializer.data)
