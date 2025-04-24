@@ -109,3 +109,12 @@ class FriendRequestSerializer(serializers.ModelSerializer):
         fields = ['id', 'from_user', 'to_user', 'status', 'timestamp']
         read_only_fields = ['from_user', 'timestamp', 'status']
 
+
+class ProfilePictureUpdateSerializer(serializers.Serializer):
+    profile_picture = serializers.ImageField()
+
+    def update(self, instance, validated_data):
+        instance.profile_picture = validated_data['profile_picture']
+        instance.save()
+        return instance
+
