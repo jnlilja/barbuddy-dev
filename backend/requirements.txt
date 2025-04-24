@@ -13,6 +13,7 @@ django-environ==0.12.0
 django-extensions==4.1
 django-filter==24.3
 django-rest-framework-nested==0.0.1
+django-storages==1.14.6
 djangorestframework==3.15.2
 djangorestframework-gis==1.1
 djangorestframework_simplejwt==5.5.0

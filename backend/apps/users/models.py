@@ -13,6 +13,12 @@ class User(AbstractUser):
     location = gis.PointField(geography=True, srid=4326, null=True, blank=True)
     vote_weight = models.IntegerField(default=1)
     friends = models.ManyToManyField('self', symmetrical=True, blank=True)
+    profile_picture = models.ImageField(
+        upload_to="profile_pictures/",
+        blank=True,
+        null=True
+    )
+
 
 
     SEXUAL_PREFERENCE_CHOICES = [
@@ -89,16 +95,27 @@ class FriendRequest(models.Model):
         return f"{self.from_user} -> {self.to_user} [{self.status}]"
 
 
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
+
 class ProfilePicture(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="profile_pictures")
-    image = models.ImageField(upload_to="profile_pictures/")  # This creates local URLs
+    image = models.ImageField(upload_to="profile_pictures/")
     is_primary = models.BooleanField(default=False)
+    uploaded_at = models.DateTimeField(auto_now_add=True)
 
     def save(self, *args, **kwargs):
         if self.is_primary:
-            # Ensure only one primary picture per user
+            # Set all other pictures of this user to not primary
             ProfilePicture.objects.filter(user=self.user, is_primary=True).update(is_primary=False)
+        # If this is the user's first picture, make it primary
+        elif not ProfilePicture.objects.filter(user=self.user).exists():
+            self.is_primary = True
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.user.username}'s Profile Picture"
+        return f"{self.user.username}'s picture ({'primary' if self.is_primary else 'secondary'})"
+
+    class Meta:
+        ordering = ['-is_primary', '-uploaded_at']

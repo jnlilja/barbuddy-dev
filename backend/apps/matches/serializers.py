@@ -8,7 +8,7 @@ class MatchUserSerializer(serializers.ModelSerializer):
     """Simplified user representation for matches"""
     class Meta:
         model = User
-        fields = ['id', 'username', 'first_name', 'last_name', 'profile_pictures']
+        fields = ['id', 'username', 'first_name', 'last_name', 'profile_picture']  # Updated field
 
 
 class MatchSerializer(serializers.ModelSerializer):
