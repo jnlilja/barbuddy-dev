@@ -13,6 +13,12 @@ class User(AbstractUser):
     location = gis.PointField(geography=True, srid=4326, null=True, blank=True)
     vote_weight = models.IntegerField(default=1)
     friends = models.ManyToManyField('self', symmetrical=True, blank=True)
+    profile_picture = models.ImageField(
+        upload_to="profile_pictures/",
+        blank=True,
+        null=True
+    )
+
 
 
     SEXUAL_PREFERENCE_CHOICES = [
@@ -93,17 +99,17 @@ from django.contrib.auth import get_user_model
 
 User = get_user_model()
 
-class ProfilePicture(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="profile_pictures")
-    image = models.ImageField(upload_to="profile_pictures/")  # Stored in GCS
-    is_primary = models.BooleanField(default=False)
+# class ProfilePicture(models.Model):
+#     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="profile_pictures")
+#     image = models.ImageField(upload_to="profile_pictures/")  # Stored in GCS
+#     is_primary = models.BooleanField(default=False)
 
-    def save(self, *args, **kwargs):
-        if self.is_primary:
-            # Ensure only one primary picture per user
-            ProfilePicture.objects.filter(user=self.user, is_primary=True).update(is_primary=False)
-        super().save(*args, **kwargs)
+#     def save(self, *args, **kwargs):
+#         if self.is_primary:
+#             # Ensure only one primary picture per user
+#             ProfilePicture.objects.filter(user=self.user, is_primary=True).update(is_primary=False)
+#         super().save(*args, **kwargs)
 
-    @property
-    def image_url(self):
-        return self.image.url  # Returns the GCS URL
+#     @property
+#     def image_url(self):
+#         return self.image.url  # Returns the GCS URL

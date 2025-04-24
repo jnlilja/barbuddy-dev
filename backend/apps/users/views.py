@@ -10,11 +10,8 @@ from apps.matches.serializers import MatchSerializer
 from .serializers import UserSerializer, UserLocationUpdateSerializer
 from .permissions import IsOwnerOrReadOnly
 from .authentication import FirebaseAuthentication
-from rest_framework.parsers import MultiPartParser
 
-from .models import FriendRequest, ProfilePicture
-from .serializers import FriendRequestSerializer, ProfilePictureSerializer
-
+from .models import FriendRequest
 
 User = get_user_model()
 
@@ -98,56 +95,3 @@ class UserViewSet(viewsets.ModelViewSet):
         friends = request.user.friends.all()
         data = UserSerializer(friends, many=True).data
         return Response(data)
-    
-    @action(detail=False, methods=["post"])
-    def update_profile_pictures(self, request):
-        user = request.user
-        pics = request.data.get("profile_pictures", [])
-        if not isinstance(pics, list):
-            return Response({"error": "Expected a list of image URLs."}, status=400)
-
-        user.profile_pictures = pics
-        user.save()
-        return Response({"status": "Profile pictures updated."})
-    
-    @action(detail=False, methods=["delete"])
-    def delete_profile_picture(self, request):
-        user = request.user
-        url_to_remove = request.data.get("url")
-
-        if not url_to_remove:
-            return Response({"error": "No URL provided."}, status=400)
-
-        if url_to_remove not in user.profile_pictures:
-            return Response({"error": "URL not found in profile pictures."}, status=404)
-
-        user.profile_pictures.remove(url_to_remove)
-        user.save()
-        return Response({"status": "Profile picture removed."})
-
-    @action(detail=False, methods=["post"], permission_classes=[permissions.IsAuthenticated], parser_classes=[MultiPartParser])
-    def upload_profile_picture(self, request):
-        serializer = ProfilePictureSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save(user=request.user)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    @action(detail=True, methods=["patch"], permission_classes=[permissions.IsAuthenticated])
-    def set_primary_picture(self, request, pk=None):
-        try:
-            picture = ProfilePicture.objects.get(pk=pk, user=request.user)
-            picture.is_primary = True
-            picture.save()
-            return Response({"status": "Primary picture updated."})
-        except ProfilePicture.DoesNotExist:
-            return Response({"error": "Picture not found."}, status=404)
-
-    @action(detail=True, methods=["delete"], permission_classes=[permissions.IsAuthenticated])
-    def delete_profile_picture(self, request, pk=None):
-        try:
-            picture = ProfilePicture.objects.get(pk=pk, user=request.user)
-            picture.delete()
-            return Response({"status": "Picture deleted."})
-        except ProfilePicture.DoesNotExist:
-            return Response({"error": "Picture not found."}, status=404)

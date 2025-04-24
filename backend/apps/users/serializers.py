@@ -7,35 +7,24 @@ from apps.matches.models import Match
 from apps.swipes.models import Swipe
 from apps.swipes.serializers import SwipeSerializer
 from apps.matches.serializers import MatchSerializer
-from .models import FriendRequest, ProfilePicture
+from .models import FriendRequest, User
 
 
 User = get_user_model()
-
-class ProfilePictureSerializer(serializers.ModelSerializer):
-    image_url = serializers.SerializerMethodField()
-
-    class Meta:
-        model = ProfilePicture
-        fields = ["id", "image_url", "is_primary"]
-
-    def get_image_url(self, obj):
-        return obj.image.url
 
 class UserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=True)
     location = serializers.SerializerMethodField()
     matches = serializers.SerializerMethodField()
     swipes = serializers.SerializerMethodField()
-    profile_pictures = ProfilePictureSerializer(many=True, read_only=True)
 
     class Meta:
         model = User
         fields = [
             "id", "username", "first_name", "last_name", "email", "password", "date_of_birth",
             "hometown", "job_or_university", "favorite_drink", "location",
-            "profile_pictures", "matches", "swipes", "vote_weight", "account_type",
-            "sexual_preference"  
+            "profile_picture", "matches", "swipes", "vote_weight", "account_type",
+            "sexual_preference", "phone_number"
         ]
         extra_kwargs = {
             "password": {"write_only": True},
@@ -64,7 +53,7 @@ class UserSerializer(serializers.ModelSerializer):
         raw_location = self.initial_data.get('location')
 
         if raw_location:
-            try:
+            try: 
                 lat = raw_location['latitude']
                 lon = raw_location['longitude']
                 validated_data['location'] = Point(lon, lat, srid=4326)
@@ -98,11 +87,6 @@ class UserSerializer(serializers.ModelSerializer):
             instance.set_password(password)
         instance.save()
         return instance
-
-    def get_match_count(self, obj):
-        return Match.objects.filter(user1=obj, status='connected').count() + \
-               Match.objects.filter(user2=obj, status='connected').count()
-
 
 
 class UserLocationUpdateSerializer(serializers.Serializer):
