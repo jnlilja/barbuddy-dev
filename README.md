@@ -20,7 +20,7 @@ For the time being, this documentation is temporary:
 To view the API documentation:
 
 1. Open [Swagger Editor](https://editor-next.swagger.io/).
-2. Copy and paste the contents of the [April22.txt](https://github.com/user-attachments/files/19857910/April22.txt) file into the editor.
+2. Copy and paste the contents of the [April23.txt](https://github.com/user-attachments/files/19885695/April23.txt) file into the editor.
 
 ## Testing Authentication
 At the BarBuddy login screen enter the following:
@@ -96,9 +96,14 @@ Example: group-chat-5
 - Access to channels is controlled by backend permissions
 
 
-
 ## API endpoints: 
 #### API DOCS: 
 https://barbuddy-backend-148659891217.us-central1.run.app/swagger/
 #### Base URL: 
 https://barbuddy-backend-148659891217.us-central1.run.app
+
+
+
+
+
+
