@@ -58,6 +58,25 @@ class BarViewSet(viewsets.ModelViewSet):
         bar = self.get_object()
         return Response(bar.get_aggregated_vote_status())
 
+    @action(detail=False, methods=['get'])
+    def most_active(self, request):
+        """Return the most active bars based on current user count"""
+        limit = int(request.query_params.get('limit', 10))
+        active_bars = Bar.get_most_active_bars(limit=limit)
+        
+        data = [{
+            'id': bar.id,
+            'name': bar.name,
+            'user_count': bar.current_user_count,
+            'activity_level': bar.get_activity_level(),
+            'location': {
+                'latitude': bar.location.y,
+                'longitude': bar.location.x
+            }
+        } for bar in active_bars]
+        
+        return Response(data)
+
 
 class BarStatusViewSet(viewsets.ModelViewSet):
     """
