@@ -89,9 +89,13 @@ class FriendRequest(models.Model):
         return f"{self.from_user} -> {self.to_user} [{self.status}]"
 
 
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
+
 class ProfilePicture(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="profile_pictures")
-    image = models.ImageField(upload_to="profile_pictures/")  # This creates local URLs
+    image = models.ImageField(upload_to="profile_pictures/")  # Stored in GCS
     is_primary = models.BooleanField(default=False)
 
     def save(self, *args, **kwargs):
@@ -100,5 +104,6 @@ class ProfilePicture(models.Model):
             ProfilePicture.objects.filter(user=self.user, is_primary=True).update(is_primary=False)
         super().save(*args, **kwargs)
 
-    def __str__(self):
-        return f"{self.user.username}'s Profile Picture"
+    @property
+    def image_url(self):
+        return self.image.url  # Returns the GCS URL

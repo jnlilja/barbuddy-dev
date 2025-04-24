@@ -13,9 +13,14 @@ from .models import FriendRequest, ProfilePicture
 User = get_user_model()
 
 class ProfilePictureSerializer(serializers.ModelSerializer):
+    image_url = serializers.SerializerMethodField()
+
     class Meta:
         model = ProfilePicture
-        fields = ["id", "image", "is_primary"]
+        fields = ["id", "image_url", "is_primary"]
+
+    def get_image_url(self, obj):
+        return obj.image.url
 
 class UserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=True)

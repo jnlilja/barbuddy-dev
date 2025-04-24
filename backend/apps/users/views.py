@@ -10,6 +10,7 @@ from apps.matches.serializers import MatchSerializer
 from .serializers import UserSerializer, UserLocationUpdateSerializer
 from .permissions import IsOwnerOrReadOnly
 from .authentication import FirebaseAuthentication
+from rest_framework.parsers import MultiPartParser
 
 from .models import FriendRequest, ProfilePicture
 from .serializers import FriendRequestSerializer, ProfilePictureSerializer
@@ -124,7 +125,7 @@ class UserViewSet(viewsets.ModelViewSet):
         user.save()
         return Response({"status": "Profile picture removed."})
 
-    @action(detail=False, methods=["post"], permission_classes=[permissions.IsAuthenticated])
+    @action(detail=False, methods=["post"], permission_classes=[permissions.IsAuthenticated], parser_classes=[MultiPartParser])
     def upload_profile_picture(self, request):
         serializer = ProfilePictureSerializer(data=request.data)
         if serializer.is_valid():
