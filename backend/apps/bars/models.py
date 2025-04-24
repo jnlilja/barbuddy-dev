@@ -41,6 +41,31 @@ class Bar(models.Model):
         avg = self.ratings.aggregate(Avg('rating'))['rating__avg']
         return round(avg, 2) if avg is not None else None
 
+    @property
+    def current_user_count(self):
+        """Get the current number of users at this bar"""
+        return self.users_at_bar.count()
+
+    @classmethod
+    def get_most_active_bars(cls, limit=10):
+        """Returns bars ordered by current number of users"""
+        return cls.objects.annotate(
+            user_count=models.Count('users_at_bar')
+        ).order_by('-user_count')[:limit]
+
+    def get_activity_level(self):
+        count = self.current_user_count
+        if count == 0:
+            return "Dead"
+        elif count < 5:
+            return "Quiet"
+        elif count < 15:
+            return "Moderate"
+        elif count < 30:
+            return "Active"
+        else:
+            return "Buzzing"
+
     def __str__(self):
         return self.name
 

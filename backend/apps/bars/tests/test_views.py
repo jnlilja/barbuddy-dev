@@ -203,3 +203,36 @@ class AggregatedVoteViewTest(APITestCase):
         self.assertIn('wait_time', response.data)
         self.assertEqual(response.data['crowd_size'], 'crowded')
         self.assertEqual(response.data['wait_time'], '10-20 min')
+
+class BarActivityTests(APITestCase):
+    def setUp(self):
+        self.bar1 = Bar.objects.create(
+            name="Busy Bar",
+            address="123 Party St",
+            average_price="$$",
+            location=Point(-117.0, 32.0, srid=4326)
+        )
+        
+        self.bar2 = Bar.objects.create(
+            name="Quiet Bar",
+            address="456 Chill St",
+            average_price="$$",
+            location=Point(-117.1, 32.1, srid=4326)
+        )
+        
+        # Create and add users to bar1
+        for i in range(5):
+            user = User.objects.create_user(
+                username=f"user{i}",
+                password="testpass123"
+            )
+            self.bar1.users_at_bar.add(user)
+
+    def test_most_active_bars_endpoint(self):
+        url = reverse('bar-most-active')
+        response = self.response = self.client.get(url)
+        
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 2)
+        self.assertEqual(response.data[0]['name'], "Busy Bar")
+        self.assertEqual(response.data[0]['user_count'], 5)
