@@ -5,7 +5,7 @@ from django.contrib import admin
 from django.contrib.gis.geos import Point
 from django.core.exceptions import ValidationError
 
-from .models import Bar, BarStatus, BarRating, BarImage
+from .models import Bar, BarStatus, BarRating, BarImage, BarHours
 
 # Try to pick up the GeoDjango map widget; if it isn't installed, fall back:
 try:
@@ -91,3 +91,10 @@ class BarRatingAdmin(admin.ModelAdmin):
 class BarImageAdmin(admin.ModelAdmin):
     list_display = ("bar", "caption", "uploaded_at")
     readonly_fields = ("uploaded_at",)
+
+class BarHoursAdmin(admin.ModelAdmin):
+    list_display = ("bar", "day", "open_time", "close_time", "is_closed")
+    list_filter = ("day", "is_closed")
+    search_fields = ("bar__name",)
+
+admin.site.register(BarHours, BarHoursAdmin)

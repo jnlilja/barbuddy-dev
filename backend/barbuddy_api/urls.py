@@ -3,7 +3,7 @@ from django.urls import path, include, re_path
 # from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from apps.users.views import UserViewSet
-from apps.bars.views import BarViewSet, BarStatusViewSet, BarRatingViewSet, BarImageViewSet
+from apps.bars.views import BarViewSet, BarStatusViewSet, BarRatingViewSet, BarImageViewSet, BarHoursViewSet
 from apps.events.views import EventViewSet
 from apps.matches.views import MatchViewSet
 from apps.messaging.views import MessageViewSet, GroupChatViewSet, PusherViewSet, GroupMessageViewSet
@@ -31,6 +31,7 @@ router = SimpleRouter()
 router.register(r'bars', BarViewSet, basename="bars")
 router.register(r'bar-status', BarStatusViewSet, basename="bar-status")
 router.register(r'bar-votes', BarVoteViewSet, basename='barvote')  
+router.register(r'bar-hours', BarHoursViewSet, basename='bar-hours')
 router.register(r'events', EventViewSet, basename="events")
 # MUST DO: MATCHES
 router.register(r'matches', MatchViewSet, basename="matches")

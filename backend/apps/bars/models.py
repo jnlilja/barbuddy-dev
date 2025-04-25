@@ -176,8 +176,8 @@ class BarHours(models.Model):
 
     bar = models.ForeignKey(Bar, on_delete=models.CASCADE, related_name='hours')
     day = models.CharField(max_length=10, choices=DAY_CHOICES)
-    open_time = models.TimeField()
-    close_time = models.TimeField()
+    open_time = models.TimeField(null=True, blank=True)  # Make these fields optional
+    close_time = models.TimeField(null=True, blank=True)  # Make these fields optional
     is_closed = models.BooleanField(default=False)
 
     class Meta:
@@ -190,8 +190,15 @@ class BarHours(models.Model):
 
     def clean(self):
         super().clean()
-        if not self.is_closed and self.open_time >= self.close_time:
-            raise ValidationError({'close_time': 'Close time must be after open time.'})
+        if not self.is_closed:
+            if not self.open_time or not self.close_time:
+                raise ValidationError({'open_time': 'Open and close times are required when bar is not closed.'})
+            if self.open_time >= self.close_time:
+                raise ValidationError({'close_time': 'Close time must be after open time.'})
+        else:
+            # If bar is closed, we don't need to validate times
+            self.open_time = None
+            self.close_time = None
 
     def save(self, *args, **kwargs):
         self.clean()
