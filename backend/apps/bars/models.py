@@ -161,3 +161,43 @@ class BarImage(models.Model):
 
     def __str__(self):
         return f"Image for {self.bar.name} @ {self.uploaded_at}"
+
+
+class BarHours(models.Model):
+    DAY_CHOICES = [
+        ('monday', 'Monday'),
+        ('tuesday', 'Tuesday'),
+        ('wednesday', 'Wednesday'),
+        ('thursday', 'Thursday'),
+        ('friday', 'Friday'),
+        ('saturday', 'Saturday'),
+        ('sunday', 'Sunday'),
+    ]
+
+    bar = models.ForeignKey(Bar, on_delete=models.CASCADE, related_name='hours')
+    day = models.CharField(max_length=10, choices=DAY_CHOICES)
+    open_time = models.TimeField()
+    close_time = models.TimeField()
+    is_closed = models.BooleanField(default=False)
+
+    class Meta:
+        unique_together = ('bar', 'day')
+        ordering = ['day']
+        indexes = [
+            models.Index(fields=['bar']),
+            models.Index(fields=['day']),
+        ]
+
+    def clean(self):
+        super().clean()
+        if not self.is_closed and self.open_time >= self.close_time:
+            raise ValidationError({'close_time': 'Close time must be after open time.'})
+
+    def save(self, *args, **kwargs):
+        self.clean()
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        if self.is_closed:
+            return f"{self.bar.name} - {self.get_day_display()}: Closed"
+        return f"{self.bar.name} - {self.get_day_display()}: {self.open_time.strftime('%I:%M %p')} - {self.close_time.strftime('%I:%M %p')}"

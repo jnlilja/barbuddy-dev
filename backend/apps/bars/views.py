@@ -5,10 +5,10 @@ from django.utils import timezone
 from datetime import timedelta
 
 from django.contrib.auth import get_user_model
-from .models import Bar, BarStatus, BarRating, BarVote, BarImage
+from .models import Bar, BarStatus, BarRating, BarVote, BarImage, BarHours
 from .serializers import (
     BarSerializer, BarStatusSerializer, BarRatingSerializer,
-    BarVoteSerializer, BarImageSerializer
+    BarVoteSerializer, BarImageSerializer, BarHoursSerializer
 )
 from apps.bars.services.voting import aggregate_bar_votes
 
@@ -140,3 +140,60 @@ class BarImageViewSet(viewsets.ModelViewSet):
         bar_pk = self.kwargs.get('bar_pk')
         bar = Bar.objects.get(pk=bar_pk)
         serializer.save(bar=bar)
+
+
+class BarHoursViewSet(viewsets.ModelViewSet):
+    authentication_classes = [FirebaseAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = BarHoursSerializer
+    queryset = BarHours.objects.all()
+
+    def get_queryset(self):
+        bar_id = self.request.query_params.get('bar_id')
+        if bar_id:
+            return BarHours.objects.filter(bar_id=bar_id)
+        return BarHours.objects.all()
+
+    @action(detail=False, methods=['get'])
+    def by_bar(self, request):
+        bar_id = request.query_params.get('bar_id')
+        if not bar_id:
+            return Response({"error": "bar_id parameter is required"}, status=400)
+        
+        hours = BarHours.objects.filter(bar_id=bar_id)
+        serializer = self.get_serializer(hours, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['post'])
+    def bulk_update(self, request):
+        bar_id = request.data.get('bar_id')
+        if not bar_id:
+            return Response({"error": "bar_id is required"}, status=400)
+
+        try:
+            bar = Bar.objects.get(id=bar_id)
+        except Bar.DoesNotExist:
+            return Response({"error": "Bar not found"}, status=404)
+
+        hours_data = request.data.get('hours', [])
+        updated_hours = []
+
+        for hour_data in hours_data:
+            day = hour_data.get('day')
+            if not day:
+                continue
+
+            hour_data['bar'] = bar_id
+            serializer = self.get_serializer(data=hour_data)
+            if serializer.is_valid():
+                hour, created = BarHours.objects.update_or_create(
+                    bar=bar,
+                    day=day,
+                    defaults=serializer.validated_data
+                )
+                updated_hours.append(hour)
+            else:
+                return Response(serializer.errors, status=400)
+
+        serializer = self.get_serializer(updated_hours, many=True)
+        return Response(serializer.data)
