@@ -3,7 +3,7 @@ from django.contrib.gis.geos import Point
 from django.db.models import Avg
 from django.contrib.auth import get_user_model
 
-from .models import Bar, BarStatus, BarRating, BarVote, BarImage
+from .models import Bar, BarStatus, BarRating, BarVote, BarImage, BarHours
 
 User = get_user_model()
 
@@ -128,4 +128,15 @@ class BarVoteSerializer(serializers.ModelSerializer):
     def validate(self, data):
         if data.get('bar') is None:
             raise serializers.ValidationError("A bar must be specified.")
+        return data
+
+class BarHoursSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BarHours
+        fields = ['id', 'bar', 'day', 'open_time', 'close_time', 'is_closed']
+        read_only_fields = ['id']
+
+    def validate(self, data):
+        if not data.get('is_closed') and data.get('open_time') >= data.get('close_time'):
+            raise serializers.ValidationError("Close time must be after open time.")
         return data

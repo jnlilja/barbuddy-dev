@@ -40,10 +40,10 @@ environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
 SECRET_KEY = env('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True  # Changed to True for local development
 
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'barbuddy-backend-148659891217.us-central1.run.app']
+# ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'barbuddy-backend-148659891217.us-central1.run.app']
 
 # Pusher Configuration
 PUSHER_APP_ID = env('PUSHER_APP_ID')
@@ -198,12 +198,13 @@ LOGGING = {
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
 STATIC_URL = '/static/'
-# STATICFILES_DIRS = [
-#     BASE_DIR / "static",  # Adjust this path if needed
-# ]
 STATIC_ROOT = BASE_DIR / "staticfiles"
+# STATICFILES_DIRS = [
+#     BASE_DIR / "static",
+# ]
 
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
