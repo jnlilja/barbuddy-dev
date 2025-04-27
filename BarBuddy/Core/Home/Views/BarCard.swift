@@ -7,7 +7,7 @@ import SwiftUI
 import MapKit
 struct BarCard: View {
     let bar: Bar
-    @EnvironmentObject var viewModel: MapViewModel
+    @Environment(MapViewModel.self) var viewModel
     @Environment(\.colorScheme) var colorScheme
     @State private var showingSwipe = false
     var body: some View {
@@ -47,7 +47,7 @@ struct BarCard: View {
         .shadow(radius: 5)
         .sheet(isPresented: $showingSwipe) {
             SwipeView()
-                .environmentObject(viewModel)
+                .environment(viewModel)
         }
     }
     // Helper to find this bar’s index
@@ -62,7 +62,7 @@ struct BarCard_Previews: PreviewProvider {
             location: CLLocationCoordinate2D(latitude: 32.7961859,
                                              longitude: -117.2558475)
         ))
-        .environmentObject(MapViewModel())
+        .environment(MapViewModel())
         .previewLayout(.sizeThatFits)
         .padding()
     }

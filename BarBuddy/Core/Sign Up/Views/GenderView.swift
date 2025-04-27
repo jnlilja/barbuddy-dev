@@ -8,11 +8,8 @@
 import SwiftUI
 
 struct GenderView: View {
-    @State private var proceedToNextPage = false
     @Binding var path: NavigationPath
-
-    // ← use EnvironmentObject for your ObservableObject view‑model
-    @EnvironmentObject var viewModel: SignUpViewModel
+    @Environment(SignUpViewModel.self) var viewModel
 
     let genderOptions = ["Man", "Woman", "Non‑binary", "Prefer not to say"]
 
@@ -59,7 +56,6 @@ struct GenderView: View {
                         .padding(.horizontal)
 
                     Button {
-                        proceedToNextPage = true
                         path.append(SignUpNavigation.hometown)
                     } label: {
                         Text("Continue")
@@ -82,6 +78,5 @@ struct GenderView: View {
 
 #Preview("Gender") {
     GenderView(path: .constant(NavigationPath()))
-      // ← inject the shared SignUpViewModel here
-      .environmentObject(SignUpViewModel())
+      .environment(SignUpViewModel())
 }

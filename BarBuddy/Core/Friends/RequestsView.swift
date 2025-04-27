@@ -49,7 +49,7 @@ struct RequestsView: View {
                         Section(header: Text("Added Me").foregroundColor(.white)) {
                             ForEach(friendService.friendRequests) { user in
                                 HStack {
-                                    AsyncImage(url: URL(string: user.profile_pictures?.first ?? "")) { phase in
+                                    AsyncImage(url: URL(string: user.profilePictures?.first?.url ?? "")) { phase in
                                         switch phase {
                                         case .success(let img): img.resizable().scaledToFill()
                                         default: Image(systemName: "person.crop.circle.fill").resizable().scaledToFill()
@@ -59,7 +59,7 @@ struct RequestsView: View {
                                     .clipShape(Circle())
 
                                     VStack(alignment: .leading) {
-                                        Text("\(user.first_name) \(user.last_name)")
+                                        Text("\(user.firstName) \(user.lastName)")
                                             .font(.headline)
                                             .foregroundColor(.white)
                                         Text(user.hometown)
@@ -99,7 +99,7 @@ struct RequestsView: View {
             .task {
                 await friendService.loadFriendRequests()
                 do {
-                    allUsers = try await GetUserAPIService.shared.fetchUsers()
+                    allUsers = try await NetworkManager.shared.fetchUsers()
                 } catch {
                     print("Error fetching users: \(error)")
                     allUsers = []

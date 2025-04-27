@@ -1,0 +1,46 @@
+{
+  "configurations" : [
+    {
+      "id" : "EC8C40F9-3BD4-45F9-BB13-831A46D5A41F",
+      "name" : "Test Scheme Action",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "environmentVariableEntries" : [
+      {
+        "key" : "BASE_URL",
+        "value" : "https:\/\/barbuddy-backend-148659891217.us-central1.run.app\/api\/"
+      }
+    ],
+    "targetForVariableExpansion" : {
+      "containerPath" : "container:BarBuddy.xcodeproj",
+      "identifier" : "599153B02D540523004B2832",
+      "name" : "BarBuddy"
+    }
+  },
+  "testTargets" : [
+    {
+      "parallelizable" : true,
+      "target" : {
+        "containerPath" : "container:BarBuddy.xcodeproj",
+        "identifier" : "599153C02D540525004B2832",
+        "name" : "BarBuddyTests"
+      }
+    },
+    {
+      "parallelizable" : true,
+      "skippedTests" : [
+        "BarBuddyUITests"
+      ],
+      "target" : {
+        "containerPath" : "container:BarBuddy.xcodeproj",
+        "identifier" : "599153CA2D540525004B2832",
+        "name" : "BarBuddyUITests"
+      }
+    }
+  ],
+  "version" : 1
+}

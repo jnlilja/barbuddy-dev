@@ -10,7 +10,7 @@ import SwiftUI
 
 struct PhotoUploadView: View {
     @EnvironmentObject var authViewModel: AuthViewModel
-    @EnvironmentObject var signUpViewModel: SignUpViewModel
+    @Environment(SignUpViewModel.self) var signUpViewModel
 
     @State private var selectedImages: [UIImage] = []
     @State private var photoPickerItems: [PhotosPickerItem] = []
@@ -70,12 +70,13 @@ struct PhotoUploadView: View {
                 }
 
                 Spacer()
-
+                
                 Button(action: {
+                    signUpViewModel.convertUIImageToString(pictures: selectedImages)
                     withAnimation { isLoading = true }
                     Task {
                         let profile = signUpViewModel.buildProfile()
-                        await authViewModel.signUp(
+                        try await authViewModel.signUp(
                             profile: profile,
                             password: signUpViewModel.newPassword
                         )
@@ -104,6 +105,6 @@ struct PhotoUploadView: View {
 
 #Preview("Photo Upload") {
     PhotoUploadView()
-        .environmentObject(SignUpViewModel())
+        .environment(SignUpViewModel())
         .environmentObject(AuthViewModel())
 }

@@ -7,7 +7,7 @@ import BottomSheet
 import MapKit
 import SwiftUI
 struct MainFeedView: View {
-    @EnvironmentObject var viewModel: MapViewModel
+    @Environment(MapViewModel.self) var viewModel
     @State private var bottomSheetPosition: BottomSheetPosition = .relative(0.86)
     @State private var selectedItem: UUID?
     @State private var isDetailPresented = false
@@ -24,12 +24,12 @@ struct MainFeedView: View {
             .toolbarBackgroundVisibility(.hidden, for: .navigationBar)
             .toolbar { toolbarContent }
         }
-        .environmentObject(viewModel)
         .task { await viewModel.loadBarData() }
     }
     // MARK: — Map Layer
     private var mapLayer: some View {
-        Map(position: $viewModel.cameraPosition, selection: $selectedItem) {
+        @Bindable var model = viewModel
+        return Map(position: $model.cameraPosition, selection: $selectedItem) {
             ForEach(viewModel.bars) { bar in
                 Annotation(bar.name, coordinate: bar.location) {
                     annotationView(for: bar)
@@ -50,7 +50,6 @@ struct MainFeedView: View {
         .sheet(isPresented: $isDetailPresented) {
             if let bar = selectedBar {
                 BarDetailPopup(bar: bar)
-                    .environmentObject(viewModel)
             }
         }
         .tint(.salmon)
@@ -129,10 +128,8 @@ struct MainFeedView: View {
                     .font(.title3)
             } else {
                 ForEach(filteredBars) { bar in
-                    NavigationLink(destination: BarDetailPopup(bar: bar)
-                                    .environmentObject(viewModel)) {
+                    NavigationLink(destination: BarDetailPopup(bar: bar)) {
                         BarCard(bar: bar)
-                            .environmentObject(viewModel)
                             .padding([.horizontal, .bottom])
                     }
                     .buttonStyle(PlainButtonStyle())
@@ -163,6 +160,6 @@ struct MainFeedView: View {
 struct MainFeedView_Previews: PreviewProvider {
     static var previews: some View {
         MainFeedView()
-            .environmentObject(MapViewModel())
+            .environment(MapViewModel())
     }
 }

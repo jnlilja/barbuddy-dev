@@ -9,7 +9,6 @@
 import SwiftUI
 
 struct PhotoPromptView: View {
-    @State private var proceedToPhotoUpload = false
     @Binding var path: NavigationPath
     
     var body: some View {
@@ -45,7 +44,6 @@ struct PhotoPromptView: View {
                 Spacer()
                 
                 Button(action: {
-                    proceedToPhotoUpload = true
                     path.append(SignUpNavigation.photoUpload)
                 }) {
                     Text("Add Photos")

@@ -3,10 +3,11 @@ import SwiftUI
 
 struct SignUpView: View {
     @Binding var path: NavigationPath
-    @EnvironmentObject private var viewModel: SignUpViewModel
+    @Environment(SignUpViewModel.self) var viewModel
     @EnvironmentObject private var authVM: AuthViewModel
 
     var body: some View {
+        @Bindable var signUp = viewModel
         ZStack {
             Color("DarkBlue").ignoresSafeArea()
 
@@ -17,7 +18,7 @@ struct SignUpView: View {
                     .padding(.bottom, 30)
 
                 // ───────── Email
-                TextField("Email", text: $viewModel.email)
+                TextField("Email", text: $signUp.email)
                     .textFieldStyle(CustomTextFieldStyle())
                     .overlay(
                         RoundedRectangle(cornerRadius: 10)
@@ -31,12 +32,12 @@ struct SignUpView: View {
                     .keyboardType(.emailAddress)
 
                 // ───────── Username
-                TextField("Username", text: $viewModel.newUsername)
+                TextField("Username", text: $signUp.newUsername)
                     .textFieldStyle(CustomTextFieldStyle())
                     .autocapitalization(.none)
 
                 // ───────── Password
-                SecureField("Password", text: $viewModel.newPassword)
+                SecureField("Password", text: $signUp.newPassword)
                     .textFieldStyle(CustomTextFieldStyle())
                     .overlay(
                         RoundedRectangle(cornerRadius: 10)
@@ -50,7 +51,7 @@ struct SignUpView: View {
                 // ───────── Confirm password
                 SecureField(
                     "Confirm Password",
-                    text: $viewModel.confirmPassword
+                    text: $signUp.confirmPassword
                 )
                 .textFieldStyle(CustomTextFieldStyle())
                 .overlay(
@@ -87,7 +88,7 @@ struct SignUpView: View {
             }
             .padding()
         }
-        .alert("Sign‑Up Error", isPresented: $viewModel.showingAlert) {
+        .alert("Sign‑Up Error", isPresented: $signUp.showingAlert) {
             Button("OK", role: .cancel) {}
         } message: {
             Text(viewModel.alertMessage)
@@ -96,7 +97,7 @@ struct SignUpView: View {
 }
 #Preview {
     SignUpView(path: .constant(NavigationPath()))
-        .environmentObject(SignUpViewModel())
+        .environment(SignUpViewModel())
 }
 
 // MARK: – View‑model helpers

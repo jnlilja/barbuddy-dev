@@ -9,12 +9,11 @@
 import SwiftUI
 
 struct DrinkPreferenceView: View {
-    @State private var favoriteDrink    = ""
     @Binding var path: NavigationPath
-    @EnvironmentObject var viewModel: SignUpViewModel
-    @State private var proceedToNextPage = false
+    @Environment(SignUpViewModel.self) var viewModel
 
     var body: some View {
+        @Bindable var signUp = viewModel
         ZStack {
             Color("DarkBlue").ignoresSafeArea()
 
@@ -35,16 +34,16 @@ struct DrinkPreferenceView: View {
                         .multilineTextAlignment(.center)
 
                     if !viewModel.doesntDrink {
-                        TextField("Enter your favorite drink", text: $favoriteDrink)
+                        TextField("Enter your favorite drink", text: $signUp.favoriteDrink)
                             .textFieldStyle(CustomTextFieldStyle())
                     }
 
                     Button {
                         viewModel.doesntDrink.toggle()
                         if viewModel.doesntDrink {
-                            favoriteDrink = "I don't drink"
+                            signUp.favoriteDrink = "I don't drink"
                         } else {
-                            favoriteDrink = ""
+                            signUp.favoriteDrink = ""
                         }
                     } label: {
                         HStack {
@@ -58,18 +57,17 @@ struct DrinkPreferenceView: View {
                     .padding(.horizontal)
 
                     Button(action: {
-                        viewModel.favoriteDrink = favoriteDrink
                         path.append(SignUpNavigation.photoPrompt)
                     }) {
                         Text("Continue")
                             .font(.headline)
                             .foregroundColor(.white)
-                            .opacity(favoriteDrink.isEmpty ? 0.6 : 1) // Dim text when disabled
+                            .opacity(signUp.favoriteDrink.isEmpty ? 0.6 : 1) // Dim text when disabled
                             .frame(width: 300, height: 50)
                             .background(Color("DarkPurple"))
                             .cornerRadius(10)
                     }
-                    .disabled(favoriteDrink.isEmpty) // Prevent interaction when disabled
+                    .disabled(signUp.favoriteDrink.isEmpty) // Prevent interaction when disabled
                 }
 
                 Spacer()
@@ -82,5 +80,5 @@ struct DrinkPreferenceView: View {
 
 #Preview("Drinks") {
     DrinkPreferenceView(path: .constant(NavigationPath()))
-        .environmentObject(SignUpViewModel())
+        .environment(SignUpViewModel())
 }

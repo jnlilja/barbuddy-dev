@@ -10,7 +10,6 @@ import SwiftUI
 
 struct LocationView: View {
     @Binding var path: NavigationPath
-    @State private var proceedToProfileSetup = false
     
     var body: some View {
         
@@ -43,7 +42,6 @@ struct LocationView: View {
                             .padding(.horizontal)
                         
                         Button(action: {
-                            proceedToProfileSetup = true
                             path.append(SignUpNavigation.gender)
                         }) {
                             Text("Continue")

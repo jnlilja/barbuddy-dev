@@ -15,10 +15,9 @@ struct LoginView: View {
     @State private var alertMessage       = ""
     @State private var showingAlert       = false
     
-    @StateObject private var viewModel = SignUpViewModel()
+    @State private var viewModel = SignUpViewModel()
     @State private var path = NavigationPath()
     @EnvironmentObject private var authVM: AuthViewModel
-    @StateObject private var vm = LoginViewModel()       // pulls profile via /users
 
     var body: some View {
         NavigationStack(path: $path) {
@@ -64,9 +63,7 @@ struct LoginView: View {
                     // ───────── Login button
                     Button {
                         Task {
-                            await authVM.signIn(email: email, password: password)
-                            // authVM.currentUser is now filled by AuthViewModel;
-                            // dismiss or navigate to the main app UI here if you like.
+                            try await authVM.signIn(email: email, password: password)
                         }
                     } label: {
                         Text("Login")
@@ -84,10 +81,6 @@ struct LoginView: View {
                     .foregroundColor(Color("DarkPurple"))
                 }
             }
-            //        .sheet(isPresented: $showingSignUpSheet) {
-            //            SignUpView(isPresented: $showingSignUpSheet)
-            //                .environmentObject(authVM)   // pass auth down
-            //        }
             .navigationDestination(for: SignUpNavigation.self) { view in
                 switch view {
                 case .createAccount: SignUpView(path: $path)
@@ -107,7 +100,7 @@ struct LoginView: View {
                    actions: { Button("OK", role: .cancel) { } },
                    message: { Text(alertMessage) })
         }
-        .environmentObject(viewModel)
+        .environment(viewModel)
         .tint(.salmon)
     }
 
@@ -120,6 +113,6 @@ struct LoginView: View {
 
 #Preview("Login View") {
     LoginView()
-        .environmentObject(SignUpViewModel())
+        .environment(SignUpViewModel())
         .environmentObject(AuthViewModel())
 }

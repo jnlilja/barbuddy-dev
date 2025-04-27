@@ -10,16 +10,17 @@ import SwiftUI
 @preconcurrency import _MapKit_SwiftUI
 
 @MainActor
-final class MapViewModel: ObservableObject {
+@Observable
+final class MapViewModel {
     // MARK: – Published properties so SwiftUI updates when they change
-    @Published var cameraPosition: MapCameraPosition = .userLocation(
+    var cameraPosition: MapCameraPosition = .userLocation(
         fallback: .automatic
     )
-    @Published var statuses: [Int: BarStatus] = [:]  // now Equatable
-    @Published var music: [Int: String] = [:]
-    @Published var pricing: [Int: String] = [:]
+    var statuses: [Int: BarStatus] = [:]  // now Equatable
+    var music: [Int: String] = [:]
+    var pricing: [Int: String] = [:]
     // MARK: – Static list of bars in Pacific Beach
-    let bars: [Bar] = [
+    @ObservationIgnored let bars: [Bar] = [
         Bar(
             name: "Mavericks Beach Club",
             location: CLLocationCoordinate2D(

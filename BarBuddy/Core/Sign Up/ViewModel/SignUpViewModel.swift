@@ -5,51 +5,53 @@
 
 import Foundation
 import FirebaseAuth
+import UIKit
 
 @MainActor
-final class SignUpViewModel: ObservableObject {
+@Observable // A more efficent way than standard stateObject/environmentObject
+final class SignUpViewModel {
     // ───────── UI‑bound fields ─────────
-    @Published var email            = ""
-    @Published var newUsername      = ""
-    @Published var newPassword      = ""
-    @Published var confirmPassword  = ""
+    var email            = ""
+    var newUsername      = ""
+    var newPassword      = ""
+    var confirmPassword  = ""
 
-    @Published var firstName        = ""
-    @Published var lastName         = ""
-    @Published var dateOfBirth      = ""
-    @Published var gender           = ""          // added for GenderView
-    @Published var hometown         = ""
-    @Published var jobOrUniversity  = ""
-    @Published var favoriteDrink    = ""
-    @Published var doesntDrink      = false       // added for DrinkPreferenceView
-    @Published var sexualPreference = "straight"
+    var firstName        = ""
+    var lastName         = ""
+    var dateOfBirth      = ""
+    var gender           = ""          // added for GenderView
+    var hometown         = ""
+    var jobOrUniversity  = ""
+    var favoriteDrink    = ""
+    var profilePictures: [ProfilePicture]?
+    var doesntDrink      = false       // added for DrinkPreferenceView
+    var sexualPreference = "straight"
     
     // ───────── Validation state ─────────
-    @Published var isValidEmail     = true
-    @Published var isValidPassword  = true
-    @Published var passwordsMatch   = true
-    @Published var alertMessage     = ""
-    @Published var showingAlert     = false
+    var isValidEmail     = true
+    var isValidPassword  = true
+    var passwordsMatch   = true
+    var alertMessage     = ""
+    var showingAlert     = false
     
     func buildProfile() -> User {
             User(
-                id: 0,
                 username: newUsername,
-                first_name: firstName,
-                last_name: lastName,
+                firstName: firstName,
+                lastName: lastName,
                 email: email,
                 password: newPassword,
-                date_of_birth: dateOfBirth,
+                dateOfBirth: dateOfBirth,
                 hometown: hometown,
-                job_or_university: jobOrUniversity,
-                favorite_drink: favoriteDrink,
-                location: "",
-                profile_pictures: [],
+                jobOrUniversity: jobOrUniversity,
+                favoriteDrink: favoriteDrink,
+                location: Location(latitude: 0, longitude: 0),
+                profilePictures: profilePictures,
                 matches: "",
                 swipes: "",
-                vote_weight: 0,
-                account_type: "regular",
-                sexual_preference: sexualPreference
+                voteWeight: 0,
+                accountType: "regular",
+                sexualPreference: sexualPreference
             )
         }
 
@@ -62,43 +64,27 @@ final class SignUpViewModel: ObservableObject {
             return fire("Password must be ≥ 8 characters with a number & special char.")
         }
         guard newPassword == confirmPassword else { return fire("Passwords do not match.") }
-
-        // 2) Build profile & call Auth + API
-//        let profile = PostUser(
-//            username: newUsername,
-//            first_name: firstName,
-//            last_name: lastName,
-//            email: email,
-//            password: newPassword,      // store hashed in backend, plain here only to send
-//            date_of_birth: dateOfBirth,
-//            hometown: hometown,
-//            job_or_university: jobOrUniversity,
-//            favorite_drink: favoriteDrink,
-//            profile_pictures: [:],
-//            account_type: "regular",
-//            sexual_preference: sexualPreference
-//        )
-//
-//        Task {
-//            await signUp(profile: profile)
-//        }
     }
-
-    // MARK: - Sign‑up flow
-    private func signUp(profile: User) async {
-        do {
-            // 1) Create Firebase Auth account
-            _ = try await Auth.auth().createUser(withEmail: profile.email,
-                                                 password: profile.password)
-
-            // 2) Send profile JSON to your API
-            try await PostUserAPIService.shared.create(user: profile)
-
-            alertMessage = "Account created successfully!"
-            showingAlert = true
-        } catch {
-            fire(error.localizedDescription)
+    
+    func convertUIImageToString(pictures: [UIImage]) {
+        var result: [ProfilePicture] = []
+        let tempDirectory = FileManager.default.temporaryDirectory
+        for (i, picture) in pictures.enumerated() {
+            let fileName = UUID().uuidString
+            let imageData = picture.jpegData(compressionQuality: 0.5)
+            let fileURL = tempDirectory.appendingPathComponent("\(fileName).jpg")
+            
+            do {
+                try imageData?.write(to: fileURL)
+                result.append(ProfilePicture(id: abs(UUID().hashValue),
+                                             url: fileURL.absoluteString,
+                                             isPrimary: i == 0,
+                                             uploadedAt: Date.getCurrentDate()))
+            } catch {
+                print("Error writing image to disk: \(error)")
+            }
         }
+        self.profilePictures = result
     }
 
     // MARK: - Helpers
@@ -113,5 +99,15 @@ final class SignUpViewModel: ObservableObject {
     private func fire(_ message: String) {
         alertMessage  = message
         showingAlert  = true
+    }
+}
+
+extension Date {
+
+ static func getCurrentDate() -> String {
+
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "dd/MM/yyyy HH:mm:ss"
+        return dateFormatter.string(from: Date())
     }
 }

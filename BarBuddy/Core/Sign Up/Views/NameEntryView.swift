@@ -9,13 +9,11 @@
 import SwiftUI
 
 struct NameEntryView: View {
-    @State private var firstName = ""
-    @State private var lastName  = ""
-    @State private var proceedToLocation = false
     @Binding var path: NavigationPath
-    @EnvironmentObject var viewModel: SignUpViewModel
+    @Environment(SignUpViewModel.self) var viewModel
 
     var body: some View {
+        @Bindable var signUp = viewModel
         ZStack {
             Color("DarkBlue").ignoresSafeArea()
 
@@ -30,16 +28,14 @@ struct NameEntryView: View {
                         .foregroundColor(.white)
                         .multilineTextAlignment(.center)
 
-                    TextField("First Name", text: $firstName)
+                    TextField("First Name", text: $signUp.firstName)
                         .textFieldStyle(CustomTextFieldStyle())
 
-                    TextField("Last Name", text: $lastName)
+                    TextField("Last Name", text: $signUp.lastName)
                         .textFieldStyle(CustomTextFieldStyle())
 
                     Button(action: {
                         // Navigate to the next step
-                        viewModel.firstName = firstName
-                        viewModel.lastName = lastName
                         path.append(SignUpNavigation.location)
                     }) {
                         Text("Continue")
@@ -49,8 +45,8 @@ struct NameEntryView: View {
                             .background(Color("DarkPurple"))
                             .cornerRadius(10)
                     }
-                    .disabled(firstName.isEmpty || lastName.isEmpty)
-                    .opacity(firstName.isEmpty || lastName.isEmpty ? 0.6 : 1) // Visual feedback for disabled state
+                    .disabled(signUp.firstName.isEmpty || signUp.lastName.isEmpty)
+                    .opacity(signUp.firstName.isEmpty || signUp.lastName.isEmpty ? 0.6 : 1) // Visual feedback for disabled state
                 }
 
                 Spacer()
@@ -62,5 +58,5 @@ struct NameEntryView: View {
 
 #Preview("Name") {
     NameEntryView(path: .constant(NavigationPath()))
-        .environmentObject(SignUpViewModel())
+        .environment(SignUpViewModel())
 }

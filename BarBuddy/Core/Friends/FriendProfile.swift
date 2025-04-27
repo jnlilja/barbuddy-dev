@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import SDWebImageSwiftUI
 
 struct FriendProfile: View {
     let user: User
@@ -20,13 +21,15 @@ struct FriendProfile: View {
             VStack(spacing: 0) {
                 // Photo Gallery
                 TabView {
-                    ForEach(user.profile_pictures ?? [], id: \.self) { imageName in
-                        Image(imageName)
-                            .resizable()
-                            .scaledToFill()
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 457)
-                            .clipped()
+                    if let profilePictures = user.profilePictures {
+                        ForEach(profilePictures) {
+                            WebImage(url: URL(string: $0.url))
+                                .resizable()
+                                .scaledToFill()
+                                .frame(maxWidth: .infinity)
+                                .frame(height: 457)
+                                .clipped()
+                        }
                     }
                 }
                 .frame(height: 457)
@@ -35,7 +38,7 @@ struct FriendProfile: View {
                 // Info Card
                 VStack(alignment: .leading, spacing: 12) {
                     HStack {
-                        Text("\(user.first_name) \(user.last_name)")
+                        Text("\(user.firstName) \(user.lastName)")
                             .font(.system(size: 32, weight: .bold))
                             .foregroundColor(Color("DarkPurple"))
                         Image(systemName: "checkmark.seal.fill")
@@ -54,13 +57,13 @@ struct FriendProfile: View {
                     HStack {
                         HStack(spacing: 4) {
                             Image(systemName: "calendar")
-                            Text(user.date_of_birth)
+                            Text(user.dateOfBirth)
                         }
                         .frame(maxWidth: .infinity)
 
                         HStack(spacing: 4) {
                             Image(systemName: "mappin.circle.fill")
-                            Text(user.location)
+                            Text(user.location?.description ?? "None")
                         }
                         .frame(maxWidth: .infinity)
                     }
@@ -70,19 +73,19 @@ struct FriendProfile: View {
                     HStack {
                         HStack(spacing: 4) {
                             Image(systemName: "graduationcap.fill")
-                            Text(user.job_or_university)
+                            Text(user.jobOrUniversity)
                         }
                         .frame(maxWidth: .infinity)
 
                         HStack(spacing: 4) {
                             Image(systemName: "wineglass.fill")
-                            Text(user.favorite_drink)
+                            Text(user.favoriteDrink)
                         }
                         .frame(maxWidth: .infinity)
 
                         HStack(spacing: 4) {
                             Image(systemName: "person.2.fill")
-                            Text(user.sexual_preference)
+                            Text(user.sexualPreference)
                         }
                         .frame(maxWidth: .infinity)
                     }
@@ -111,30 +114,29 @@ struct FriendProfile: View {
     }
 }
 
-struct FriendProfile_Previews: PreviewProvider {
-    static var previews: some View {
-        NavigationView {
-            FriendProfile(
-                user: User(
-                    id: 1,
-                    username: "sampleuser",
-                    first_name: "Sample",
-                    last_name: "User",
-                    email: "sample@example.com",
-                    password: "password",
-                    date_of_birth: "1990-01-01",
-                    hometown: "Springfield",
-                    job_or_university: "Example University",
-                    favorite_drink: "Coffee",
-                    location: "Springfield",
-                    profile_pictures: [],
-                    matches: "Loves SwiftUI",
-                    swipes: "",
-                    vote_weight: 0,
-                    account_type: "regular",
-                    sexual_preference: "straight"
-                )
+#Preview {
+    NavigationView {
+        let dummyImage = "https://media.istockphoto.com/id/2165337331/photo/portrait-of-tabby-cat.webp?a=1&b=1&s=612x612&w=0&k=20&c=_5WHcTO3VstFvHziQH3N7pGgbVnXEmXdN00NylUKgpo="
+        FriendProfile(
+            user: User(
+                id: 1,
+                username: "sampleuser",
+                firstName: "Sample",
+                lastName: "User",
+                email: "sample@example.com",
+                password: "password",
+                dateOfBirth: "1990-01-01",
+                hometown: "Springfield",
+                jobOrUniversity: "Example University",
+                favoriteDrink: "Coffee",
+                location: Location(latitude: 137, longitude: 20),
+                profilePictures: [ProfilePicture(id: 0, url: dummyImage, isPrimary: true, uploadedAt: "")],
+                matches: "Loves SwiftUI",
+                swipes: "",
+                voteWeight: 0,
+                accountType: "regular",
+                sexualPreference: "straight"
             )
-        }
+        )
     }
 }

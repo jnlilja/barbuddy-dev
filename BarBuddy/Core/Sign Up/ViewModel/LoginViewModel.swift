@@ -19,22 +19,22 @@ final class LoginViewModel: ObservableObject {
 
     /// Attempts Firebase Auth sign‑in, then fetches the matching profile
     /// from your REST API. Returns the profile so calling views can react.
-    func login(email: String, password: String) async -> User? {
-        do {
-            // Firebase authentication
-            _ = try await Auth.auth().signIn(withEmail: email, password: password)
-
-            // Pull the profile list from your API
-            let users = try await GetUserAPIService.shared.fetchUsers()
-            if let user = users.first(where: { $0.email == email }) {
-                currentUser = user
-                return user
-            } else {
-                errorMessage = "No matching profile found."
-            }
-        } catch {
-            errorMessage = error.localizedDescription
-        }
-        return nil
-    }
+//    func login(email: String, password: String) async -> User? {
+//        do {
+//            // Firebase authentication
+//            _ = try await Auth.auth().signIn(withEmail: email, password: password)
+//
+//            // Pull the profile list from your API
+//            let users = try await GetUserAPIService.shared.fetchUsers()
+//            if let user = users.first(where: { $0.email == email }) {
+//                currentUser = user
+//                return user
+//            } else {
+//                errorMessage = "No matching profile found."
+//            }
+//        } catch {
+//            errorMessage = error.localizedDescription
+//        }
+//        return nil
+//    }
 }

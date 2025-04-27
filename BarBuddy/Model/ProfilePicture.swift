@@ -6,3 +6,10 @@
 //
 
 import Foundation
+
+struct ProfilePicture: Codable, Hashable, Identifiable {
+    var id: Int?
+    var url: String
+    var isPrimary: Bool
+    let uploadedAt: String
+}

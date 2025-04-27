@@ -11,7 +11,7 @@ import SwiftUI
 
 struct HomeView: View {
     @State private var selectedTab = 2
-    @StateObject private var viewModel = MapViewModel()
+    @State private var viewModel = MapViewModel()
 
     var body: some View {
         TabView(selection: $selectedTab) {
@@ -21,35 +21,36 @@ struct HomeView: View {
                     Text("Swipe")
                 }
                 .tag(0)
-
+            
             MessagesView()
                 .tabItem {
                     Image(systemName: "message.fill")
                     Text("Messages")
                 }
                 .tag(1)
-
+            
             MainFeedView()
                 .tabItem {
                     Image(systemName: "map.fill")
                     Text("Map")
                 }
+                .toolbar(.visible, for: .tabBar)
+                .toolbarBackground(.darkBlue, for: .tabBar)
                 .tag(2)
-                .environmentObject(viewModel)
-
+                .environment(viewModel)
+            
             ProfileView()
                 .tabItem {
                     Image(systemName: "person.circle")
                     Text("Profile")
                 }
-                .tag(4)
+                .tag(3)
         }
-        .accentColor(Color("Salmon"))
+        .tint(.salmon)
         .onAppear {
-            // Set tab bar appearance to white with slight transparency
             let appearance = UITabBarAppearance()
-            appearance.configureWithTransparentBackground()
-            appearance.backgroundColor = UIColor.white.withAlphaComponent(0.95)
+            appearance.configureWithOpaqueBackground()
+            appearance.backgroundColor = UIColor.darkBlue
             UITabBar.appearance().standardAppearance = appearance
             UITabBar.appearance().scrollEdgeAppearance = appearance
         }
@@ -59,5 +60,5 @@ struct HomeView: View {
 #Preview("Home Tab Bar") {
     HomeView()
         .environmentObject(AuthViewModel())
-        .environmentObject(MapViewModel())
+        .environment(MapViewModel())
 }

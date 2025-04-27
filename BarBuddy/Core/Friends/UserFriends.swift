@@ -16,12 +16,12 @@ class UserFriends: ObservableObject {
     private init() { }
 
     func loadFriends() async {
-        let all = (try? await GetUserAPIService.shared.fetchUsers()) ?? []
-        // Placeholder: include every user for now
-        friends = all.filter { user in
-            // your real friend‑filter logic here
-            true
-        }
+//        let all = (try? await GetUserAPIService.shared.fetchUsers()) ?? []
+//        // Placeholder: include every user for now
+//        friends = all.filter { user in
+//            // your real friend‑filter logic here
+//            true
+//        }
     }
 
     func addFriend(_ user: User) {

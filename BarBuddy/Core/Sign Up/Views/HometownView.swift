@@ -8,13 +8,12 @@
 import SwiftUI
 
 struct HometownView: View {
-    @State private var hometown = ""
     @State private var showOnProfile = true
-    @State private var proceedToNextPage = false
     @Binding var path: NavigationPath
-    @EnvironmentObject var viewModel: SignUpViewModel
+    @Environment(SignUpViewModel.self) var viewModel
 
     var body: some View {
+        @Bindable var signUp = viewModel
         ZStack {
             Color("DarkBlue")
                 .ignoresSafeArea()
@@ -31,7 +30,7 @@ struct HometownView: View {
                         .bold()
                         .multilineTextAlignment(.center)
 
-                    TextField("Enter your hometown", text: $hometown)
+                    TextField("Enter your hometown", text: $signUp.hometown)
                         .textFieldStyle(CustomTextFieldStyle())
 
                     Button(action: {
@@ -48,9 +47,6 @@ struct HometownView: View {
                     .padding(.horizontal)
 
                     Button(action: {
-                        proceedToNextPage = true
-                        // write back into your ObservableObject directly—drop the `$`
-                        viewModel.hometown = hometown
                         path.append(SignUpNavigation.school)
                     }) {
                         Text("Continue")
@@ -60,8 +56,8 @@ struct HometownView: View {
                             .background(Color("DarkPurple"))
                             .cornerRadius(10)
                     }
-                    .disabled(hometown.isEmpty)
-                    .opacity(hometown.isEmpty ? 0.6 : 1)
+                    .disabled(signUp.hometown.isEmpty)
+                    .opacity(signUp.hometown.isEmpty ? 0.6 : 1)
                 }
 
                 Spacer()
@@ -73,6 +69,5 @@ struct HometownView: View {
 
 #Preview("Hometown") {
     HometownView(path: .constant(NavigationPath()))
-        // inject using environmentObject
-        .environmentObject(SignUpViewModel())
+        .environment(SignUpViewModel())
 }

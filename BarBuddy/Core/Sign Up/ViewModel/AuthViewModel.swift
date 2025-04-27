@@ -6,31 +6,27 @@
 //
 
 import Foundation
-@preconcurrency import FirebaseAuth   // Treat non‑Sendable Firebase types as warnings
+import FirebaseAuth
 
 @MainActor
 final class AuthViewModel: ObservableObject {
     // MARK: - Published state
-    @Published private(set) var authUser: FirebaseAuth.User?
+    @Published var authUser: FirebaseAuth.User?
     @Published var currentUser: User?
     
-    /*  Checks to see if user has signed in previously
-        which automatically signs in the user on app's
-        initial launch
-     
-        Comment out initilizer to force "sign out"
-     */
     init() {
         self.authUser = Auth.auth().currentUser
+        Task { await fetchData() }
     }
 
     // MARK: - Sign‑in (existing account)
-    func signIn(email: String, password: String) async {
+    func signIn(email: String, password: String) async throws {
         do {
-            let result: AuthDataResult = try await Auth.auth().signIn(withEmail: email,
-                                                                      password: password)
+            let result = try await Auth.auth().signIn(withEmail: email, password: password)
             authUser = result.user
-            try await loadCurrentUser(email: email)
+            await fetchData()
+            print("Sign‑in successful!")
+            
         } catch {
             print("❌ Sign‑in failed:", error.localizedDescription)
         }
@@ -38,21 +34,29 @@ final class AuthViewModel: ObservableObject {
 
     // MARK: - Sign‑up (new account)
     /// Creates a Firebase Auth account and stores the profile in your backend.
-    func signUp(profile: User, password: String) async {
+    func signUp(profile: User, password: String) async throws {
         do {
             let result = try await Auth.auth().createUser(withEmail: profile.email, password: password)
             authUser = result.user
 
             // Store profile through REST POST
-            try await PostUserAPIService.shared.create(user: profile)
-
-            try await loadCurrentUser(email: profile.email)
+            try await NetworkManager.shared.postUser(user: profile)
+            self.currentUser = try await NetworkManager.shared.getUser(user: profile)
             print("✅ New user created & stored.")
+        } catch APIError.badURL {
+            print("❌ Sign‑up failed: Invalid URL.")
+        } catch APIError.encoding {
+            print( "❌ Sign‑up failed: Failed to encode user data.")
+        } catch NetworkError.decodingFailed {
+            print("❌ Sign‑up failed: Failed to decode server response.")
+        } catch APIError.noToken {
+            print( "❌ Sign‑up failed: No token returned.")
+        } catch NetworkError.httpError {
+            print("❌ Sign‑up failed: HTTP error.")
         } catch {
-            print("❌ Sign‑up failed:", error.localizedDescription)
+            print("❌ Sign‑up failed bruh:", error.localizedDescription)
         }
     }
-
     // MARK: - Sign‑out
     func signOut() {
         do {
@@ -63,31 +67,14 @@ final class AuthViewModel: ObservableObject {
             print("❌ Sign‑out failed:", error.localizedDescription)
         }
     }
-
-    // MARK: - Private helpers
-    private func loadCurrentUser(email: String) async throws {
-        // If your backend echoes the profile record (with id) after sign‑up,
-        // you could store that id in UserDefaults, then:
-        //
-        // currentUser = try await GetUserAPIService.shared.fetchUser(id: savedId)
-        //
-        // For the moment we’ll stick with email filtering:
-        let users = try await GetUserAPIService.shared.fetchUsers()
-        currentUser = users.first(where: { $0.email == email })
-    }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Async convenience for PostUserAPIService
-// ─────────────────────────────────────────────────────────────────────────────
-
-extension PostUserAPIService {
-    /// Async/await wrapper around the completion‑handler version of create(user:…)
-    func create(user: User) async throws {
-        try await withCheckedThrowingContinuation { cont in
-            self.create(user: user) { result in
-                cont.resume(with: result)
-            }
+    private func fetchData() async {
+        do {
+            guard let uid = Auth.auth().currentUser?.uid else { print("No user logged in."); return }
+            self.currentUser = try await NetworkManager.shared.getUser(uid: uid)
+        } catch {
+            print("❌ Failed to fetch user data.")
         }
     }
+
+    
 }

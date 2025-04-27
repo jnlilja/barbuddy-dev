@@ -9,7 +9,7 @@ import SwiftUI
 
 struct BarDetailPopup: View {
     @Environment(\.dismiss) var dismiss
-    @EnvironmentObject var viewModel: MapViewModel
+    @Environment(MapViewModel.self) var viewModel
     let bar: Bar
     @State private var waitButtonProperties = ButtonProperties(type: "wait")
     @State private var crowdButtonProperties = ButtonProperties(type: "crowd")
@@ -285,7 +285,7 @@ struct BarDetailPopup_Previews: PreviewProvider {
                 )
             )
         )
-        .environmentObject(MapViewModel())
+        .environment(MapViewModel())
         .previewLayout(.sizeThatFits)
     }
 }

@@ -9,14 +9,14 @@
 import SwiftUI
 
 struct SchoolView: View {
-    @State private var school             = ""
     @State private var currentlyAttending = false
     @State private var major              = ""
     @State private var showOnProfile      = true
     @Binding var path: NavigationPath
-    @EnvironmentObject var viewModel: SignUpViewModel
+    @Environment(SignUpViewModel.self) var viewModel
 
     var body: some View {
+        @Bindable var signUp = viewModel
         ZStack {
             Color("DarkBlue").ignoresSafeArea()
 
@@ -31,7 +31,7 @@ struct SchoolView: View {
                         .foregroundColor(.white)
                         .multilineTextAlignment(.center)
 
-                    TextField("Enter your school", text: $school)
+                    TextField("Enter your school", text: $signUp.jobOrUniversity)
                         .textFieldStyle(CustomTextFieldStyle())
 
                     Button {
@@ -60,19 +60,17 @@ struct SchoolView: View {
                     .foregroundColor(.white)
 
                     Button(action: {
-                        // Write back into shared view‑model
-                        viewModel.jobOrUniversity = school
                         path.append(SignUpNavigation.drink)
                     }) {
                         Text("Continue")
                             .font(.headline)
                             .foregroundColor(.white)
-                            .opacity(school.isEmpty || (currentlyAttending && major.isEmpty) ? 0.6 : 1) // Dim text when disabled
+                            .opacity(signUp.jobOrUniversity.isEmpty || (currentlyAttending && major.isEmpty) ? 0.6 : 1) // Dim text when disabled
                             .frame(width: 300, height: 50)
                             .background(Color("DarkPurple"))
                             .cornerRadius(10)
                     }
-                    .disabled(school.isEmpty || (currentlyAttending && major.isEmpty)) // Prevent interaction when disabled
+                    .disabled(signUp.jobOrUniversity.isEmpty || (currentlyAttending && major.isEmpty)) // Prevent interaction when disabled
                 }
 
                 Spacer()
@@ -85,5 +83,5 @@ struct SchoolView: View {
 
 #Preview("School") {
     SchoolView(path: .constant(NavigationPath()))
-        .environmentObject(SignUpViewModel())
+        .environment(SignUpViewModel())
 }
