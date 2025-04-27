@@ -12,4 +12,8 @@ enum NetworkError: Error {
     case invalidResponse
     case invalidData
     case decodingFailed
+    case idTokenDecodingFailed
+    case httpError
+    case pictureDecodingFailed
+    case primaryPictureEncodingFailed
 }

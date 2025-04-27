@@ -6,3 +6,12 @@
 //
 
 import Foundation
+
+struct Location: Codable, Hashable, CustomStringConvertible {
+    var latitude: Double
+    var longitude: Double
+    
+    public var description: String {
+        "Location (latitude: \(latitude), longitude: \(longitude))"
+    }
+}
