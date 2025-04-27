@@ -26,10 +26,10 @@ struct ProfileView: View {
     private var filteredFriends: [User] {
         guard !searchText.isEmpty else { return userFriends.friends }
         let q = searchText.lowercased()
-        let first = userFriends.friends.filter { $0.first_name.lowercased().contains(q) }
+        let first = userFriends.friends.filter { $0.firstName.lowercased().contains(q) }
         let last  = userFriends.friends.filter {
-            !$0.first_name.lowercased().contains(q) &&
-            $0.last_name.lowercased().contains(q)
+            !$0.firstName.lowercased().contains(q) &&
+            $0.lastName.lowercased().contains(q)
         }
         return first + last
     }
@@ -45,7 +45,7 @@ struct ProfileView: View {
                         VStack(spacing: 25) {
                             // Profile header
                             Group {
-                                if let pic = user.profile_pictures?.first {
+                                if let pic = user.profilePictures?.first?.image {
                                     Image(pic)
                                         .resizable()
                                         .scaledToFill()
@@ -62,7 +62,7 @@ struct ProfileView: View {
                             .padding(.top, 20)
 
                             HStack(spacing: 8) {
-                                Text("\(user.first_name) \(user.last_name)")
+                                Text("\(user.firstName) \(user.lastName)")
                                     .font(.system(size: 32, weight: .bold))
                                     .foregroundColor(.white)
                                 Image(systemName: "checkmark.seal.fill")
@@ -91,31 +91,33 @@ struct ProfileView: View {
                                     GridItem(.fixed(gridCellWidth), spacing: 15),
                                     GridItem(.fixed(gridCellWidth))
                                 ], spacing: 15) {
-                                    ForEach(user.profile_pictures ?? [], id: \.self) { img in
-                                        ZStack(alignment: .topTrailing) {
-                                            Image(img)
-                                                .resizable()
-                                                .scaledToFill()
-                                                .frame(width: gridCellWidth, height: gridCellWidth)
-                                                .clipped()
-                                                .cornerRadius(10)
-                                                .onTapGesture {
-                                                    selectedImage = img
-                                                    isImageExpanded = true
+                                    if let profilePictures = user.profilePictures {
+                                        ForEach(profilePictures, id: \.self) {
+                                            ZStack(alignment: .topTrailing) {
+                                                Image($0.image)
+                                                    .resizable()
+                                                    .scaledToFill()
+                                                    .frame(width: gridCellWidth, height: gridCellWidth)
+                                                    .clipped()
+                                                    .cornerRadius(10)
+                                                    .onTapGesture {
+                                                        selectedImage = $0.image
+                                                        isImageExpanded = true
+                                                    }
+                                                Button {
+                                                    // edit
+                                                } label: {
+                                                    Circle()
+                                                        .fill(Color("Salmon"))
+                                                        .frame(width: 30, height: 30)
+                                                        .overlay(
+                                                            Image(systemName: "pencil")
+                                                                .font(.system(size: 12))
+                                                                .foregroundColor(.white)
+                                                        )
                                                 }
-                                            Button {
-                                                // edit
-                                            } label: {
-                                                Circle()
-                                                    .fill(Color("Salmon"))
-                                                    .frame(width: 30, height: 30)
-                                                    .overlay(
-                                                        Image(systemName: "pencil")
-                                                            .font(.system(size: 12))
-                                                            .foregroundColor(.white)
-                                                    )
+                                                .padding(8)
                                             }
-                                            .padding(8)
                                         }
                                     }
                                 }
@@ -125,15 +127,15 @@ struct ProfileView: View {
                                 // Info sections
                                 VStack(alignment: .leading, spacing: 20) {
                                     InfoSection(title: "Basic Info", items: [
-                                        InfoItem(icon: "calendar",         text: user.date_of_birth),
+                                        InfoItem(icon: "calendar",         text: user.dateOfBirth),
                                         InfoItem(icon: "mappin.circle.fill", text: user.hometown)
                                     ])
                                     InfoSection(title: "Work & Education", items: [
-                                        InfoItem(icon: "graduationcap.fill", text: user.job_or_university)
+                                        InfoItem(icon: "graduationcap.fill", text: user.jobOrUniversity)
                                     ])
                                     InfoSection(title: "Preferences", items: [
-                                        InfoItem(icon: "wineglass.fill",      text: user.favorite_drink),
-                                        InfoItem(icon: "person.2.fill",      text: user.sexual_preference)
+                                        InfoItem(icon: "wineglass.fill",      text: user.favoriteDrink),
+                                        InfoItem(icon: "person.2.fill",      text: user.sexualPreference)
                                     ])
                                 }
                                 .padding(.horizontal, 16)
@@ -194,14 +196,14 @@ struct ProfileView: View {
                     .padding(.top, 16)
                     .background(Color("DarkBlue"))
 
-                    List(filteredFriends) { friend in
-                        NavigationLink(destination: FriendProfile(user: friend)) {
-                            Text("\(friend.first_name) \(friend.last_name)")
-                                .foregroundColor(.white)
-                        }
-                        .listRowBackground(Color("DarkBlue"))
-                    }
-                    .listStyle(PlainListStyle())
+//                    List(filteredFriends) { friend in
+//                        NavigationLink(destination: FriendProfile(user: friend)) {
+//                            Text("\(friend.firstName) \(friend.lastName)")
+//                                .foregroundColor(.white)
+//                        }
+//                        .listRowBackground(Color("DarkBlue"))
+//                    }
+//                    .listStyle(PlainListStyle())
                 }
                 .background(Color("DarkBlue").ignoresSafeArea())
                 .offset(y: isSearchActive ? 0 : UIScreen.main.bounds.height)
@@ -229,11 +231,11 @@ struct ProfileView: View {
                     } label: {
                         Image(systemName: "magnifyingglass")
                     }
-                    .tint(Color("Salmon"))
+                    .tint(.salmon)
                 }
             }
         }
-        .tint(Color("Salmon")) // ← Apply Salmon tint to back button
+        .tint(.salmon) // ← Apply Salmon tint to back button
     }
 }
 
@@ -243,13 +245,13 @@ struct FriendRow: View {
     let friend: User
     var body: some View {
         HStack {
-            Image(friend.profile_pictures?.first ?? "")
+            Image(friend.profilePictures?.first?.image ?? "")
                 .resizable()
                 .scaledToFill()
                 .frame(width: 60, height: 60)
                 .clipShape(Circle())
             VStack(alignment: .leading) {
-                Text("\(friend.first_name) \(friend.last_name)")
+                Text("\(friend.firstName) \(friend.lastName)")
                     .font(.headline)
                     .foregroundColor(.white)
                 Text(friend.hometown)
@@ -326,21 +328,21 @@ struct InfoItem: Identifiable {
           vm.currentUser = User(
             id: 1,
             username: "jdoe",
-            first_name: "John",
-            last_name: "Doe",
+            firstName: "John",
+            lastName: "Doe",
             email: "jdoe@example.com",
             password: "",
-            date_of_birth: "1990-01-01",
+            dateOfBirth: "1990-01-01",
             hometown: "Springfield",
-            job_or_university: "Example U",
-            favorite_drink: "Coffee",
-            location: "Springfield",
-            profile_pictures: [],
+            jobOrUniversity: "Example U",
+            favoriteDrink: "Coffee",
+            location: Location(latitude: 20, longitude: 20),
+            profilePictures: [ProfilePicture(id: 0, image: "", isPrimary: true, uploadedAt: "")],
             matches: "",
             swipes: "",
-            vote_weight: 0,
-            account_type: "regular",
-            sexual_preference: "straight"
+            voteWeight: 0,
+            accountType: "regular",
+            sexualPreference: "straight"
           )
           return vm
       }())
