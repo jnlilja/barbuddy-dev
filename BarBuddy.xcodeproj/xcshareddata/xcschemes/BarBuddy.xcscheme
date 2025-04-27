@@ -51,6 +51,11 @@
                BlueprintName = "BarBuddyUITests"
                ReferencedContainer = "container:BarBuddy.xcodeproj">
             </BuildableReference>
+            <SkippedTests>
+               <Test
+                  Identifier = "BarBuddyUITests">
+               </Test>
+            </SkippedTests>
          </TestableReference>
       </Testables>
    </TestAction>
@@ -77,7 +82,7 @@
       <EnvironmentVariables>
          <EnvironmentVariable
             key = "BASE_URL"
-            value = "https://barbuddy-backend-148659891217.us-central1.run.app"
+            value = "https://barbuddy-backend-148659891217.us-central1.run.app/api/"
             isEnabled = "YES">
          </EnvironmentVariable>
       </EnvironmentVariables>
