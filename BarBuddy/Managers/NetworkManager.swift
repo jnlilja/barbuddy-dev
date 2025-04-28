@@ -13,7 +13,7 @@ final class NetworkManager {
     
     static let shared = NetworkManager()
     private let session: URLSession
-    private let baseURL = ProcessInfo.processInfo.environment["BASE_URL"] ?? "http://localhost:8080/"
+    private let baseURL = ProcessInfo.processInfo.environment["BASE_URL"] ?? ""
     private let (encoder, decoder) = (JSONEncoder(), JSONDecoder())
 
     private init(session: URLSession = .shared) {
@@ -27,7 +27,7 @@ final class NetworkManager {
         guard let idToken = try await Auth.auth().currentUser?.getIDToken() else { throw NetworkError.idTokenDecodingFailed }
         var request = URLRequest(url: url)
         let (data, response) = try await session.data(for: request)
-        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
+        guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
             throw NetworkError.httpError
         }
         request.httpMethod = "GET"
@@ -43,12 +43,16 @@ final class NetworkManager {
     }
     
     func getUser(user: User) async throws -> User {
-        let endpoint = baseURL + "users/\(String(describing: user.id))"
+        guard let id = user.id else {
+            print("User must have an ID to fetch")
+            throw NetworkError.invalidData
+        }
+        let endpoint = baseURL + "users/\(id)"
         guard let url = URL(string: endpoint) else { throw APIError.badURL }
         guard let idToken = try await Auth.auth().currentUser?.getIDToken() else { throw NetworkError.idTokenDecodingFailed }
         var request = URLRequest(url: url)
         let (data, response) = try await session.data(for: request)
-        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else { throw NetworkError.httpError }
+        guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else { throw NetworkError.httpError }
         
         request.httpMethod = "GET"
         request.setValue("Bearer \(idToken)", forHTTPHeaderField: "Authorization")
@@ -69,7 +73,7 @@ final class NetworkManager {
         guard let idToken = try await Auth.auth().currentUser?.getIDToken() else { throw NetworkError.idTokenDecodingFailed }
         var request = URLRequest(url: url)
         let (data, response) = try await session.data(for: request)
-        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else { throw NetworkError.httpError }
+        guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else { throw NetworkError.httpError }
         
         request.httpMethod = "GET"
         request.setValue("Bearer \(idToken)", forHTTPHeaderField: "Authorization")
@@ -93,7 +97,7 @@ final class NetworkManager {
         if let hhttpResponse = response as? HTTPURLResponse {
             print("Status code: \(hhttpResponse.statusCode)")
         }
-        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else { throw NetworkError.httpError }
+        guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else { throw NetworkError.httpError }
         
         request.httpMethod = "POST"
         request.setValue("Bearer \(idToken)", forHTTPHeaderField: "Authorization")
@@ -125,7 +129,7 @@ final class NetworkManager {
             guard let url = URL(string: endpoint) else { throw APIError.badURL }
             var request = URLRequest(url: url)
             let (data, response) = try await session.data(for: request)
-            guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else { throw NetworkError.httpError }
+            guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else { throw NetworkError.httpError }
             
             request.httpMethod = "POST"
             request.setValue("Bearer \(idToken)", forHTTPHeaderField: "Authorization")
@@ -150,7 +154,7 @@ final class NetworkManager {
         guard let url = URL(string: endpoint) else { throw APIError.badURL }
         var request = URLRequest(url: url)
         let (data, response) = try await session.data(for: request)
-        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else { throw NetworkError.httpError }
+        guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else { throw NetworkError.httpError }
         
         request.httpMethod = "PUT"
         request.setValue("Bearer \(idToken)", forHTTPHeaderField: "Authorization")
