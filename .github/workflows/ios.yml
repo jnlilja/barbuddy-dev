@@ -35,22 +35,8 @@ jobs:
           scheme: ${{ 'default' }}
           platform: ${{ 'iOS Simulator' }}
         run: |
-          device=$(xcrun xctrace list devices 2>&1 \
-            | awk '
-              BEGIN {
-                # define regex as a string, escaping parentheses
-                regex="(iPhone [^()]+) \\((iOS ([0-9]+)\\.[0-9]+)\\)"
-              }
-              /iPhone/ && /\(.*iOS [0-9]+\.[0-9]+\)/ {
-                # match against our regex; m[3] is the major version number
-                if (match($0, regex, m) && m[3] >= 18) {
-                  print m[1]
-                  exit
-                }
-              }
-            ')
-
-          if [ "$scheme" = "default" ]; then scheme=$(cat default); fi
+          device=`xcrun xctrace list devices 2>&1 | grep -oE 'iPhone 16' | head -1 | awk '{$1=$1;print}' | sed -e "s/ Simulator$//"`
+          if [ $scheme = default ]; then scheme=$(cat default); fi
           file_to_build=$(ls -A | grep -i .xcworkspace || ls -A | grep -i .xcodeproj)
           xcodebuild build-for-testing -scheme "$scheme" -project "$file_to_build" -destination "platform=$platform,name=$device"
 
@@ -59,26 +45,8 @@ jobs:
           scheme: ${{ 'default' }}
           platform: ${{ 'iOS Simulator' }}
         run: |
-          device=$(xcrun xctrace list devices 2>&1 \
-            | awk '
-              BEGIN {
-                regex="(iPhone [^()]+) \\((iOS ([0-9]+)\\.[0-9]+)\\)"
-              }
-              /iPhone/ && /\(.*iOS [0-9]+\.[0-9]+\)/ {
-                if (match($0, regex, m) && m[3] >= 18) {
-                  print m[1]
-                  exit
-                }
-              }
-            ')
-
-          if [ "$scheme" = "default" ]; then scheme=$(cat default); fi
-          if [ "`ls -A | grep -i \\.xcworkspace\$`" ]; then 
-            filetype_parameter="workspace"
-            file_to_build="`ls -A | grep -i \\.xcworkspace\$`"
-          else 
-            filetype_parameter="project"
-            file_to_build="`ls -A | grep -i \\.xcodeproj\$`"
-          fi
+          device=`xcrun xctrace list devices 2>&1 | grep -oE 'iPhone 16' | head -1 | awk '{$1=$1;print}' | sed -e "s/ Simulator$//"`
+          if [ $scheme = default ]; then scheme=$(cat default); fi
+          if [ "`ls -A | grep -i \\.xcworkspace\$`" ]; then filetype_parameter="workspace" && file_to_build="`ls -A | grep -i \\.xcworkspace\$`"; else filetype_parameter="project" && file_to_build="`ls -A | grep -i \\.xcodeproj\$`"; fi
           file_to_build=`echo $file_to_build | awk '{$1=$1;print}'`
           xcodebuild test-without-building -scheme "$scheme" -"$filetype_parameter" "$file_to_build" -destination "platform=$platform,name=$device"
