@@ -133,7 +133,6 @@ DATABASES = {
         'PORT': env('DB_PORT'),
         'CONN_MAX_AGE': 60,
         'OPTIONS': {
-            # 'sslmode': 'require',  # Required for Google Cloud SQL
             'connect_timeout': 5, # time out if db connection can't be established in 5 seconds
         },
     }

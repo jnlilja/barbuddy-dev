@@ -30,6 +30,7 @@ COPY backend /app
 
 # Ensure Firebase service account is in place
 COPY backend/firebase/service-account.json /app/firebase/service-account.json
+COPY backend/firebase/macro-climber-456819-b9-e424dfbea992.json /app/firebase/macro-climber-456819-b9-e424dfbea992.json
 
 # Copy entrypoint script
 COPY backend/entrypoint.sh /app/entrypoint.sh
