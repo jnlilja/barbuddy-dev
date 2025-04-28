@@ -43,7 +43,15 @@ SECRET_KEY = env('SECRET_KEY')
 DEBUG = False  # Changed to True for local development
 
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'barbuddy-backend-148659891217.us-central1.run.app']
+ALLOWED_HOSTS = [
+    'localhost',
+    '127.0.0.1',
+    'barbuddy-backend-148659891217.us-central1.run.app',
+]
+
+CSRF_TRUSTED_ORIGINS = [
+    'https://barbuddy-backend-148659891217.us-central1.run.app',
+]
 
 # Pusher Configuration
 PUSHER_APP_ID = env('PUSHER_APP_ID')

@@ -22,18 +22,18 @@ ENV GDAL_LIBRARY_PATH=/usr/lib/libgdal.so
 ENV GEOS_LIBRARY_PATH=/usr/lib/libgeos_c.so
 
 # Install Python dependencies
-COPY backend/requirements.txt .
+COPY requirements.txt .
 RUN pip install --upgrade pip && pip install -r requirements.txt && pip install gunicorn
 
 # Copy the entire backend code into the container
-COPY backend /app
+COPY . /app
 
 # Ensure Firebase service account is in place
-COPY backend/firebase/service-account.json /app/firebase/service-account.json
-COPY backend/firebase/macro-climber-456819-b9-e424dfbea992.json /app/firebase/macro-climber-456819-b9-e424dfbea992.json
+COPY firebase/service-account.json /app/firebase/service-account.json
+COPY firebase/macro-climber-456819-b9-e424dfbea992.json /app/firebase/macro-climber-456819-b9-e424dfbea992.json
 
 # Copy entrypoint script
-COPY backend/entrypoint.sh /app/entrypoint.sh
+COPY entrypoint.sh /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh
 
 # Create and switch to non-root user
@@ -43,4 +43,3 @@ USER appuser
 
 # Run app
 ENTRYPOINT ["/app/entrypoint.sh"]
-
