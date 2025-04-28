@@ -47,6 +47,14 @@ class User(AbstractUser):
             )
             if age < 18 or age > 120:
                 raise ValidationError({'date_of_birth': 'User must be between 18 and 120 years old.'})
+        
+        # Validate email is unique
+        if User.objects.filter(email=self.email).exclude(pk=self.pk).exists():
+            raise ValidationError({'email': 'This email is already in use.'})
+        
+        # Validate username is unique
+        if User.objects.filter(username=self.username).exclude(pk=self.pk).exists():
+            raise ValidationError({'username': 'This username is already taken.'})
 
     def get_age(self):
         if not self.date_of_birth:

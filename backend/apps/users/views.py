@@ -7,7 +7,7 @@ from django.db.models import Q
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from apps.matches.models import Match
 from apps.matches.serializers import MatchSerializer
-from .serializers import UserSerializer, UserLocationUpdateSerializer, ProfilePictureSerializer
+from .serializers import UserSerializer, UserLocationUpdateSerializer, ProfilePictureSerializer, UserRegistrationSerializer
 from .permissions import IsOwnerOrReadOnly
 from barbuddy_api.authentication import FirebaseAuthentication
 
@@ -20,6 +20,11 @@ class UserViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated, IsOwnerOrReadOnly]
     queryset = User.objects.all()
     serializer_class = UserSerializer
+
+    # def get_permissions(self):
+    #     if self.action == 'create':
+    #         return [permissions.AllowAny()]
+    #     return [permissions.IsAuthenticated(), IsOwnerOrReadOnly()]
 
     def get_queryset(self):
         user = self.request.user
@@ -142,3 +147,14 @@ class UserViewSet(viewsets.ModelViewSet):
         pictures = ProfilePicture.objects.filter(user=request.user)
         serializer = ProfilePictureSerializer(pictures, many=True)
         return Response(serializer.data)
+
+    @action(detail=False, methods=['POST'], permission_classes=[permissions.AllowAny])
+    def register_user(self, request):
+        serializer = UserRegistrationSerializer(data=request.data)
+        if serializer.is_valid():
+            user = serializer.save()
+            return Response({
+                'user': UserSerializer(user).data,
+                'message': 'User registered successfully'
+            }, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

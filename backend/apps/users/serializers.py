@@ -123,3 +123,43 @@ class FriendRequestSerializer(serializers.ModelSerializer):
         fields = ['id', 'from_user', 'to_user', 'status', 'timestamp']
         read_only_fields = ['from_user', 'timestamp', 'status']
 
+
+class UserRegistrationSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True, required=True)
+    confirm_password = serializers.CharField(write_only=True, required=True)
+
+    class Meta:
+        model = User
+        fields = [
+            "username", "email", "password", "confirm_password",
+            "first_name", "last_name", "date_of_birth",
+            "hometown", "job_or_university", "favorite_drink",
+            "sexual_preference", "phone_number"
+        ]
+        extra_kwargs = {
+            "password": {"write_only": True},
+            "email": {"required": True}
+        }
+
+    def validate(self, data):
+        if data['password'] != data['confirm_password']:
+            raise serializers.ValidationError({"password": "Passwords do not match"})
+        return data
+
+    def validate_date_of_birth(self, value):
+        today = date.today()
+        age = today.year - value.year - ((today.month, today.day) < (value.month, value.day))
+        if age < 18:
+            raise serializers.ValidationError("You must be at least 18 years old.")
+        if age > 120:
+            raise serializers.ValidationError("Age cannot exceed 120.")
+        return value
+
+    def create(self, validated_data):
+        validated_data.pop('confirm_password')
+        password = validated_data.pop('password')
+        user = User(**validated_data)
+        user.set_password(password)
+        user.save()
+        return user
+
