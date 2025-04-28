@@ -30,6 +30,12 @@ jobs:
           echo $default | cat >default
           echo Using default scheme: $default
 
+        
+      - name: Reset iOS Simulators
+        run: |
+          xcrun simctl shutdown all
+          xcrun simctl erase all
+
       - name: Build
         env:
           scheme: ${{ 'default' }}
