@@ -137,6 +137,4 @@ class BarHoursSerializer(serializers.ModelSerializer):
         read_only_fields = ['id']
 
     def validate(self, data):
-        if not data.get('is_closed') and data.get('open_time') >= data.get('close_time'):
-            raise serializers.ValidationError("Close time must be after open time.")
         return data

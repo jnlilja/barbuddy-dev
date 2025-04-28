@@ -217,8 +217,6 @@ class BarHours(models.Model):
         if not self.is_closed:
             if not self.open_time or not self.close_time:
                 raise ValidationError({'open_time': 'Open and close times are required when bar is not closed.'})
-            if self.open_time >= self.close_time:
-                raise ValidationError({'close_time': 'Close time must be after open time.'})
         else:
             # If bar is closed, we don't need to validate times
             self.open_time = None
