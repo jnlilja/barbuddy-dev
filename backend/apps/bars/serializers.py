@@ -137,4 +137,6 @@ class BarHoursSerializer(serializers.ModelSerializer):
         read_only_fields = ['id']
 
     def validate(self, data):
+        # Remove the validation that prevents close time from being before open time
+        # This allows for overnight hours (e.g., 11am-2am)
         return data

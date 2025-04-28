@@ -9,14 +9,14 @@ from apps.matches.models import Match
 from apps.matches.serializers import MatchSerializer
 from .serializers import UserSerializer, UserLocationUpdateSerializer, ProfilePictureSerializer
 from .permissions import IsOwnerOrReadOnly
-from .authentication import FirebaseAuthentication
+from barbuddy_api.authentication import FirebaseAuthentication
 
 from .models import FriendRequest, ProfilePicture
 
 User = get_user_model()
 
 class UserViewSet(viewsets.ModelViewSet):
-    authentication_classes = [JWTAuthentication, FirebaseAuthentication]
+    authentication_classes = [FirebaseAuthentication]
     permission_classes = [permissions.IsAuthenticated, IsOwnerOrReadOnly]
     queryset = User.objects.all()
     serializer_class = UserSerializer
@@ -24,10 +24,18 @@ class UserViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user = self.request.user
         if not user or not user.is_authenticated:
+            print("❌ User not authenticated in get_queryset")
             return User.objects.none()
         if user.is_superuser:
+            print("✅ Superuser accessing all users")
             return User.objects.all()
+        print(f"✅ Regular user {user.username} accessing their own profile")
         return User.objects.filter(id=user.id)
+
+    def list(self, request, *args, **kwargs):
+        print("📝 Request headers:", dict(request.headers))
+        print("📝 Request META:", {k: v for k, v in request.META.items() if k.startswith('HTTP_')})
+        return super().list(request, *args, **kwargs)
 
     # GET /api/users/location
     @action(detail=False, methods=["get"], permission_classes=[permissions.IsAuthenticated])

@@ -53,27 +53,29 @@ class BarViewSetTestCase(APITestCase):
     def test_create_bar(self):
         """Test creating a new bar."""
         data = {
-            "name": "New Bar",
-            "address": "456 Side St",
-            "average_price": 15.00,
-            "location": {"latitude": 1.0, "longitude": 2.0}  # Add location data
+            'name': 'New Bar',
+            'address': '456 New St',
+            'average_price': 15.00,
+            'latitude': 2.0,  # Add required latitude
+            'longitude': 1.0  # Add required longitude
         }
-        response = self.client.post(self.list_url, data, format="json")
+        response = self.client.post(self.list_url, data)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Bar.objects.count(), 2)
 
     def test_update_bar(self):
         """Test updating a bar's information."""
         data = {
-            "name": "Updated Test Bar",
-            "address": self.bar.address,
-            # "music_genre": "Pop",
-            "average_price": self.bar.average_price
+            'name': 'Updated Bar',
+            'address': '789 Updated St',
+            'average_price': 20.00,
+            'latitude': 2.0,  # Add required latitude
+            'longitude': 1.0  # Add required longitude
         }
-        response = self.client.put(self.detail_url, data, format="json")
+        response = self.client.put(self.detail_url, data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.bar.refresh_from_db()
-        self.assertEqual(self.bar.name, "Updated Test Bar")
+        self.assertEqual(self.bar.name, 'Updated Bar')
 
     def test_delete_bar(self):
         """Test deleting a bar."""
