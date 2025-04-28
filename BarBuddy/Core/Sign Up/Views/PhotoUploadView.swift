@@ -34,9 +34,6 @@ struct PhotoUploadView: View {
                     .foregroundColor(Color("Salmon"))
                     .padding(.vertical, 20)
 
-                // snapshot of the @State array for Sendable closure
-                let imageSnapshot = selectedImages
-
                 LazyVGrid(columns: Array(repeating: .init(.flexible()), count: 3),
                           spacing: 15)
                 {
@@ -46,9 +43,9 @@ struct PhotoUploadView: View {
                             maxSelectionCount: maxPhotos,
                             selectionBehavior: .ordered,
                             matching: .images
-                        ) {
-                            if i < imageSnapshot.count {
-                                ImageTileView(image: imageSnapshot[i])
+                        ) { [selectedImages] in
+                            if i < selectedImages.count {
+                                ImageTileView(image: selectedImages[i])
                             } else {
                                 EmptyImageTileView()
                             }
@@ -77,9 +74,7 @@ struct PhotoUploadView: View {
                     Task {
                         let profile = signUpViewModel.buildProfile()
                         try await authViewModel.signUp(
-                            profile: profile,
-                            password: signUpViewModel.newPassword
-                        )
+                            profile: profile)
                     }
                 }) {
                     Text("Let's go!")
