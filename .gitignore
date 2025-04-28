@@ -27,7 +27,7 @@ xcuserdata/
 *.xcscmblueprint
 *.xccheckout
 
-backend/staticfiles/
+backend/staticfiles
 
 ### Xcode Patch ###
 *.xcodeproj/*

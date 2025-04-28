@@ -29,31 +29,87 @@ struct PostUser: Codable {
 @MainActor
 final class PostUserAPIService {
     static let shared = PostUserAPIService()
-    private let baseURL = URL(string: "barbuddy-backend-148659891217.us-central1.run.app/api")!   // ← Edit
+    private let baseURL = URL(string: "http://127.0.0.1:8000/api/")!   // Added trailing slash
 
     /// POST /users – create a profile document in your backend
     func create(user: PostUser, completion: @escaping @Sendable (Result<Void, APIError>) -> Void) {
         guard let currentUser = Auth.auth().currentUser else {
+            print("❌ No current user found")
             return completion(.failure(.noToken))
         }
 
-        currentUser.getIDToken { idToken, err in
-            if let err = err { return completion(.failure(.transport(err))) }
-            guard let idToken = idToken else { return completion(.failure(.noToken)) }
+        print("👤 Current user UID:", currentUser.uid)
+        print("👤 Current user email:", currentUser.email ?? "no email")
 
-            var request = URLRequest(url: self.baseURL.appendingPathComponent("users"))
-            request.httpMethod = "POST"
+        currentUser.getIDToken { idToken, err in
+            if let err = err {
+                print("❌ Error getting ID token:", err.localizedDescription)
+                return completion(.failure(.transport(err)))
+            }
+            guard let idToken = idToken else {
+                print("❌ No token received")
+                return completion(.failure(.noToken))
+            }
+
+            print("✅ Successfully got Firebase token")
+            print("🔑 Token length:", idToken.count)
+            print("🔑 Token first 20 chars:", String(idToken.prefix(20)))
+
+            var request = URLRequest(url: self.baseURL.appendingPathComponent("users/"))  // Added trailing slash
+            request.httpMethod = "POST"  // Changed from PUT to POST
             request.setValue("Bearer \(idToken)", forHTTPHeaderField: "Authorization")
             request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-            do { request.httpBody = try JSONEncoder().encode(user) }
-            catch { return completion(.failure(.encoding(error))) }
+            request.setValue("application/json", forHTTPHeaderField: "Accept")
+            
+            // Log all headers for debugging
+            print("📝 Request headers:", request.allHTTPHeaderFields ?? [:])
+            print("🌐 Request URL:", request.url?.absoluteString ?? "unknown")
 
-            URLSession.shared.dataTask(with: request) { _, _, error in
+            do {
+                request.httpBody = try JSONEncoder().encode(user)
+                print("📦 Request body:", String(data: request.httpBody!, encoding: .utf8) ?? "unknown")
+            } catch {
+                print("❌ Encoding error:", error.localizedDescription)
+                return completion(.failure(.encoding(error)))
+            }
+
+            URLSession.shared.dataTask(with: request) { data, response, error in
                 if let error = error {
+                    print("❌ Network error:", error.localizedDescription)
                     completion(.failure(.transport(error)))
-                } else {
-                    completion(.success(()))
+                    return
                 }
+
+                if let httpResponse = response as? HTTPURLResponse {
+                    print("📡 Response status code:", httpResponse.statusCode)
+                    print("📡 Response headers:", httpResponse.allHeaderFields)
+                    
+                    if httpResponse.statusCode == 401 {
+                        print("❌ Unauthorized - Token may be invalid")
+                        if let data = data, let errorString = String(data: data, encoding: .utf8) {
+                            print("❌ Server error message:", errorString)
+                        }
+                        return completion(.failure(.transport(URLError(.userAuthenticationRequired))))
+                    }
+                    
+                    if httpResponse.statusCode == 403 {
+                        print("❌ Forbidden - Authorization header may be missing")
+                        if let data = data, let errorString = String(data: data, encoding: .utf8) {
+                            print("❌ Server error message:", errorString)
+                        }
+                        return completion(.failure(.transport(URLError(.userAuthenticationRequired))))
+                    }
+                    
+                    if !(200...299).contains(httpResponse.statusCode) {
+                        print("❌ Server error - Status code:", httpResponse.statusCode)
+                        if let data = data, let errorString = String(data: data, encoding: .utf8) {
+                            print("❌ Server error message:", errorString)
+                        }
+                        return completion(.failure(.transport(URLError(.badServerResponse))))
+                    }
+                }
+
+                completion(.success(()))
             }.resume()
         }
     }
@@ -113,7 +169,7 @@ extension GetUserAPIService {
                 guard let tok = tok else { return cont.resume(throwing: APIError.noToken) }
 
                 // Build endpoint locally (cannot access private baseURL)
-                let base = URL(string: "https://YOUR_API_BASE_URL")!  // ← keep in sync
+                let base = URL(string: "http://127.0.0.1:8000/api")!  // ← keep in sync
                 let url  = base.appendingPathComponent("users").appendingPathComponent(String(id))
 
                 var req = URLRequest(url: url)

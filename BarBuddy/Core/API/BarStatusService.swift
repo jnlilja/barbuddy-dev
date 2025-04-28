@@ -40,7 +40,7 @@ public struct BarPricing: Codable, Equatable, Sendable {
 
 public actor BarStatusService {
     public static let shared = BarStatusService()
-    private let baseURL = URL(string: "barbuddy-backend-148659891217.us-central1.run.app/api")!
+    private let baseURL = URL(string: "http://127.0.0.1:8000/api")!
     private init() {}
 
     // GET /bar-status/

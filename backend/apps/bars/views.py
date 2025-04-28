@@ -11,7 +11,7 @@ from .serializers import (
     BarVoteSerializer, BarImageSerializer, BarHoursSerializer
 )
 from apps.bars.services.voting import aggregate_bar_votes
-from apps.users.authentication import FirebaseAuthentication
+from barbuddy_api.authentication import FirebaseAuthentication
 
 from django.contrib.gis.db.models.functions import Distance
 from django.contrib.gis.geos import Point

@@ -88,6 +88,7 @@ INSTALLED_APPS = [
 AUTH_USER_MODEL = 'users.User'
 
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",  # Must be first
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -96,7 +97,6 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "corsheaders.middleware.CorsMiddleware",
 ]
 
 ROOT_URLCONF = "barbuddy_api.urls"
@@ -179,17 +179,32 @@ USE_I18N = True
 
 USE_TZ = True
 
+# Logging configuration
 LOGGING = {
-    "version": 1,
-    "disable_existing_loggers": False,
-    "handlers": {
-        "console": {
-            "class": "logging.StreamHandler",
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {message}',
+            'style': '{',
         },
     },
-    "root": {
-        "handlers": ["console"],
-        "level": "DEBUG",
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'INFO',
+    },
+    'loggers': {
+        'barbuddy_api': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
     },
 }
 
@@ -244,3 +259,37 @@ STORAGES = {
 }
 
 MEDIA_URL = f"https://storage.googleapis.com/{GS_BUCKET_NAME}/"
+
+# CORS settings
+CORS_ALLOW_ALL_ORIGINS = True  # For development only
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'Authorization',  # Add uppercase version
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+    'X-Authorization',  # Add X-Authorization
+    'Content-Type',  # Add uppercase version
+    'Accept',  # Add uppercase version
+]
+CORS_EXPOSE_HEADERS = [
+    'Authorization',
+    'authorization',
+    'X-Authorization',
+    'Content-Type',
+    'Accept'
+]
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]

@@ -1,7 +1,8 @@
 from django.test import TestCase
 from django.core.exceptions import ValidationError
 from django.contrib.gis.geos import Point
-from apps.bars.models import Bar, BarStatus, BarRating
+from rest_framework.test import APIClient
+from apps.bars.models import Bar, BarStatus, BarRating, BarHours
 from apps.users.models import User
 
 #python manage.py test bars.tests.test_models
@@ -224,3 +225,37 @@ class BarRatingModelTests(TestCase):
         )
         expected_str = f"{self.user.username}'s rating for {self.bar.name}"
         self.assertEqual(str(rating), expected_str)
+
+class BarHoursTests(TestCase):
+    def setUp(self):
+        # Create a test user
+        self.user = User.objects.create_user(
+            username='testuser',
+            email='test@example.com',
+            password='testpass123'
+        )
+        self.user.is_staff = True  # Make user an admin
+        self.user.save()
+
+        # Create a test bar
+        self.bar = Bar.objects.create(
+            name='Test Bar',
+            address='123 Test St',
+            average_price='$$'
+        )
+
+        # Create test client
+        self.client = APIClient()
+        # Authenticate the client
+        self.client.force_authenticate(user=self.user)
+
+    def test_create_bar_hours(self):
+        data = {
+            'bar': self.bar.id,
+            'day': 'monday',
+            'open_time': '09:00:00',
+            'close_time': '17:00:00',
+            'is_closed': False
+        }
+        response = self.client.post('/api/bar-hours/', data)
+        self.assertEqual(response.status_code, 201)

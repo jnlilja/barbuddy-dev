@@ -39,7 +39,7 @@ enum MatchingError: Error, LocalizedError {
 @MainActor
 final class MatchingService {
     static let shared = MatchingService()
-    private let baseURL = URL(string: "barbuddy-backend-148659891217.us-central1.run.app/api")!
+    private let baseURL = URL(string: "http://127.0.0.1:8000/api")!
     private init() {}
 
     /// Toggle to ignore bar‑boundary filtering during testing.

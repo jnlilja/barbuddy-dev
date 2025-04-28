@@ -12,7 +12,7 @@ import FirebaseAuth
 /// Handles all friend-related API calls with Firebase Auth
 class FriendAPIService: @unchecked Sendable {
     @MainActor static let shared = FriendAPIService()
-    private let baseURL = "barbuddy-backend-148659891217.us-central1.run.app/api"
+    private let baseURL = "http://127.0.0.1:8000/api"
 
     /// Attaches Firebase ID token to the request headers
     private func authorizedRequest(url: URL, method: String = "GET", body: Data? = nil) async throws -> URLRequest {

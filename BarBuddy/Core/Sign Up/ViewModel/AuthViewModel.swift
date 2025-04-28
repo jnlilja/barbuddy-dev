@@ -40,12 +40,21 @@ final class AuthViewModel: ObservableObject {
     /// Creates a Firebase Auth account and stores the profile in your backend.
     func signUp(profile: PostUser, password: String) async {
         do {
+            // 1. Create Firebase user
             let result = try await Auth.auth().createUser(withEmail: profile.email, password: password)
             authUser = result.user
-
-            // Store profile through REST POST
+            
+            // 2. Get a fresh token and wait for it to propagate
+            let token = try await result.user.getIDToken()
+            print("✅ Got Firebase token after signup")
+            
+            // Add a small delay to ensure token propagation
+            try await Task.sleep(nanoseconds: 2_000_000_000) // 2 seconds
+            
+            // 3. Store profile through REST POST
             try await PostUserAPIService.shared.create(user: profile)
-
+            
+            // 4. Load the current user
             try await loadCurrentUser(email: profile.email)
             print("✅ New user created & stored.")
         } catch {
@@ -66,14 +75,7 @@ final class AuthViewModel: ObservableObject {
 
     // MARK: - Private helpers
     private func loadCurrentUser(email: String) async throws {
-        // If your backend echoes the profile record (with id) after sign‑up,
-        // you could store that id in UserDefaults, then:
-        //
-        // currentUser = try await GetUserAPIService.shared.fetchUser(id: savedId)
-        //
-        // For the moment we’ll stick with email filtering:
-        let users = try await GetUserAPIService.shared.fetchUsers()
-        currentUser = users.first(where: { $0.email == email })
+        currentUser = try await GetUserAPIService.shared.fetchUserByEmail(email: email)
     }
 }
 
