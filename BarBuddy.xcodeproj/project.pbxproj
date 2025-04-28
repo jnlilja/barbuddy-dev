@@ -33,7 +33,6 @@
 
 /* Begin PBXFileReference section */
 		1B86E8202DBED97100659B1B /* BarBuddy.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = BarBuddy.xctestplan; sourceTree = "<group>"; };
-		1BC392192DBF547C0048A7AD /* BarBuddy.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = BarBuddy.xctestplan; sourceTree = "<group>"; };
 		599153B12D540523004B2832 /* BarBuddy.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BarBuddy.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		599153C12D540525004B2832 /* BarBuddyTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BarBuddyTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		599153CB2D540525004B2832 /* BarBuddyUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BarBuddyUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -103,7 +102,6 @@
 		599153A82D540523004B2832 = {
 			isa = PBXGroup;
 			children = (
-				1BC392192DBF547C0048A7AD /* BarBuddy.xctestplan */,
 				1B86E8202DBED97100659B1B /* BarBuddy.xctestplan */,
 				599153B32D540523004B2832 /* BarBuddy */,
 				599153C42D540525004B2832 /* BarBuddyTests */,
