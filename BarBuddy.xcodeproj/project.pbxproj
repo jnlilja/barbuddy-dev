@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		1BBB5B712D979D0400A5E2E8 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 1BBB5B702D979D0400A5E2E8 /* FirebaseAuth */; };
+		1BC38D3B2DBF428B0048A7AD /* File.rtf in Resources */ = {isa = PBXBuildFile; fileRef = 1BC38D3A2DBF428B0048A7AD /* File.rtf */; };
 		1BEC0A212DB0825F00ED74F0 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 1BEC0A202DB0825F00ED74F0 /* FirebaseFirestore */; };
 		1BF7EF472D79161D001786D8 /* BottomSheet in Frameworks */ = {isa = PBXBuildFile; productRef = 1BF7EF462D79161D001786D8 /* BottomSheet */; };
 		1BFF2B742DB6C59400D160AB /* PusherSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 1BFF2B732DB6C59400D160AB /* PusherSwift */; };
@@ -33,6 +34,7 @@
 
 /* Begin PBXFileReference section */
 		1B86E8202DBED97100659B1B /* BarBuddy.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = BarBuddy.xctestplan; sourceTree = "<group>"; };
+		1BC38D3A2DBF428B0048A7AD /* File.rtf */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; path = File.rtf; sourceTree = "<group>"; };
 		599153B12D540523004B2832 /* BarBuddy.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BarBuddy.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		599153C12D540525004B2832 /* BarBuddyTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BarBuddyTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		599153CB2D540525004B2832 /* BarBuddyUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BarBuddyUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -102,6 +104,7 @@
 		599153A82D540523004B2832 = {
 			isa = PBXGroup;
 			children = (
+				1BC38D3A2DBF428B0048A7AD /* File.rtf */,
 				1B86E8202DBED97100659B1B /* BarBuddy.xctestplan */,
 				599153B32D540523004B2832 /* BarBuddy */,
 				599153C42D540525004B2832 /* BarBuddyTests */,
@@ -251,6 +254,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1BC38D3B2DBF428B0048A7AD /* File.rtf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
