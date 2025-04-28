@@ -32,9 +32,6 @@
     },
     {
       "parallelizable" : true,
-      "skippedTests" : [
-        "BarBuddyUITests"
-      ],
       "target" : {
         "containerPath" : "container:BarBuddy.xcodeproj",
         "identifier" : "599153CA2D540525004B2832",
