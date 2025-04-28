@@ -1,16 +1,17 @@
-from rest_framework import viewsets, permissions, serializers
+from rest_framework import viewsets, permissions, serializers, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.utils import timezone
 from datetime import timedelta
 
 from django.contrib.auth import get_user_model
-from .models import Bar, BarStatus, BarRating, BarVote, BarImage
+from .models import Bar, BarStatus, BarRating, BarVote, BarImage, BarHours
 from .serializers import (
     BarSerializer, BarStatusSerializer, BarRatingSerializer,
-    BarVoteSerializer, BarImageSerializer
+    BarVoteSerializer, BarImageSerializer, BarHoursSerializer
 )
 from apps.bars.services.voting import aggregate_bar_votes
+from apps.users.authentication import FirebaseAuthentication
 
 from django.contrib.gis.db.models.functions import Distance
 from django.contrib.gis.geos import Point
@@ -159,3 +160,78 @@ class BarImageViewSet(viewsets.ModelViewSet):
         bar_pk = self.kwargs.get('bar_pk')
         bar = Bar.objects.get(pk=bar_pk)
         serializer.save(bar=bar)
+
+class BarHoursViewSet(viewsets.ModelViewSet):
+    authentication_classes = [FirebaseAuthentication]
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = BarHoursSerializer
+    queryset = BarHours.objects.all()
+
+    def get_permissions(self):
+        if self.action in ['create', 'update', 'partial_update', 'destroy', 'bulk_update']:
+            return [permissions.IsAdminUser()]
+        return [permissions.IsAuthenticated()]
+
+    def get_queryset(self):
+        bar_id = self.request.query_params.get('bar_id')
+        if bar_id:
+            return self.queryset.filter(bar_id=bar_id)
+        return self.queryset
+
+    @action(detail=False, methods=['get'])
+    def by_bar(self, request):
+        bar_id = request.query_params.get('bar_id')
+        if not bar_id:
+            return Response(
+                {"error": "bar_id parameter is required"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        hours = self.get_queryset().filter(bar_id=bar_id)
+        serializer = self.get_serializer(hours, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['post'])
+    def bulk_update(self, request):
+        if not request.user.is_staff:
+            return Response(
+                {"error": "Only admin users can update bar hours"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        bar_id = request.data.get('bar_id')
+        if not bar_id:
+            return Response(
+                {"error": "bar_id is required"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            bar = Bar.objects.get(id=bar_id)
+        except Bar.DoesNotExist:
+            return Response(
+                {"error": "Bar not found"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        hours_data = request.data.get('hours', [])
+        created_hours = []
+        errors = []
+
+        for hour_data in hours_data:
+            hour_data['bar'] = bar_id
+            serializer = self.get_serializer(data=hour_data)
+            if serializer.is_valid():
+                hour = serializer.save()
+                created_hours.append(hour)
+            else:
+                errors.append(serializer.errors)
+
+        if errors:
+            return Response(
+                {"errors": errors},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        return Response(
+            self.get_serializer(created_hours, many=True).data,
+            status=status.HTTP_201_CREATED
+        )
