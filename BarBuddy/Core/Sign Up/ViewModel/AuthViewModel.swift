@@ -34,9 +34,9 @@ final class AuthViewModel: ObservableObject {
 
     // MARK: - Sign‑up (new account)
     /// Creates a Firebase Auth account and stores the profile in your backend.
-    func signUp(profile: User, password: String) async throws {
+    func signUp(profile: User) async throws {
         do {
-            let result = try await Auth.auth().createUser(withEmail: profile.email, password: password)
+            let result = try await Auth.auth().createUser(withEmail: profile.email, password: profile.password)
             authUser = result.user
 
             // Store profile through REST POST
@@ -53,6 +53,8 @@ final class AuthViewModel: ObservableObject {
             print( "❌ Sign‑up failed: No token returned.")
         } catch NetworkError.httpError {
             print("❌ Sign‑up failed: HTTP error.")
+        } catch NetworkError.invalidData {
+            print("Invalid data returned from the server.")
         } catch {
             print("❌ Sign‑up failed bruh:", error.localizedDescription)
         }

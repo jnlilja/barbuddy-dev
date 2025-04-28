@@ -312,8 +312,6 @@ struct InfoItem: Identifiable {
     let text: String
 }
 
-
-
 //uncomment for real user data
 #Preview("User Data") {
     ProfileView()
@@ -341,7 +339,7 @@ struct InfoItem: Identifiable {
             jobOrUniversity: "Example U",
             favoriteDrink: "Coffee",
             location: Location(latitude: 20, longitude: 20),
-            profilePictures: [ProfilePicture(id: 0, url: dummyPic, isPrimary: false, uploadedAt: "today"), ProfilePicture(id: 1, url: dummyPic2, isPrimary: true, uploadedAt: ""), ProfilePicture(url: dummyPic3, isPrimary: false, uploadedAt: "")],
+            profilePictures: [ProfilePicture(id: 0, url: dummyPic, isPrimary: false, uploadedAt: "today"), ProfilePicture(id: 1, url: dummyPic2, isPrimary: true, uploadedAt: ""), ProfilePicture(url: dummyPic3, isPrimary: false, uploadedAt: ""),ProfilePicture(id: 2, url: dummyPic, isPrimary: false, uploadedAt: "today"), ProfilePicture(id: 3, url: dummyPic2, isPrimary: false, uploadedAt: ""), ProfilePicture(url: dummyPic3, isPrimary: false, uploadedAt: ""), ],
             matches: "",
             swipes: "",
             voteWeight: 0,
