@@ -1,0 +1,145 @@
+/* Privacy page specific styles to complement index.css */
+
+.privacy-hero {
+  height: 300px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  margin-top: 80px;
+  text-align: center;
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+}
+
+.privacy-hero-content {
+  z-index: 2;
+  padding: 0 20px;
+}
+
+.privacy-hero h1 {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  font-weight: 700;
+  background: linear-gradient(90deg, var(--accent), var(--secondary));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.privacy-hero p {
+  font-size: 1.2rem;
+  opacity: 0.9;
+  max-width: 600px;
+  background: linear-gradient(90deg, var(--accent), var(--secondary));
+  background-clip: text;
+  color: transparent;
+}
+
+.privacy-wave {
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 100%;
+  z-index: 1;
+}
+
+.legal-page {
+  background: var(--light-bg);
+  color: var(--text-dark);
+  padding: 0 5% 5rem;
+  line-height: 1.8;
+  margin-top: -1px;
+}
+
+.legal-container {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.legal-content {
+  padding: 2rem 0;
+}
+
+.privacy-card {
+  background: white;
+  border-radius: 16px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.05);
+  display: flex;
+  gap: 1.5rem;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all 0.4s ease;
+}
+
+.privacy-card.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.privacy-card-icon {
+  flex-shrink: 0;
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  background: rgba(138, 43, 226, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary);
+}
+
+.privacy-card-content {
+  flex: 1;
+}
+
+.privacy-card h2 {
+  color: var(--primary-dark);
+  font-size: 1.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.privacy-card p {
+  opacity: 0.8;
+  font-size: 1.05rem;
+}
+
+.privacy-card a {
+  color: var(--secondary);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.privacy-card a:hover {
+  text-decoration: underline;
+}
+
+.privacy-update-info {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin: 3rem 0;
+  color: var(--primary-dark);
+  opacity: 0.7;
+}
+
+/* Media Queries */
+@media (max-width: 768px) {
+  .privacy-hero h1 {
+    font-size: 2.25rem;
+  }
+
+  .privacy-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .privacy-card-icon {
+    width: 48px;
+    height: 48px;
+  }
+}
