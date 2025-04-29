@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BarBuddy | Your Nightlife Companion</title>
+  <link rel="stylesheet" href="../css/index.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Background Elements -->
+  <div class="gradient-bg"></div>
+  <div class="noise-overlay"></div>
+
+  <!-- Header -->
+  <header>
+    <div class="logo-container">
+      <img src="/api/placeholder/40/40" alt="BarBuddy Logo" class="logo" />
+      <span class="brand-name">BarBuddy</span>
+    </div>
+
+    <nav>
+      <button class="mobile-nav-toggle" aria-label="Toggle Navigation">☰</button>
+      <ul>
+        <li><a href="#features">Features</a></li>
+        <li><a href="#how-it-works">How It Works</a></li>
+        <li><a href="#reviews">Reviews</a></li>
+        <li><a href="#download">Download</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero" id="hero">
+    <div class="hero-bg-circle circle-1"></div>
+    <div class="hero-bg-circle circle-2"></div>
+
+    <div class="hero-content">
+      <img src="/api/placeholder/140/140" alt="BarBuddy Logo" class="logo-hero" />
+      <h1 class="tagline fade-in">Discover. Connect. Party.</h1>
+      <p class="subtitle fade-in delay-1">
+        The ultimate companion for your nightlife. Find vibrant bars, connect with like-minded people, and never miss the hottest events in your city.
+      </p>
+
+      <div class="cta-container fade-in delay-2">
+        <a href="#download" class="cta-button cta-primary">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 17V3"></path>
+            <path d="m6 11 6 6 6-6"></path>
+            <path d="M19 21H5a2 2 0 0 1-2-2V5"></path>
+          </svg>
+          Download App
+        </a>
+        <a href="#how-it-works" class="cta-button cta-secondary">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polygon points="10 8 16 12 10 16 10 8"></polygon>
+          </svg>
+          How It Works
+        </a>
+      </div>
+    </div>
+
+    <div class="app-preview fade-in delay-3">
+      <img src="/api/placeholder/900/450" alt="BarBuddy App Preview" class="phone-mockup" />
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section class="features" id="features">
+    <h2 class="section-title">More Than Just Another Bar App</h2>
+    <p class="section-subtitle">BarBuddy combines AI-powered location services, social networking, and real-time event updates to transform your night out.</p>
+
+    <div class="features-grid">
+      <div class="feature-card" data-animate>
+        <div class="feature-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M13 20v-6h6v6"></path>
+            <path d="M19 10V5a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v5"></path>
+            <path d="M11 20a3 3 0 1 1-6 0v-6h6v6Z"></path>
+            <path d="M8 8V4"></path>
+            <path d="M16 8V4"></path>
+          </svg>
+        </div>
+        <h3>Social Matching</h3>
+        <p>Connect with like-minded people based on shared interests, favorite drinks, and music preferences to find your perfect party crew.</p>
+        <a href="#" class="learn-more">
+          Learn more
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m9 18 6-6-6-6"></path>
+          </svg>
+        </a>
+      </div>
+
+      <div class="feature-card" data-animate>
+        <div class="feature-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5.5 20H8M17 9l-4.8 4.7a1 1 0 0 0-.2 1.1l1.1 2.4a1 1 0 0 1-.6 1.4l-.7.2"></path>
+            <path d="m17.5 11.5 1 1"></path>
+            <path d="M15.5 13.5 14 15"></path>
+            <path d="M14 5h.01M3 8h.01M14 21h.01M9 13h.01"></path>
+            <path d="M19 5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z"></path>
+            <path d="M14 8a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z"></path>
+            <path d="M3 11a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z"></path>
+            <path d="M9 16a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z"></path>
+            <path d="M3 24a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z"></path>
+            <path d="M14 24a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z"></path>
+          </svg>
+        </div>
+        <h3>Drink Specials</h3>
+        <p>Exclusive in-app drink deals and happy hour notifications help you save money while experiencing the best nightlife in town.</p>
+        <a href="#" class="learn-more">
+          Learn more
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m9 18 6-6-6-6"></path>
+          </svg>
+        </a>
+      </div>
+
+      <div class="feature-card" data-animate>
+        <div class="feature-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+        </div>
+        <h3>Safe Journey Home</h3>
+        <p>Built-in ride sharing integration and friend location sharing ensures everyone gets home safely after a night of fun.</p>
+        <a href="#" class="learn-more">
+          Learn more
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m9 18 6-6-6-6"></path>
+          </svg>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- How It Works Section -->
+  <section class="how-it-works" id="how-it-works">
+    <h2 class="section-title" style="color: white;">Start Your Night Right</h2>
+    <p class="section-subtitle">Using BarBuddy is as easy as 1-2-3. Download, discover, and enjoy!</p>
+
+    <div class="steps">
+      <div class="step" data-animate>
+        <div class="step-number">01</div>
+        <h3>Download & Create Profile</h3>
+        <p>Download the app and set up your profile with your preferences, favorite drinks, and the vibes you're looking for.</p>
+      </div>
+
+      <div class="step" data-animate>
+        <div class="step-number">02</div>
+        <h3>Discover & Connect</h3>
+        <p>Browse nearby venues with real-time data on crowd, atmosphere, and exclusive events happening tonight.</p>
+      </div>
+
+      <div class="step" data-animate>
+        <div class="step-number">03</div>
+        <h3>Enjoy & Share</h3>
+        <p>Check in, meet new friends, unlock drink specials, and share your experience with the BarBuddy community.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Reviews Section -->
+  <section class="reviews" id="reviews">
+    <h2 class="section-title" style="color: white;">What Our Users Say</h2>
+    <p class="section-subtitle">Join thousands of satisfied nightlife enthusiasts who've found their perfect night out with BarBuddy.</p>
+
+    <div class="reviews-container">
+      <div class="review-card">
+        <img src="/api/placeholder/60/60" alt="User" />
+        <div class="stars">★★★★★</div>
+        <p class="review-text">"BarBuddy completely changed how I experience nightlife! I found my favorite bar and even met my girlfriend through the app. The live data is incredibly accurate."</p>
+        <p class="review-author">Jake Thompson</p>
+        <p class="review-location">Los Angeles, CA</p>
+      </div>
+
+      <div class="review-card">
+        <img src="/api/placeholder/60/60" alt="User" />
+        <div class="stars">★★★★★</div>
+        <p class="review-text">"As someone who's always looking for good happy hour deals, this app is a game changer. The drink specials alone have saved me over $200 in the past month!"</p>
+        <p class="review-author">Sarah Miller</p>
+        <p class="review-location">Chicago, IL</p>
+      </div>
+
+      <div class="review-card">
+        <img src="/api/placeholder/60/60" alt="User" />
+        <div class="stars">★★★★☆</div>
+        <p class="review-text">"I travel for work a lot, and BarBuddy helps me find the best local spots in every city. The social matching feature is brilliant for meeting new people."</p>
+        <p class="review-author">Michael Chen</p>
+        <p class="review-location">Miami, FL</p>
+      </div>
+
+      <div class="review-card">
+        <img src="/api/placeholder/60/60" alt="User" />
+        <div class="stars">★★★★★</div>
+        <p class="review-text">"As a bar owner, partnering with BarBuddy has increased our weeknight traffic by 35%. The event promotion features are incredibly effective!"</p>
+        <p class="review-author">Olivia Rodriguez</p>
+        <p class="review-location">Austin, TX</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Download Section -->
+  <section class="download" id="download">
+    <svg class="wave-bg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320">
+      <path fill="#ffffff" fill-opacity="1" d="M0,96L48,112C96,128,192,160,288,186.7C384,213,480,235,576,213.3C672,192,768,128,864,128C960,128,1056,192,1152,208C1248,224,1344,192,1392,176L1440,160L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
+    </svg>
+
+    <div class="download-content">
+      <h2>Ready to Transform Your Night Out?</h2>
+      <p>Download BarBuddy today and discover a new way to experience nightlife. Available soon on iOS and Android.</p>
+
+      <div class="download-buttons">
+        <a href="#" class="store-button">
+          <div class="store-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 19H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v5.5"></path>
+              <path d="M16 2v4"></path>
+              <path d="M8 2v4"></path>
+              <path d="M3 10h18"></path>
+              <circle cx="17" cy="19" r="2"></circle>
+              <path d="M17 17v-6h-2"></path>
+              <path d="M15 17h4"></path>
+            </svg>
+          </div>
+          <div class="store-text">
+            <small>Coming Soon on</small>
+            <strong>App Store</strong>
+          </div>
+        </a>
+
+        <a href="#" class="store-button">
+          <div class="store-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 3v18h18"></path>
+              <path d="M13 17V9h4v8"></path>
+              <path d="M13 13h4"></path>
+              <path d="M7 17l4-8"></path>
+              <path d="M7 17v-3"></path>
+            </svg>
+          </div>
+          <div class="store-text">
+            <small>Coming Soon on</small>
+            <strong>Google Play</strong>
+          </div>
+        </a>
+      </div>
+
+      <p>Want to be notified when we launch?</p>
+      <form class="notification-form">
+        <input type="email" class="notification-input" placeholder="Enter your email address" required />
+        <button type="submit" class="notification-submit">Notify Me</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <div class="footer-content">
+      <div class="footer-col">
+        <h4>BarBuddy</h4>
+        <ul>
+          <li><a href="#">About Us</a></li>
+          <li><a href="#">Careers</a></li>
+          <li><a href="#">Press Kit</a></li>
+          <li><a href="#">Contact</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h4>Features</h4>
+        <ul>
+          <li><a href="#">Smart Location</a></li>
+          <li><a href="#">Live Data</a></li>
+          <li><a href="#">Social Matching</a></li>
+          <li><a href="#">Event Discovery</a></li>
+          <li><a href="#">Safe Home</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h4>Partners</h4>
+        <ul>
+          <li><a href="#">For Bar Owners</a></li>
+          <li><a href="#">For Event Planners</a></li>
+          <li><a href="#">Advertising</a></li>
+          <li><a href="#">API Access</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h4>Stay Connected</h4>
+        <div class="social-links">
+          <a href="#" class="social-link">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path>
+            </svg>
+          </a>
+          <a href="#" class="social-link">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+              <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+              <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+            </svg>
+          </a>
+          <a href="#" class="social-link">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"></path>
+            </svg>
+          </a>
+          <a href="#" class="social-link">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path>
+              <rect x="2" y="9" width="4" height="12"></rect>
+              <circle cx="4" cy="4" r="2"></circle>
+            </svg>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <p>&copy; 2025 BarBuddy. All rights reserved.</p>
+      <div class="footer-bottom-links">
+        <a href="privacy.html">Privacy Policy</a>
+        <a href="terms.html">Terms of Service</a>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>
+            <circle cx="12" cy="10" r="3"></circle>
+            <path d="M12 21.7C17.3 17 20 13 20 10a8 8 0 1 0-16 0c0 3 2.7 6.9 8 11.7z"></path>
+          </svg>
+        </div>
+        <h3>Smart Location</h3>
+        <p>Find the perfect bar based on your mood, vibe preference, and current location with our AI-powered recommendation engine.</p>
+        <a href="#" class="learn-more">
+          Learn more
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m9 18 6-6-6-6"></path>
+          </svg>
+        </a>
+      </div>
+
+      <div class="feature-card" data-animate>
+        <div class="feature-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3Z"></path>
+          </svg>
+        </div>
+        <h3>Live Crowd Data</h3>
+        <p>See real-time information about how busy venues are, the current vibe, gender ratio, and age range before you even arrive.</p>
+        <a href="#" class="learn-more">
+          Learn more
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m9 18 6-6-6-6"></path>
+          </svg>
+        </a>
+      </div>
+
+      <div class="feature-card" data-animate>
+        <div class="feature-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 5H7a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2Z"></path>
+            <path d="m14 12-2 2-2-2"></path>
+            <path d="M12 12v6"></path>
+            <path d="M12 10V8"></path>
+            <path d="M7 3v2"></path>
+            <path d="M17 3v2"></path>
+          </svg>
+        </div>
+        <h3>Event Discovery</h3>
+        <p>Never miss a DJ set, themed night, or happy hour with our curated event calendar personalized to your preferences.</p>
+        <a href="#" class="learn-more">
+          Learn more
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m9 18 6-6-6-6"></path>
+          </svg>
+        </a>
+      </div>
+
+      <div class="feature-card" data-animate>
+        <div class="feature-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
