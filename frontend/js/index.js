@@ -95,3 +95,9 @@ if (notifyForm) {
 function validateEmail(email) {
   return /\S+@\S+\.\S+/.test(email);
 }
+
+fetch("../html/footer.html?v=1.0.0")
+  .then(res => res.text())
+  .then(html => {
+    document.getElementById("footer-placeholder").innerHTML = html;
+});
