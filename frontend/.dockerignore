@@ -1,0 +1,17 @@
+# Ignore everything not needed for frontend Docker image
+../backend/
+../BarBuddy*/
+../.idea
+../.gitignore
+../.DS_Store
+../README.md
+
+../backend/.env
+../backend/venv-3.11.8
+
+../BarBuddy/
+../BarBuddy.xcodeproj/
+../BarBuddyTests/
+../BarBuddyUITests/
+
+node_modules/
