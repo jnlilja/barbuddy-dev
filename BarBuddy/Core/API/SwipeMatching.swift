@@ -80,6 +80,7 @@ final class MatchingService {
               "https://barbuddy-backend-148659891217.us-central1.run.app/api/swipes")!)
         req.httpMethod = "POST"
         req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        req.setValue(token, forHTTPHeaderField: "id-token")
         req.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
         let body = SwipeRequestBody(swiped_on: userID, status: status.rawValue)

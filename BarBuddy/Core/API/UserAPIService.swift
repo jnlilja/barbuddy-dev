@@ -16,6 +16,7 @@ final class UserAPIService {
     private let baseURL = URL(string:
         "https://barbuddy-backend-148659891217.us-central1.run.app/api")!
 
+
     /// GET /api/users  → [User]
     func fetchAll() async throws -> [User] {
         guard let fb = Auth.auth().currentUser else { return [] }
@@ -24,6 +25,7 @@ final class UserAPIService {
         var req = URLRequest(url: baseURL.appendingPathComponent("users"))
         req.httpMethod = "GET"
         req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        req.setValue(token, forHTTPHeaderField: "id-token")
 
         let (data, _) = try await URLSession.shared.data(for: req)
         let dec = JSONDecoder()
@@ -36,5 +38,6 @@ final class UserAPIService {
             }
             throw error
         }
+        
     }
 }
