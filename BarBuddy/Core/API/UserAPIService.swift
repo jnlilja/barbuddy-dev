@@ -24,7 +24,7 @@ final class UserAPIService {
 
         var req = URLRequest(url: baseURL.appendingPathComponent("users"))
         req.httpMethod = "GET"
-        req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization") 
         req.setValue(token, forHTTPHeaderField: "id-token")
 
         let (data, _) = try await URLSession.shared.data(for: req)

@@ -88,8 +88,7 @@ struct MessagesView: View {
             return
         }
         do {
-            let users = try await NetworkManager.shared.fetchUsers()
-            if let me = users.first(where: { $0.id == id }) {
+            let users = try await GetUserAPIService.shared.fetchAll();            if let me = users.first(where: { $0.id == id }) {
                 currentUserID = me.id
             }
         } catch {

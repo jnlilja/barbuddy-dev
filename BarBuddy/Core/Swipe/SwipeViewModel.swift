@@ -15,26 +15,30 @@ final class SwipeViewModel: ObservableObject {
     @Published var users: [User] = []
     @Published var errorMessage: String?
 
-    init() { Task { await loadSuggestions() } }
+    // ───────────────────── init
+    init() {
+        // retry every time Firebase auth state changes
+        Auth.auth().addStateDidChangeListener { [weak self] _, _ in
+            Task { await self?.loadSuggestions() }
+        }
+        // first attempt
+        Task { await loadSuggestions() }
+    }
 
-    // MARK: - Refresh
+    // ───────────────────── refresh
     func loadSuggestions() async {
         do {
-            let feed = try await UserAPIService.shared.fetchAll()
+            let feed = try await GetUserAPIService.shared.fetchAll()
 
             guard
                 let email = Auth.auth().currentUser?.email?.lowercased(),
                 let me    = feed.first(where: { $0.email.lowercased() == email })
-            else {
-                errorMessage = "Could not determine your profile."
-                users.removeAll(); return
-            }
+            else { users = []; errorMessage = "No profile found."; return }
 
             users = try await MatchingService.shared.suggestions(for: me)
-            errorMessage = users.isEmpty ? "No nearby matches – try later." : nil
-
+            errorMessage = users.isEmpty ? "No nearby matches right now." : nil
         } catch {
-            users.removeAll()
+            users = []
             errorMessage = error.localizedDescription
         }
     }

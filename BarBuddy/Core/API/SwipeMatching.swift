@@ -10,33 +10,9 @@ import FirebaseAuth
 
 public enum SwipeStatus: String, Codable { case like, dislike }
 
-public struct SwipeEvent: Codable, Identifiable {
-    public let id: Int
-    public let swiper_username: String
-    public let swiped_on: Int
-    public let swiped_on_username: String
-    public let status: SwipeStatus
-    public let timestamp: String
-}
-
 private struct SwipeRequestBody: Encodable {
     let swiped_on: Int
     let status: String
-}
-
-enum MatchingError: Error, LocalizedError {
-    case noToken, transport(Error), decoding(Error),
-         invalidAuthUser, noSelfProfile
-
-    var errorDescription: String? {
-        switch self {
-        case .noToken:          return "Missing Firebase idToken."
-        case .transport(let e): return e.localizedDescription
-        case .decoding(let e):  return "Decoding error: \(e.localizedDescription)"
-        case .invalidAuthUser:  return "Could not determine the signed-in user."
-        case .noSelfProfile:    return "Could not find your own profile."
-        }
-    }
 }
 
 @MainActor
@@ -44,62 +20,46 @@ final class MatchingService {
     static let shared = MatchingService()
     private init() {}
 
-    // local cache of IDs you’ve already swiped this launch
     private var swipedIDs = Set<Int>()
 
-    // ───────────────────────────────────────── Suggestions
+    // ───────────────────────── Suggestions
     func suggestions(for me: User) async throws -> [User] {
-        let all = try await UserAPIService.shared.fetchAll()
+        // ▼ new: use GetUserAPIService
+        let all = try await GetUserAPIService.shared.fetchAll()
 
-        guard let myID = me.id else { throw MatchingError.noSelfProfile }
+        guard let myID = me.id else { return [] }
 
-        // remove yourself & already-swiped
-        let filtered = all.filter { user in
-            guard let uid = user.id else { return false }
-            return uid != myID && !swipedIDs.contains(uid)
-        }
-
-        // mutual sexual-preference
-        let prefMatched = filtered.filter { Self.preferencesMatch($0, me) }
-
-        // sort by absolute age-difference
-        return prefMatched.sorted {
-            abs($0.ageInYears - me.ageInYears) < abs($1.ageInYears - me.ageInYears)
-        }
+        let filtered = all.filter { ($0.id ?? -1) != myID && !swipedIDs.contains($0.id ?? -1) }
+        let pref = filtered.filter { Self.preferencesMatch($0, me) }
+        return pref.sorted { abs($0.ageInYears - me.ageInYears) < abs($1.ageInYears - me.ageInYears) }
     }
 
-    // ───────────────────────────────────────── Swipe POST
+    // ───────────────────────── Swipe POST
     func sendSwipe(to userID: Int, status: SwipeStatus) async throws {
-        swipedIDs.insert(userID)    // optimistic
+        swipedIDs.insert(userID)
 
-        guard let me = Auth.auth().currentUser else { throw MatchingError.noToken }
+        guard let me = Auth.auth().currentUser else { return }
         let token = try await me.getIDToken()
 
         var req = URLRequest(
-            url: URL(string:
-              "https://barbuddy-backend-148659891217.us-central1.run.app/api/swipes")!)
+            url: URL(string:"https://barbuddy-backend-148659891217.us-central1.run.app/api/swipes")!)
         req.httpMethod = "POST"
+        // ▼ new: Bearer header the backend expects
         req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        req.setValue(token, forHTTPHeaderField: "id-token")
         req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        req.httpBody = try JSONEncoder().encode(
+            SwipeRequestBody(swiped_on: userID, status: status.rawValue))
 
-        let body = SwipeRequestBody(swiped_on: userID, status: status.rawValue)
-        req.httpBody = try JSONEncoder().encode(body)
-
-        do { _ = try await URLSession.shared.data(for: req) }
-        catch { throw MatchingError.transport(error) }
+        _ = try await URLSession.shared.data(for: req)
     }
 
-    // ───────────────────────────────────────── Helpers
     private static func preferencesMatch(_ a: User, _ b: User) -> Bool {
         let x = (a.sexualPreference ?? "").lowercased()
         let y = (b.sexualPreference ?? "").lowercased()
-
-        if x == "both" || x == "everyone" { return true }
-        if y == "both" || y == "everyone" { return true }
-        return x == y
+        return x == "everyone" || x == "both" || y == "everyone" || y == "both" || x == y
     }
 }
+
 
 // MARK: - Age helper
 extension User {

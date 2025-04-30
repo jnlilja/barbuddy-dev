@@ -6,22 +6,34 @@
 //
 
 import SwiftUI
+import Foundation
 import FirebaseAuth
 
-// MARK: Still A WORK IN PROGRESS
-// MARK: - Network service
 @MainActor
 final class GetUserAPIService {
     static let shared = GetUserAPIService()
-}
+    private init() {}
 
-// MARK: - ViewModel
-@MainActor
-final class UsersViewModel: ObservableObject {
-    @Published var users: [User] = []
-    @Published var errorMessage = ""
-    @Published var showingError = false
+    private let baseURL = URL(
+        string: "https://barbuddy-backend-148659891217.us-central1.run.app/api")!
 
+    /// GET /api/users  → [User]
+    func fetchAll() async throws -> [User] {
+        // 1) make sure we have a Firebase user
+        guard let fbUser = Auth.auth().currentUser else { return [] }
+        let token = try await fbUser.getIDToken()
+
+        // 2) build request with the ONE header backend accepts
+        var req = URLRequest(url: baseURL.appendingPathComponent("users"))
+        req.httpMethod = "GET"
+        req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+
+        // 3) fire + decode
+        let (data, _) = try await URLSession.shared.data(for: req)
+        let dec = JSONDecoder()
+        dec.keyDecodingStrategy = .convertFromSnakeCase     // snake_case → camelCase
+        return try dec.decode([User].self, from: data)
+    }
 }
 
 extension User {
