@@ -69,7 +69,7 @@ struct PhotoUploadView: View {
                 Spacer()
                 
                 Button(action: {
-                    signUpViewModel.convertUIImageToString(pictures: selectedImages)
+                    signUpViewModel.convertUIImageToString(picture: selectedImages[0]) // only for the first image (profile)
                     withAnimation { isLoading = true }
                     Task {
                         let profile = signUpViewModel.buildProfile()

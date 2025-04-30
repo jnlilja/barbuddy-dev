@@ -23,7 +23,7 @@ final class SignUpViewModel {
     var hometown         = ""
     var jobOrUniversity  = ""
     var favoriteDrink    = ""
-    var profilePictures: [ProfilePicture]?
+    var profilePictures  = ""
     var doesntDrink      = false       // added for DrinkPreferenceView
     var sexualPreference = "straight"
     
@@ -34,24 +34,22 @@ final class SignUpViewModel {
     var alertMessage     = ""
     var showingAlert     = false
     
-    func buildProfile() -> User {
-            User(
-                username: newUsername,
-                firstName: firstName,
-                lastName: lastName,
-                email: email,
-                password: newPassword,
-                dateOfBirth: dateOfBirth,
-                hometown: hometown,
-                jobOrUniversity: jobOrUniversity,
-                favoriteDrink: favoriteDrink,
-                location: Location(latitude: 0, longitude: 0),
-                profilePictures: profilePictures,
-                matches: "",
-                swipes: "",
-                voteWeight: 0,
-                accountType: "regular",
-                sexualPreference: sexualPreference
+    func buildProfile() -> CreateUserRequest {
+        CreateUserRequest(
+            username: newUsername,
+            firstName: firstName,
+            lastName: lastName,
+            email: email,
+            password: newPassword,
+            confirmPassword: newPassword,
+            dateOfBirth: dateOfBirth,
+            hometown: hometown,
+            jobOrUniversity: jobOrUniversity,
+            favoriteDrink: favoriteDrink,
+            profilePictures: profilePictures,
+            accountType: "regular",
+            sexualPreference: "straight",
+            phoneNumber: generatePhoneNumber() // Placeholder
             )
         }
 
@@ -66,25 +64,22 @@ final class SignUpViewModel {
         guard newPassword == confirmPassword else { return fire("Passwords do not match.") }
     }
     
-    func convertUIImageToString(pictures: [UIImage]) {
-        var result: [ProfilePicture] = []
+    func convertUIImageToString(picture: UIImage) {
         let tempDirectory = FileManager.default.temporaryDirectory
-        for (i, picture) in pictures.enumerated() {
-            let fileName = UUID().uuidString
-            let imageData = picture.jpegData(compressionQuality: 0.5)
-            let fileURL = tempDirectory.appendingPathComponent("\(fileName).jpg")
+        let fileName = UUID().uuidString
+        let imageData = picture.jpegData(compressionQuality: 0.5)
+        let fileURL = tempDirectory.appendingPathComponent("\(fileName).jpg")
             
-            do {
-                try imageData?.write(to: fileURL)
-                result.append(ProfilePicture(id: abs(UUID().hashValue),
-                                             url: fileURL.absoluteString,
-                                             isPrimary: i == 0,
-                                             uploadedAt: Date.getCurrentDate()))
-            } catch {
-                print("Error writing image to disk: \(error)")
-            }
+        do {
+            try imageData?.write(to: fileURL)
+            self.profilePictures = fileURL.absoluteString
+        } catch {
+            print("Error writing image to disk: \(error)")
         }
-        self.profilePictures = result
+    }
+    private func generatePhoneNumber() -> String {
+        let randomDigits = (0..<10).map { _ in Int.random(in: 0...9) }
+        return randomDigits.map(String.init).joined()
     }
 
     // MARK: - Helpers

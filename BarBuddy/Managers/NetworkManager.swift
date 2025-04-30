@@ -5,8 +5,8 @@
 //  Created by Andrew Betancourt on 3/25/25.
 //
 
-import Foundation
 import FirebaseAuth
+import Foundation
 
 @MainActor
 final class NetworkManager {
@@ -15,51 +15,60 @@ final class NetworkManager {
     private let session: URLSession
     private let baseURL = ProcessInfo.processInfo.environment["BASE_URL"] ?? ""
     private let (encoder, decoder) = (JSONEncoder(), JSONDecoder())
-
+    
     private init(session: URLSession = .shared) {
         self.session = session
     }
     
     /// GET /users – returns the full users list
     func fetchUsers() async throws -> [User] {
-        let endpoint = baseURL + "users"
+        let endpoint = baseURL + "users/"
         guard let url = URL(string: endpoint) else { throw APIError.badURL }
-        guard let idToken = try await Auth.auth().currentUser?.getIDToken() else { throw NetworkError.idTokenDecodingFailed }
+        guard let idToken = try await Auth.auth().currentUser?.getIDToken()
+        else { throw NetworkError.idTokenDecodingFailed }
+        
         var request = URLRequest(url: url)
-        let (data, response) = try await session.data(for: request)
-        guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
-            throw NetworkError.httpError
-        }
         request.httpMethod = "GET"
-        request.setValue("Bearer \(idToken)", forHTTPHeaderField: "Authorization")
+        request.setValue(
+            "Bearer \(idToken)",
+            forHTTPHeaderField: "Authorization"
+        )
         request.setValue("application/json", forHTTPHeaderField: "Accept")
         
         do {
             decoder.keyDecodingStrategy = .convertFromSnakeCase
+            let (data, response) = try await session.data(for: request)
+            guard let httpResponse = response as? HTTPURLResponse,
+                  (200...299).contains(httpResponse.statusCode)
+            else {
+                throw NetworkError.httpError
+            }
             return try decoder.decode([User].self, from: data)
         } catch {
             throw APIError.decoding(error)
         }
     }
     
-    func getUser(user: User) async throws -> User {
-        guard let id = user.id else {
-            print("User must have an ID to fetch")
-            throw NetworkError.invalidData
-        }
-        let endpoint = baseURL + "users/\(id)"
+    func getUser(user: CreateUserRequest) async throws -> User {
+        let endpoint = baseURL + "users/"
         guard let url = URL(string: endpoint) else { throw APIError.badURL }
-        guard let idToken = try await Auth.auth().currentUser?.getIDToken() else { throw NetworkError.idTokenDecodingFailed }
-        var request = URLRequest(url: url)
-        let (data, response) = try await session.data(for: request)
-        guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else { throw NetworkError.httpError }
+        guard let idToken = try await Auth.auth().currentUser?.getIDToken()
+        else { throw NetworkError.idTokenDecodingFailed }
         
+        var request = URLRequest(url: url)
         request.httpMethod = "GET"
-        request.setValue("Bearer \(idToken)", forHTTPHeaderField: "Authorization")
+        request.setValue(
+            "Bearer \(idToken)",
+            forHTTPHeaderField: "Authorization"
+        )
         request.setValue("application/json", forHTTPHeaderField: "Accept")
         
         do {
             decoder.keyDecodingStrategy = .convertFromSnakeCase
+            let (data, response) = try await session.data(for: request)
+            if let hhttpResponse = response as? HTTPURLResponse {
+                print("getUser Status code: \(hhttpResponse.statusCode)")
+            }
             return try decoder.decode(User.self, from: data)
         } catch {
             print("Data unsuccessfully decoded")
@@ -67,106 +76,161 @@ final class NetworkManager {
         }
     }
     
-    func getUser(uid: String) async throws -> User {
-        let endpoint = baseURL + "users/\(uid)"
+    func getUser(id: String) async throws -> User {
+        let endpoint = baseURL + "users/\(id)/"
         guard let url = URL(string: endpoint) else { throw APIError.badURL }
-        guard let idToken = try await Auth.auth().currentUser?.getIDToken() else { throw NetworkError.idTokenDecodingFailed }
-        var request = URLRequest(url: url)
-        let (data, response) = try await session.data(for: request)
-        guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else { throw NetworkError.httpError }
+        guard let idToken = try await Auth.auth().currentUser?.getIDToken()
+        else { throw NetworkError.idTokenDecodingFailed }
         
+        var request = URLRequest(url: url)
         request.httpMethod = "GET"
-        request.setValue("Bearer \(idToken)", forHTTPHeaderField: "Authorization")
+        request.setValue(
+            "Bearer \(idToken)",
+            forHTTPHeaderField: "Authorization"
+        )
         request.setValue("application/json", forHTTPHeaderField: "Accept")
         
         do {
             decoder.keyDecodingStrategy = .convertFromSnakeCase
+            let (data, response) = try await session.data(for: request)
+            guard let httpResponse = response as? HTTPURLResponse,
+                  (200...299).contains(httpResponse.statusCode)
+            else { throw NetworkError.httpError }
             return try decoder.decode(User.self, from: data)
+            
         } catch {
             print("Data unsuccessfully decoded")
             throw NetworkError.decodingFailed
         }
     }
     
-    func postUser(user: User) async throws {
-        let endpoint = baseURL + "users"
+    // MARK: - User Registration
+    /// POST /users/register_user/ – registers a new user
+    /// - Parameters:
+    ///   - user: The user to register.
+    ///   - Throws: An error if the request fails or the response cannot be decoded.
+    ///   - Returns: The registered user.
+    ///   - Note: The user must be authenticated with Firebase before calling this method.
+    ///   - Important: This method does not handle the Firebase authentication process.
+    /// POST /users/register_user/ – registers a new user
+    /// - Parameter user: The user information to register
+    /// - Returns: The registered user from the server response
+    /// - Throws: APIError or NetworkError if registration fails
+    func postUser(user: CreateUserRequest) async throws {
+        let endpoint = baseURL + "users/register_user/"
         guard let url = URL(string: endpoint) else { throw APIError.badURL }
-        guard let idToken = try await Auth.auth().currentUser?.getIDToken() else { throw APIError.noToken }
-        var request = URLRequest(url: url)
-        let (data, response) = try await session.data(for: request)
-        if let hhttpResponse = response as? HTTPURLResponse {
-            print("Status code: \(hhttpResponse.statusCode)")
-        }
-        guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else { throw NetworkError.httpError }
         
+        var request = URLRequest(url: url)
         request.httpMethod = "POST"
-        request.setValue("Bearer \(idToken)", forHTTPHeaderField: "Authorization")
-        request.setValue("application/json", forHTTPHeaderField: "Accept")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        // Add timeout to prevent hanging requests
+        request.timeoutInterval = 30
         
         do {
             encoder.keyEncodingStrategy = .convertToSnakeCase
-            request.httpBody = try encoder.encode(user)
-            print("Response data: \(String(data: data, encoding: .utf8) ?? "No response")")
-            
-            try await postPictures(of: user)
-            
-            
-        } catch NetworkError.pictureDecodingFailed {
-            print("Could not decode picture data")
+            let encodedData = try encoder.encode(user)
+            request.httpBody = encodedData
+            print("Request payload: \(String(data: encodedData, encoding: .utf8) ?? "No data")")
         } catch {
+            print("Encoding failed: \(error)")
             throw APIError.encoding(error)
         }
-    }
-    
-    private func postPictures(of user: User) async throws {
-        guard let pictures = user.profilePictures else { print("No pictures to upload"); return }
-        guard let idToken = try await Auth.auth().currentUser?.getIDToken() else { throw APIError.noToken }
-        
-        for picture in pictures where !picture.isPrimary {
-            let endpoint = baseURL + "users/\(user.id!)/upload_picture/\(picture.url)"
-            
-            guard let url = URL(string: endpoint) else { throw APIError.badURL }
-            var request = URLRequest(url: url)
-            let (data, response) = try await session.data(for: request)
-            guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else { throw NetworkError.httpError }
-            
-            request.httpMethod = "POST"
-            request.setValue("Bearer \(idToken)", forHTTPHeaderField: "Authorization")
-            request.setValue("application/json", forHTTPHeaderField: "Accept")
-            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-            
-            do {
-                encoder.keyEncodingStrategy = .convertToSnakeCase
-                request.httpBody = try encoder.encode(picture.url)
-                print("Response data: \(String(data: data, encoding: .utf8) ?? "No response")")
-            } catch {
-                throw NetworkError.pictureDecodingFailed
-            }
-        }
-    }
-    
-    private func putPrimaryPicture(of user: User) async throws {
-        guard let primaryPicture = user.profilePictures?.first(where: { $0.isPrimary }) else { print("No primary picture to upload"); return }
-        guard let idToken = try await Auth.auth().currentUser?.getIDToken() else { throw APIError.noToken }
-        let endpoint = baseURL + "users/\(user.id!)/set_primary_picture/\(primaryPicture.url)"
-        
-        guard let url = URL(string: endpoint) else { throw APIError.badURL }
-        var request = URLRequest(url: url)
-        let (data, response) = try await session.data(for: request)
-        guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else { throw NetworkError.httpError }
-        
-        request.httpMethod = "PUT"
-        request.setValue("Bearer \(idToken)", forHTTPHeaderField: "Authorization")
-        request.setValue("application/json", forHTTPHeaderField: "Accept")
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         
         do {
-            encoder.keyEncodingStrategy = .convertToSnakeCase
-            request.httpBody = try encoder.encode(primaryPicture.url)
-            print("Response data: \(String(data: data, encoding: .utf8) ?? "No response")")
+            // Use a background task to prevent network timeout issues
+            let (data, response) = try await session.data(for: request)
+            
+            // Log response data for debugging
+            print("Response data: \(String(data: data, encoding: .utf8) ?? "No response data")")
+            
+            guard let httpResponse = response as? HTTPURLResponse else {
+                throw NetworkError.invalidResponse
+            }
+            
+            print("Status code: \(httpResponse.statusCode)")
+            
+            if !(200...299).contains(httpResponse.statusCode) {
+                let errorMessage = String(data: data, encoding: .utf8) ?? "Unknown error"
+                print("Server error: \(httpResponse.statusCode) - \(errorMessage)")
+                throw NetworkError.httpError
+            }
+            
+//            // Try to decode the response
+//            do {
+//                decoder.keyDecodingStrategy = .convertFromSnakeCase
+//                return try decoder.decode(User.self, from: data)
+//            } catch {
+//                print("Decoding error: \(error)")
+//                if let decodingError = error as? DecodingError {
+//                    print("Decoding error details: \(decodingError)")
+//                }
+//                throw NetworkError.decodingFailed
+//            }
         } catch {
-            throw NetworkError.primaryPictureEncodingFailed
+            print("Network request failed with error: \(error)")
+            throw NetworkError.httpError
         }
     }
+        
+        
+        
+        //        private func postPictures(of user: User) async throws {
+        //            try await withThrowingTaskGroup { group in
+        //
+        //                guard let pictures = user.profilePictures else { print("No pictures to upload"); return }
+        //                guard let idToken = try await Auth.auth().currentUser?.getIDToken() else { throw APIError.noToken }
+        //
+        //                for picture in pictures {
+        //                    group.addTask {
+        //                        let endpoint = baseURL + "users/\(user.id)/upload_picture/\(picture)"
+        //
+        //                        guard let url = URL(string: endpoint) else { throw APIError.badURL }
+        //                        var request = URLRequest(url: url)
+        //                        request.httpMethod = "POST"
+        //                        request.setValue(" Bearer \(idToken)", forHTTPHeaderField: "Authorization")
+        //                        request.setValue("application/json", forHTTPHeaderField: "Accept")
+        //                        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        //
+        //                        let (data, response) = try await session.data(for: request)
+        //                        if let hhttpResponse = response as? HTTPURLResponse {
+        //                            print("postPicture Status code: \(hhttpResponse.statusCode)")
+        //                        }
+        //                        guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else { throw NetworkError.httpError }
+        //
+        //                        do {
+        //                            encoder.keyEncodingStrategy = .convertToSnakeCase
+        //                            request.httpBody = try encoder.encode(picture)
+        //                            print("Response data: \(String(data: data, encoding: .utf8) ?? "No response")")
+        //                        } catch {
+        //                            throw NetworkError.pictureDecodingFailed
+        //                        }
+        //                    }
+        //                }
+        //            }
+        //        }
+        
+        //    private func putPrimaryPicture(of user: User) async throws {
+        //        guard let primaryPicture = user.profilePictures?.first(where: { $0.isPrimary }) else { print("No primary picture to upload"); return }
+        //        guard let idToken = try await Auth.auth().currentUser?.getIDToken() else { throw APIError.noToken }
+        //        let endpoint = baseURL + "users/\(user.id!)/set_primary_picture/\(primaryPicture.url)"
+        //
+        //        guard let url = URL(string: endpoint) else { throw APIError.badURL }
+        //        var request = URLRequest(url: url)
+        //        let (data, response) = try await session.data(for: request)
+        //        guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else { throw NetworkError.httpError }
+        //
+        //        request.httpMethod = "PUT"
+        //        request.setValue(""" Bearer \(idToken)", forHTTPHeaderField: "Authorization")
+        //        request.setValue("application/json", forHTTPHeaderField: "Accept")
+        //        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        //
+        //        do {
+        //            encoder.keyEncodingStrategy = .convertToSnakeCase
+        //            request.httpBody = try encoder.encode(primaryPicture.url)
+        //            print("Response data: \(String(data: data, encoding: .utf8) ?? "No response")")
+        //        } catch {
+        //            throw NetworkError.primaryPictureEncodingFailed
+        //        }
+        //    }
 }

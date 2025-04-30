@@ -34,14 +34,13 @@ final class AuthViewModel: ObservableObject {
 
     // MARK: - Sign‑up (new account)
     /// Creates a Firebase Auth account and stores the profile in your backend.
-    func signUp(profile: User) async throws {
+    func signUp(profile: CreateUserRequest) async throws {
         do {
             let result = try await Auth.auth().createUser(withEmail: profile.email, password: profile.password)
-            authUser = result.user
+            self.authUser = result.user
 
-            // Store profile through REST POST
+            // Store profile through REST POST and fetch the user
             try await NetworkManager.shared.postUser(user: profile)
-            self.currentUser = try await NetworkManager.shared.getUser(user: profile)
             print("✅ New user created & stored.")
         } catch APIError.badURL {
             print("❌ Sign‑up failed: Invalid URL.")
@@ -72,7 +71,7 @@ final class AuthViewModel: ObservableObject {
     private func fetchData() async {
         do {
             guard let uid = Auth.auth().currentUser?.uid else { print("No user logged in."); return }
-            self.currentUser = try await NetworkManager.shared.getUser(uid: uid)
+            self.currentUser = try await NetworkManager.shared.getUser(id: uid)
         } catch {
             print("❌ Failed to fetch user data.")
         }

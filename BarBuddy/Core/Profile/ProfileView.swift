@@ -46,8 +46,8 @@ struct ProfileView: View {
                         VStack(spacing: 25) {
                             // Profile header
                             Group {
-                                if let primary = user.profilePictures?.first(where: { $0.isPrimary }) {
-                                    WebImage(url: URL(string: primary.url))
+                                if !user.profilePictures.isEmpty {
+                                    WebImage(url: URL(string: user.profilePictures))
                                         .resizable()
                                         .scaledToFill()
                                         .frame(width: 120, height: 120)
@@ -80,10 +80,10 @@ struct ProfileView: View {
                                        GridItem(.fixed(gridCellWidth), spacing: 15),
                                        GridItem(.fixed(gridCellWidth))
                                    ], spacing: 15) {
-                                       if let profilePictures = user.profilePictures {
-                                           ForEach(profilePictures.filter { !$0.isPrimary }, id: \.self) { image in
+                                       if !user.profilePictures.isEmpty {
+                                           //ForEach(profilePictures.filter { !$0.isPrimary }, id: \.self) { image in
                                                ZStack(alignment: .topTrailing) {
-                                                   WebImage(url: URL(string: image.url)) { image in
+                                                   WebImage(url: URL(string: user.profilePictures)) { image in
                                                        image.resizable()
                                                            
                                                    } placeholder: {
@@ -94,7 +94,7 @@ struct ProfileView: View {
                                                    .clipped()
                                                    .cornerRadius(10)
                                                    .onTapGesture {
-                                                       selectedImage = image.url
+                                                       selectedImage = user.profilePictures
                                                        isImageExpanded = true
                                                    }
                                                        
@@ -112,7 +112,7 @@ struct ProfileView: View {
                                                    }
                                                    .padding(8)
                                                }
-                                           }
+                                           //}
                                        }
                                    }
                                    .padding(.horizontal, 16)
@@ -122,7 +122,7 @@ struct ProfileView: View {
                                     // Info sections
                                     VStack(alignment: .leading, spacing: 20) {
                                         InfoSection(title: "Basic Info", items: [
-                                            InfoItem(icon: "calendar",         text: user.dateOfBirth),
+                                            InfoItem(icon: "calendar",         text: user.dateOfBirth ?? ""),
                                             InfoItem(icon: "mappin.circle.fill", text: user.hometown)
                                         ])
                                         InfoSection(title: "Work & Education", items: [
@@ -130,7 +130,7 @@ struct ProfileView: View {
                                         ])
                                         InfoSection(title: "Preferences", items: [
                                             InfoItem(icon: "wineglass.fill",      text: user.favoriteDrink),
-                                            InfoItem(icon: "person.2.fill",      text: user.sexualPreference)
+                                            InfoItem(icon: "person.2.fill",      text: user.sexualPreference ?? "")
                                         ])
                                     }
                                     .padding(.horizontal, 16)
@@ -246,7 +246,7 @@ struct FriendRow: View {
     let friend: User
     var body: some View {
         HStack {
-            Image(friend.profilePictures?.first?.url ?? "")
+            Image(friend.profilePictures)
                 .resizable()
                 .scaledToFill()
                 .frame(width: 60, height: 60)
@@ -324,9 +324,9 @@ struct InfoItem: Identifiable {
       .environmentObject({
           // build & seed your AuthViewModel in one expression
           let vm = AuthViewModel()
-          let dummyPic = "https://media.istockphoto.com/id/1388645967/photo/pensive-thoughtful-contemplating-caucasian-young-man-thinking-about-future-planning-new.jpg?s=612x612&w=0&k=20&c=Keax_Or9RivnYV_9VoOLjknWQP8iaxYXc4jS9rwBmcc="
-          let dummyPic2 = "https://media.istockphoto.com/id/1550540247/photo/decision-thinking-and-asian-man-in-studio-with-glasses-questions-and-brainstorming-on-grey.jpg?s=612x612&w=0&k=20&c=u0axNDq0EuPp8cEjR5mmVOaAt4FvRCTnbD4SQt66WTw="
-          let dummyPic3 = "https://plus.unsplash.com/premium_photo-1683121541367-eeb807eddb03?w=900&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTN8fGJlZXJ8ZW58MHx8MHx8fDA%3D"
+//          let dummyPic = "https://media.istockphoto.com/id/1388645967/photo/pensive-thoughtful-contemplating-caucasian-young-man-thinking-about-future-planning-new.jpg?s=612x612&w=0&k=20&c=Keax_Or9RivnYV_9VoOLjknWQP8iaxYXc4jS9rwBmcc="
+//          let dummyPic2 = "https://media.istockphoto.com/id/1550540247/photo/decision-thinking-and-asian-man-in-studio-with-glasses-questions-and-brainstorming-on-grey.jpg?s=612x612&w=0&k=20&c=u0axNDq0EuPp8cEjR5mmVOaAt4FvRCTnbD4SQt66WTw="
+//          let dummyPic3 = "https://plus.unsplash.com/premium_photo-1683121541367-eeb807eddb03?w=900&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTN8fGJlZXJ8ZW58MHx8MHx8fDA%3D"
           vm.currentUser = User(
             id: 1,
             username: "jdoe",
@@ -338,13 +338,14 @@ struct InfoItem: Identifiable {
             hometown: "Springfield",
             jobOrUniversity: "Example U",
             favoriteDrink: "Coffee",
-            location: Location(latitude: 20, longitude: 20),
-            profilePictures: [ProfilePicture(id: 0, url: dummyPic, isPrimary: false, uploadedAt: "today"), ProfilePicture(id: 1, url: dummyPic2, isPrimary: true, uploadedAt: ""), ProfilePicture(url: dummyPic3, isPrimary: false, uploadedAt: ""),ProfilePicture(id: 2, url: dummyPic, isPrimary: false, uploadedAt: "today"), ProfilePicture(id: 3, url: dummyPic2, isPrimary: false, uploadedAt: ""), ProfilePicture(url: dummyPic3, isPrimary: false, uploadedAt: ""), ],
+            location: "Location(latitude: 20, longitude: 20)",
+            profilePictures: "",
             matches: "",
             swipes: "",
             voteWeight: 0,
             accountType: "regular",
-            sexualPreference: "straight"
+            sexualPreference: "straight",
+            phoneNumber: ""
           )
           return vm
       }())

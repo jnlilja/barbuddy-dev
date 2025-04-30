@@ -37,7 +37,6 @@ struct HomeView: View {
                 .toolbar(.visible, for: .tabBar)
                 .toolbarBackground(.darkBlue, for: .tabBar)
                 .tag(2)
-                .environment(viewModel)
             
             ProfileView()
                 .tabItem {
@@ -46,6 +45,7 @@ struct HomeView: View {
                 }
                 .tag(3)
         }
+        .environment(viewModel)
         .tint(.salmon)
         .onAppear {
             let appearance = UITabBarAppearance()

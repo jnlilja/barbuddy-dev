@@ -35,7 +35,7 @@ struct MessagesView: View {
                                 // Force-unwrap is safe here because we finished loading
                                 ConversationView(
                                     currentUserID: currentUserID!,
-                                    otherUserID: user.id ?? -1,
+                                    otherUserID: user.id!,
                                     otherUsername: user.firstName
                                 )
                                 .navigationBarBackButtonHidden()
@@ -43,7 +43,7 @@ struct MessagesView: View {
                                 DirectMessageRow(
                                     name: user.firstName,
                                     message: "Hey man, how's it going?",
-                                    location: String(user.location?.latitude ?? -1) + ", " + String(user.location?.longitude ?? -1)
+                                    location: String(user.location) + ", " + String(user.location)
                                 )
                             }
                             .listRowBackground(Color("DarkBlue"))

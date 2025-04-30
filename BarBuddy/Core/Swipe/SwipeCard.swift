@@ -16,28 +16,28 @@
 import SwiftUI
 
 struct SwipeCard: View {
-    let profile: UserProfile
+    let profile: User
     private let cardWidth: CGFloat = UIScreen.main.bounds.width * 0.85
 
     // Convenience
     var displayName: String {
-        let name = "\(profile.first_name) \(profile.last_name)".trimmingCharacters(in: .whitespaces)
+        let name = "\(profile.firstName) \(profile.lastName)".trimmingCharacters(in: .whitespaces)
         return name.isEmpty ? profile.username : name
     }
 
     var body: some View {
         VStack(spacing: 0) {
             // ───────── Profile picture
-            AsyncImage(url: profile.profilePicURL) { phase in
-                switch phase {
-                case .success(let img): img.resizable().scaledToFill()
-                case .failure(_):       Color.gray.opacity(0.3)
-                case .empty:            ProgressView()
-                @unknown default:       Color.gray.opacity(0.3)
-                }
-            }
-            .frame(width: cardWidth, height: 400)
-            .clipped()
+//            AsyncImage(url: profile.profilePicURL) { phase in
+//                switch phase {
+//                case .success(let img): img.resizable().scaledToFill()
+//                case .failure(_):       Color.gray.opacity(0.3)
+//                case .empty:            ProgressView()
+//                @unknown default:       Color.gray.opacity(0.3)
+//                }
+//            }
+//            .frame(width: cardWidth, height: 400)
+//            .clipped()
 
             // ───────── Info panel
             VStack(alignment: .leading, spacing: 8) {
@@ -51,12 +51,12 @@ struct SwipeCard: View {
 
                 Divider().overlay(Color.white)
 
-                Label("DOB: \(profile.date_of_birth)", systemImage: "calendar")
-                if !profile.job_or_university.isEmpty {
-                    Label(profile.job_or_university, systemImage: "graduationcap")
+                Label("DOB: \(profile.dateOfBirth ?? "")", systemImage: "calendar")
+                if !profile.jobOrUniversity.isEmpty {
+                    Label(profile.jobOrUniversity, systemImage: "graduationcap")
                 }
-                if !profile.favorite_drink.isEmpty {
-                    Label("Fav drink: \(profile.favorite_drink)", systemImage: "wineglass")
+                if !profile.favoriteDrink.isEmpty {
+                    Label("Fav drink: \(profile.favoriteDrink)", systemImage: "wineglass")
                 }
             }
             .labelStyle(.titleAndIcon)

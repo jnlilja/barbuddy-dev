@@ -49,7 +49,7 @@ struct RequestsView: View {
                         Section(header: Text("Added Me").foregroundColor(.white)) {
                             ForEach(friendService.friendRequests) { user in
                                 HStack {
-                                    AsyncImage(url: URL(string: user.profilePictures?.first?.url ?? "")) { phase in
+                                    AsyncImage(url: URL(string: user.profilePictures)) { phase in
                                         switch phase {
                                         case .success(let img): img.resizable().scaledToFill()
                                         default: Image(systemName: "person.crop.circle.fill").resizable().scaledToFill()

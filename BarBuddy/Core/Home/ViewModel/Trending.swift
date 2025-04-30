@@ -38,14 +38,14 @@ struct Trending: View {
     }
     /// Fetches all users and counts those whose `location` matches `barName`.
     private func fetchActiveUsers() async {
-        do {
-            let users = try await UsersFeedService.shared.fetchAll()
-            activeUserCount = users.filter { $0.location == barName }.count
-        } catch {
-            print("Error fetching users for trending badge: \(error)")
-            activeUserCount = 0
-        }
-        isLoading = false
+//        do {
+//            let users = try await UsersFeedService.shared.fetchAll()
+//            activeUserCount = users.filter { $0.location == barName }.count
+//        } catch {
+//            print("Error fetching users for trending badge: \(error)")
+//            activeUserCount = 0
+//        }
+//        isLoading = false
     }
 }
 struct Trending_Previews: PreviewProvider {

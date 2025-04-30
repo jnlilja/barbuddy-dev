@@ -21,16 +21,16 @@ struct FriendProfile: View {
             VStack(spacing: 0) {
                 // Photo Gallery
                 TabView {
-                    if let profilePictures = user.profilePictures {
-                        ForEach(profilePictures) {
-                            WebImage(url: URL(string: $0.url))
+                    //if let profilePictures = user.profilePictures {
+                        //ForEach(profilePictures) {
+                    WebImage(url: URL(string: user.profilePictures))
                                 .resizable()
                                 .scaledToFill()
                                 .frame(maxWidth: .infinity)
                                 .frame(height: 457)
                                 .clipped()
-                        }
-                    }
+                        //}
+                    //}
                 }
                 .frame(height: 457)
                 .tabViewStyle(PageTabViewStyle())
@@ -57,13 +57,13 @@ struct FriendProfile: View {
                     HStack {
                         HStack(spacing: 4) {
                             Image(systemName: "calendar")
-                            Text(user.dateOfBirth)
+                            Text(user.dateOfBirth ?? "None")
                         }
                         .frame(maxWidth: .infinity)
 
                         HStack(spacing: 4) {
                             Image(systemName: "mappin.circle.fill")
-                            Text(user.location?.description ?? "None")
+                            Text(user.location.description)
                         }
                         .frame(maxWidth: .infinity)
                     }
@@ -85,7 +85,7 @@ struct FriendProfile: View {
 
                         HStack(spacing: 4) {
                             Image(systemName: "person.2.fill")
-                            Text(user.sexualPreference)
+                            Text(user.sexualPreference ?? "None")
                         }
                         .frame(maxWidth: .infinity)
                     }
@@ -116,7 +116,7 @@ struct FriendProfile: View {
 
 #Preview {
     NavigationView {
-        let dummyImage = "https://media.istockphoto.com/id/2165337331/photo/portrait-of-tabby-cat.webp?a=1&b=1&s=612x612&w=0&k=20&c=_5WHcTO3VstFvHziQH3N7pGgbVnXEmXdN00NylUKgpo="
+//        let dummyImage = "https://media.istockphoto.com/id/2165337331/photo/portrait-of-tabby-cat.webp?a=1&b=1&s=612x612&w=0&k=20&c=_5WHcTO3VstFvHziQH3N7pGgbVnXEmXdN00NylUKgpo="
         FriendProfile(
             user: User(
                 id: 1,
@@ -129,13 +129,14 @@ struct FriendProfile: View {
                 hometown: "Springfield",
                 jobOrUniversity: "Example University",
                 favoriteDrink: "Coffee",
-                location: Location(latitude: 137, longitude: 20),
-                profilePictures: [ProfilePicture(id: 0, url: dummyImage, isPrimary: true, uploadedAt: "")],
+                location: "Location(latitude: 137, longitude: 20)",
+                profilePictures: "",
                 matches: "Loves SwiftUI",
                 swipes: "",
                 voteWeight: 0,
                 accountType: "regular",
-                sexualPreference: "straight"
+                sexualPreference: "straight",
+                phoneNumber: ""
             )
         )
     }

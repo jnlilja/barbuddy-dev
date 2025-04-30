@@ -62,7 +62,7 @@ class FriendAPIService: @unchecked Sendable {
             throw URLError(.badURL)
         }
         // Encode homogeneous payload
-        let bodyObject = RespondFriendRequestBody(accept: accept, user_id: user.id ?? -1)
+        let bodyObject = RespondFriendRequestBody(accept: accept, user_id: user.id!)
         let bodyData = try JSONEncoder().encode(bodyObject)
 
         // Attach Firebase auth header & send

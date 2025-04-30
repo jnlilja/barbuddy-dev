@@ -44,11 +44,11 @@ struct SwipeView: View {
     }
 
     // MARK: - Like / dislike buttons overlay
-    private func actionButtons(for profile: UserProfile) -> some View {
+    private func actionButtons(for profile: User) -> some View {
         HStack {
             // Dislike
             Button {
-                withAnimation { vm.swipeLeft(profile: profile) }
+                //withAnimation { vm.swipeLeft(profile: profile) }
             } label: {
                 Circle()
                     .fill(Color.white)
@@ -66,7 +66,7 @@ struct SwipeView: View {
 
             // Like
             Button {
-                withAnimation { vm.swipeRight(profile: profile) }
+               // withAnimation { vm.swipeRight(profile: profile) }
             } label: {
                 Circle()
                     .fill(Color.white)
