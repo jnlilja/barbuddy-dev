@@ -8,22 +8,20 @@ struct SwipeView: View {
             ZStack {
                 Color("DarkBlue").ignoresSafeArea()
 
-
-                    // ——— Card stack ———
-                    ZStack {
-                        if vm.users.isEmpty {
-                            Text("No more users")
-                                .font(.title)
-                                .foregroundColor(.white)
-                        } else {
-                            ForEach(vm.users.reversed()) { profile in
-                                SwipeCard(profile: profile)
-                                    .clipShape(RoundedRectangle(cornerRadius: 60))
-                                    .overlay(actionButtons(for: profile))
-                                    .padding(.top, -20)
-                            }
+                // ——— Card stack ———
+                ZStack {
+                    if vm.users.isEmpty {
+                        Text("No more users")
+                            .font(.title)
+                            .foregroundColor(.white)
+                    } else {
+                        ForEach(vm.users.reversed(), id: \.id) { profile in
+                            SwipeCard(profile: profile)
+                                .clipShape(RoundedRectangle(cornerRadius: 60))
+                                .overlay(actionButtons(for: profile))
+                                .padding(.top, -20)
+                        }
                     }
-
                     Spacer()
                 }
 
@@ -37,19 +35,18 @@ struct SwipeView: View {
                             .background(Color.red.opacity(0.9))
                             .foregroundColor(.white)
                     }
+                    .transition(.move(edge: .bottom))
                 }
             }
             .navigationBarHidden(true)
+            .task { await vm.loadSuggestions() }   // pull-to-refresh on appear
         }
     }
 
     // MARK: - Like / dislike buttons overlay
     private func actionButtons(for profile: User) -> some View {
         HStack {
-            // Dislike
-            Button {
-                //withAnimation { vm.swipeLeft(profile: profile) }
-            } label: {
+            Button { vm.swipeLeft(profile: profile) } label: {
                 Circle()
                     .fill(Color.white)
                     .frame(width: 48, height: 48)
@@ -64,10 +61,7 @@ struct SwipeView: View {
 
             Spacer()
 
-            // Like
-            Button {
-               // withAnimation { vm.swipeRight(profile: profile) }
-            } label: {
+            Button { vm.swipeRight(profile: profile) } label: {
                 Circle()
                     .fill(Color.white)
                     .frame(width: 48, height: 48)
@@ -84,7 +78,4 @@ struct SwipeView: View {
     }
 }
 
-#Preview {
-    SwipeView()
-        .environmentObject(AuthViewModel())
-}
+#Preview { SwipeView() }
