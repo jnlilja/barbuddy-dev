@@ -1,17 +1,15 @@
-# Use an official Nginx image to serve static files
 FROM nginx:stable-alpine
 
-# Remove default nginx static content
+# Clear default nginx files
 RUN rm -rf /usr/share/nginx/html/*
 
-# Copy our static website (adjust paths if needed)
-COPY ./html /usr/share/nginx/html
-COPY ./assets /usr/share/nginx/html/assets
-COPY ./css /usr/share/nginx/html/css
-COPY ./js /usr/share/nginx/html/js
+# Copy all needed frontend content into html root
+COPY frontend/html /usr/share/nginx/html
+COPY frontend/assets /usr/share/nginx/html/assets
+COPY frontend/css /usr/share/nginx/html/css
+COPY frontend/js /usr/share/nginx/html/js
 
-# Expose port 80 (default), Cloud Run maps to 8080 automatically
-EXPOSE 80
+COPY frontend/nginx.conf /etc/nginx/nginx.conf
 
-# Start nginx in foreground (required for container)
+EXPOSE 8080
 CMD ["nginx", "-g", "daemon off;"]

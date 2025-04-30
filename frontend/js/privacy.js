@@ -33,7 +33,7 @@ document.querySelectorAll('nav a').forEach(link => {
 });
 
 // Load footer
-fetch("../html/footer.html?v=1.0.0")
+fetch("/footer.html?v=1.0.0")
   .then(res => res.text())
   .then(html => {
     document.getElementById("footer-placeholder").innerHTML = html;
