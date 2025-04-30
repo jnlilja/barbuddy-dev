@@ -49,7 +49,10 @@ class User(AbstractUser):
                 raise ValidationError({'date_of_birth': 'User must be between 18 and 120 years old.'})
         
         # Validate email is unique
-        if User.objects.filter(email=self.email).exclude(pk=self.pk).exists():
+        # if User.objects.filter(email=self.email).exclude(pk=self.pk).exists():
+        #     raise ValidationError({'email': 'This email is already in use.'})
+
+        if self.pk is None or User.objects.filter(email=self.email).exclude(pk=self.pk).exists():
             raise ValidationError({'email': 'This email is already in use.'})
         
         # Validate username is unique
@@ -71,7 +74,6 @@ class User(AbstractUser):
         ]
 
     def save(self, *args, **kwargs):
-        self.clean()
         account_weights = {
             'regular': 1,
             'trusted': 2,
