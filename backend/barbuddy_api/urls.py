@@ -56,7 +56,10 @@ from rest_framework import permissions
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 from django.urls import path
+from django.http import JsonResponse
 
+def health_check(request):
+    return JsonResponse({"status": "ok"})
 
 schema_view = get_schema_view(
     openapi.Info(
@@ -97,6 +100,7 @@ urlpatterns = [
 
     # Root path handler 
     path('', lambda request: redirect('schema-swagger-ui', permanent=False)),
+    path("health/", health_check),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 if settings.DEBUG:

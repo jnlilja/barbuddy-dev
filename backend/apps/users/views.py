@@ -12,6 +12,9 @@ from .permissions import IsOwnerOrReadOnly
 from barbuddy_api.authentication import FirebaseAuthentication
 
 from .models import FriendRequest, ProfilePicture
+import logging
+
+logger = logging.getLogger(__name__)
 
 User = get_user_model()
 
@@ -150,11 +153,14 @@ class UserViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['POST'], permission_classes=[permissions.AllowAny])
     def register_user(self, request):
+        logger.info(f"Register user request data: {request.data}")
         serializer = UserRegistrationSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
+            logger.info(f"User created successfully: {user.id}")
             return Response({
                 'user': UserSerializer(user).data,
                 'message': 'User registered successfully'
             }, status=status.HTTP_201_CREATED)
+        logger.error(f"Registration failed: {serializer.errors}")
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

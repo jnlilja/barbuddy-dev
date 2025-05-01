@@ -48,19 +48,15 @@ class UserSerializer(serializers.ModelSerializer):
 
     def get_matches(self, obj):
         matches = Match.objects.filter(user1=obj, status='connected') | Match.objects.filter(user2=obj, status='connected')
-        return MatchSerializer(matches.distinct(), many=True).data
+        return ", ".join([str(match.id) for match in matches])
 
     def get_swipes(self, obj):
         swipes = Swipe.objects.filter(swiper=obj)
-        return SwipeSerializer(swipes, many=True).data
+        return ", ".join([str(swipe.id) for swipe in swipes])
 
     def get_profile_pictures(self, obj):
         pictures = obj.profile_pictures.all()
-        return [{
-            'id': pic.id,
-            'url': pic.image.url,
-            'is_primary': pic.is_primary
-        } for pic in pictures]
+        return ", ".join([pic.image.url for pic in pictures])
 
     def to_internal_value(self, data):
         validated_data = super().to_internal_value(data)
@@ -101,6 +97,11 @@ class UserSerializer(serializers.ModelSerializer):
             instance.set_password(password)
         instance.save()
         return instance
+
+    def validate(self, data):
+        instance = self.instance or User(**data)
+        instance.clean()  # Explicitly call clean() here
+        return data
 
 
 class UserLocationUpdateSerializer(serializers.Serializer):
