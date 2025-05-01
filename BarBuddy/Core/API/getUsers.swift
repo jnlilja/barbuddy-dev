@@ -32,7 +32,17 @@ final class GetUserAPIService {
         let (data, _) = try await URLSession.shared.data(for: req)
         let dec = JSONDecoder()
         dec.keyDecodingStrategy = .convertFromSnakeCase     // snake_case → camelCase
-        return try dec.decode([User].self, from: data)
+        
+        do {
+            return try dec.decode([User].self, from: data)
+        } catch {
+            
+            if let json = String(data: data, encoding: .utf8) {
+                print(" /api/users raw payload →\n", json)
+            }
+            
+            throw error
+        }
     }
 }
 
