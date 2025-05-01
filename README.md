@@ -50,6 +50,9 @@ In Swift, you can grab the token with:
 
 `Auth.auth().currentUser?.getIDToken { idToken, error in     // attach "Bearer \(idToken)" to your API request headers }`
 
+## Network Manager
+All API calls created so far can be found in the NetworkManager.swift file
+
 
 ### Events filtering based on day: 
 
