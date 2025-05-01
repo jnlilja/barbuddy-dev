@@ -2,12 +2,15 @@ from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from django.contrib.gis.geos import Point
 from datetime import date
+from drf_yasg.utils import swagger_serializer_method
+from django.db.models import Q
 
 from apps.matches.models import Match
 from apps.swipes.models import Swipe
 from apps.swipes.serializers import SwipeSerializer
 from apps.matches.serializers import MatchSerializer
 from .models import FriendRequest, User, ProfilePicture  # Add ProfilePicture to imports
+
 
 
 class ProfilePictureSerializer(serializers.ModelSerializer):
@@ -39,35 +42,43 @@ class UserSerializer(serializers.ModelSerializer):
         read_only_fields = ["vote_weight"]
 
     def get_location(self, obj):
-        if (obj.location):
+        if obj.location:
             return {
                 "latitude": obj.location.y,
                 "longitude": obj.location.x
             }
         return None
 
-    def get_matches(self, obj):
-        matches = Match.objects.filter(user1=obj, status='connected') | Match.objects.filter(user2=obj, status='connected')
-        return MatchSerializer(matches.distinct(), many=True).data
-
-    def get_swipes(self, obj):
-        swipes = Swipe.objects.filter(swiper=obj)
-        return SwipeSerializer(swipes, many=True).data
-
+    @swagger_serializer_method(serializer_or_field=ProfilePictureSerializer(many=True))
     def get_profile_pictures(self, obj):
         pictures = obj.profile_pictures.all()
-        return [{
-            'id': pic.id,
-            'url': pic.image.url,
-            'is_primary': pic.is_primary
-        } for pic in pictures]
+        return [
+            {
+                "id": pic.id,
+                "url": pic.image.url,
+                "is_primary": pic.is_primary,
+            }
+            for pic in pictures
+        ]
+
+    @swagger_serializer_method(serializer_or_field=serializers.ListField(child=serializers.DictField()))
+    def get_swipes(self, obj):
+        swipes = Swipe.objects.filter(swiper=obj)
+        return [{"id": swipe.id, "status": swipe.status} for swipe in swipes]
+
+    @swagger_serializer_method(serializer_or_field=serializers.ListField(child=serializers.DictField()))
+    def get_matches(self, obj):
+        matches = Match.objects.filter(
+            (Q(user1=obj) | Q(user2=obj)) & Q(status="connected")
+        )
+        return [{"id": match.id, "status": match.status} for match in matches]
 
     def to_internal_value(self, data):
         validated_data = super().to_internal_value(data)
         raw_location = self.initial_data.get('location')
 
         if raw_location:
-            try: 
+            try:
                 lat = raw_location['latitude']
                 lon = raw_location['longitude']
                 validated_data['location'] = Point(lon, lat, srid=4326)
@@ -102,6 +113,11 @@ class UserSerializer(serializers.ModelSerializer):
         instance.save()
         return instance
 
+    def validate(self, data):
+        instance = self.instance or User(**data)
+        instance.clean()  # Explicitly call clean() here
+        return data
+
 
 class UserLocationUpdateSerializer(serializers.Serializer):
     latitude = serializers.FloatField()
@@ -125,7 +141,7 @@ class FriendRequestSerializer(serializers.ModelSerializer):
 
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True, required=True)
+    phone_number = serializers.CharField(max_length=15, required=False)
     confirm_password = serializers.CharField(write_only=True, required=True)
 
     class Meta:
