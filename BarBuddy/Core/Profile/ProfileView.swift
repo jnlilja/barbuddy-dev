@@ -46,8 +46,8 @@ struct ProfileView: View {
                         VStack(spacing: 25) {
                             // Profile header
                             Group {
-                                if !user.profilePictures.isEmpty {
-                                    WebImage(url: URL(string: user.profilePictures))
+                                if !user.profilePictures[0].image.isEmpty {
+                                    WebImage(url: URL(string: user.profilePictures[0].image))
                                         .resizable()
                                         .scaledToFill()
                                         .frame(width: 120, height: 120)
@@ -80,10 +80,10 @@ struct ProfileView: View {
                                        GridItem(.fixed(gridCellWidth), spacing: 15),
                                        GridItem(.fixed(gridCellWidth))
                                    ], spacing: 15) {
-                                       if !user.profilePictures.isEmpty {
+                                       if !user.profilePictures[0].image.isEmpty {
                                            //ForEach(profilePictures.filter { !$0.isPrimary }, id: \.self) { image in
                                                ZStack(alignment: .topTrailing) {
-                                                   WebImage(url: URL(string: user.profilePictures)) { image in
+                                                   WebImage(url: URL(string: user.profilePictures[0].image)) { image in
                                                        image.resizable()
                                                            
                                                    } placeholder: {
@@ -94,7 +94,7 @@ struct ProfileView: View {
                                                    .clipped()
                                                    .cornerRadius(10)
                                                    .onTapGesture {
-                                                       selectedImage = user.profilePictures
+                                                       selectedImage = user.profilePictures[0].image
                                                        isImageExpanded = true
                                                    }
                                                        
@@ -246,7 +246,7 @@ struct FriendRow: View {
     let friend: User
     var body: some View {
         HStack {
-            Image(friend.profilePictures)
+            Image(friend.profilePictures[0].image)
                 .resizable()
                 .scaledToFill()
                 .frame(width: 60, height: 60)
@@ -339,9 +339,9 @@ struct InfoItem: Identifiable {
             jobOrUniversity: "Example U",
             favoriteDrink: "Coffee",
             location: "Location(latitude: 20, longitude: 20)",
-            profilePictures: "",
-            matches: "",
-            swipes: "",
+            profilePictures: [ProfilePictures(id: 9, image: "", isPrimary: true, uploadedAt: "")],
+            matches: [Match(id: 0, user1: 1, user1Details: MatchUser(id: 0, username: "", profilePicture: ""), user2: 4, user2Details: MatchUser(id: 1, username: "", profilePicture: ""), status: "", createdAt: "", disconnectedBy: 7, disconnectedByUsername: "")],
+            swipes: [Swipe(id: 0, swiperUsername: "", swipedOn: 1, status: "", timestamp: "")],
             voteWeight: 0,
             accountType: "regular",
             sexualPreference: "straight",

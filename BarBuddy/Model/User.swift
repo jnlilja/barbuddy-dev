@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct User: Codable, Hashable, Identifiable {
+struct User: Codable, Identifiable {
     var id: Int?
     var username: String
     var firstName: String
@@ -19,9 +19,9 @@ struct User: Codable, Hashable, Identifiable {
     var jobOrUniversity: String
     var favoriteDrink: String
     var location: String
-    var profilePictures: String
-    var matches: String
-    var swipes: String
+    var profilePictures: [ProfilePictures]
+    var matches: [Match]
+    var swipes: [Swipe]
     var voteWeight: Int
     var accountType: String
     var sexualPreference: String?
@@ -41,7 +41,6 @@ struct CreateUserRequest: Codable {
     let hometown: String
     let jobOrUniversity: String
     let favoriteDrink: String
-    var profilePictures: String
     let accountType: String
     let sexualPreference: String?
     let phoneNumber: String?

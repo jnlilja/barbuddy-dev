@@ -7,9 +7,9 @@
 
 import Foundation
 
-struct ProfilePicture: Codable, Hashable, Identifiable {
+struct ProfilePictures: Codable, Hashable, Identifiable {
     var id: Int?
-    var url: String
+    var image: String
     var isPrimary: Bool
     let uploadedAt: String
 }

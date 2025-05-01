@@ -23,7 +23,7 @@ final class SignUpViewModel {
     var hometown         = ""
     var jobOrUniversity  = ""
     var favoriteDrink    = ""
-    var profilePictures  = ""
+    var profilePictures  = [ProfilePictures(image: "https://media.istockphoto.com/id/1388645967/photo/pensive-thoughtful-contemplating-caucasian-young-man-thinking-about-future-planning-new.jpg?s=612x612&w=0&k=20&c=Keax_Or9RivnYV_9VoOLjknWQP8iaxYXc4jS9rwBmcc=", isPrimary: true, uploadedAt: "")]
     var doesntDrink      = false       // added for DrinkPreferenceView
     var sexualPreference = "straight"
     
@@ -46,7 +46,6 @@ final class SignUpViewModel {
             hometown: hometown,
             jobOrUniversity: jobOrUniversity,
             favoriteDrink: favoriteDrink,
-            profilePictures: profilePictures,
             accountType: "regular",
             sexualPreference: "straight",
             phoneNumber: generatePhoneNumber() // Placeholder
@@ -64,19 +63,19 @@ final class SignUpViewModel {
         guard newPassword == confirmPassword else { return fire("Passwords do not match.") }
     }
     
-    func convertUIImageToString(picture: UIImage) {
-        let tempDirectory = FileManager.default.temporaryDirectory
-        let fileName = UUID().uuidString
-        let imageData = picture.jpegData(compressionQuality: 0.5)
-        let fileURL = tempDirectory.appendingPathComponent("\(fileName).jpg")
-            
-        do {
-            try imageData?.write(to: fileURL)
-            self.profilePictures = fileURL.absoluteString
-        } catch {
-            print("Error writing image to disk: \(error)")
-        }
-    }
+//    func convertUIImageToString(picture: UIImage) {
+//        let tempDirectory = FileManager.default.temporaryDirectory
+//        let fileName = UUID().uuidString
+//        let imageData = picture.jpegData(compressionQuality: 0.5)
+//        let fileURL = tempDirectory.appendingPathComponent("\(fileName).jpg")
+//            
+//        do {
+//            try imageData?.write(to: fileURL)
+//            self.profilePictures = fileURL.absoluteString
+//        } catch {
+//            print("Error writing image to disk: \(error)")
+//        }
+//    }
     private func generatePhoneNumber() -> String {
         let randomDigits = (0..<10).map { _ in Int.random(in: 0...9) }
         return randomDigits.map(String.init).joined()

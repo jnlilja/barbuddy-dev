@@ -23,7 +23,7 @@ struct FriendProfile: View {
                 TabView {
                     //if let profilePictures = user.profilePictures {
                         //ForEach(profilePictures) {
-                    WebImage(url: URL(string: user.profilePictures))
+                    WebImage(url: URL(string: user.profilePictures[0].image))
                                 .resizable()
                                 .scaledToFill()
                                 .frame(maxWidth: .infinity)
@@ -130,9 +130,9 @@ struct FriendProfile: View {
                 jobOrUniversity: "Example University",
                 favoriteDrink: "Coffee",
                 location: "Location(latitude: 137, longitude: 20)",
-                profilePictures: "",
-                matches: "Loves SwiftUI",
-                swipes: "",
+                profilePictures: [ProfilePictures(image: "", isPrimary: true, uploadedAt: "")],
+                matches: [Match(id: 0, user1: 1, user1Details: MatchUser(id: 0, username: "", profilePicture: ""), user2: 2, user2Details: MatchUser(id: 0, username: "", profilePicture: ""), status: "", createdAt: "", disconnectedBy: 1, disconnectedByUsername: "")],
+                swipes: [Swipe(id: 0, swiperUsername: "", swipedOn: 0, status: "", timestamp: "")],
                 voteWeight: 0,
                 accountType: "regular",
                 sexualPreference: "straight",

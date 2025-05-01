@@ -25,6 +25,6 @@ final class UsersViewModel: ObservableObject {
 }
 
 extension User {
-    static let MOCK_DATA = User(id: 0, username: "user123", firstName: "Rob", lastName: "Smith", email: "mail@mail.com", password: "", dateOfBirth: "", hometown: "", jobOrUniversity: "", favoriteDrink: "", location: "", profilePictures: "string", matches: "", swipes: "", voteWeight: 1, accountType: "", sexualPreference: "", phoneNumber: "")
+    static let MOCK_DATA = User(id: 0, username: "user123", firstName: "Rob", lastName: "Smith", email: "mail@mail.com", password: "", dateOfBirth: "", hometown: "", jobOrUniversity: "", favoriteDrink: "", location: "", profilePictures: [ProfilePictures(image: "", isPrimary: true, uploadedAt: "")], matches: [Match(id: 1, user1: 1, user1Details: MatchUser(id: 4, username: "", profilePicture: ""), user2: 7, user2Details: MatchUser(id: 0, username: "", profilePicture: ""), status: "", createdAt: "", disconnectedBy: 1, disconnectedByUsername: "")], swipes: [Swipe(id: 1, swiperUsername: "", swipedOn: 0, status: "", timestamp: "")], voteWeight: 1, accountType: "", sexualPreference: "", phoneNumber: "")
 
 }

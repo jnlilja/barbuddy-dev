@@ -16,7 +16,7 @@ final class AuthViewModel: ObservableObject {
     
     init() {
         self.authUser = Auth.auth().currentUser
-        Task { await fetchData() }
+        //Task { await fetchData() }
     }
 
     // MARK: - Sign‑in (existing account)
@@ -24,7 +24,7 @@ final class AuthViewModel: ObservableObject {
         do {
             let result = try await Auth.auth().signIn(withEmail: email, password: password)
             authUser = result.user
-            await fetchData()
+            //await fetchData()
             print("Sign‑in successful!")
             
         } catch {
@@ -40,7 +40,7 @@ final class AuthViewModel: ObservableObject {
             self.authUser = result.user
 
             // Store profile through REST POST and fetch the user
-            try await NetworkManager.shared.postUser(user: profile)
+            self.currentUser = try await NetworkManager.shared.postUser(user: profile)
             print("✅ New user created & stored.")
         } catch APIError.badURL {
             print("❌ Sign‑up failed: Invalid URL.")
@@ -68,14 +68,14 @@ final class AuthViewModel: ObservableObject {
             print("❌ Sign‑out failed:", error.localizedDescription)
         }
     }
-    private func fetchData() async {
-        do {
-            guard let uid = Auth.auth().currentUser?.uid else { print("No user logged in."); return }
-            self.currentUser = try await NetworkManager.shared.getUser(id: uid)
-        } catch {
-            print("❌ Failed to fetch user data.")
-        }
-    }
+//    private func fetchData() async {
+//        do {
+////            guard let uid = Auth.auth().currentUser?.uid else { print("No user logged in."); return }
+////            self.currentUser = try await NetworkManager.shared.getUser(id: uid)
+//        } catch {
+//            print("❌ Failed to fetch user data.")
+//        }
+//    }
 
     
 }
