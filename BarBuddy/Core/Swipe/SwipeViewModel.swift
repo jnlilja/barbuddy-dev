@@ -5,7 +5,7 @@
 //  Created by Elliot Gambale on 3/7/25.
 //
 
-import Foundation
+@preconcurrency import Foundation
 import FirebaseAuth
 import SwiftUI
 
@@ -14,17 +14,19 @@ final class SwipeViewModel: ObservableObject {
 
     @Published var users: [User] = []
     @Published var errorMessage: String?
+    
+    private var authHandle: AuthStateDidChangeListenerHandle?
 
-    // ───────────────────── init
-    init() {
-        // retry every time Firebase auth state changes
-        Auth.auth().addStateDidChangeListener { [weak self] _, _ in
-            Task { await self?.loadSuggestions() }
+        init() {
+            // retry whenever a user logs in or is restored
+            authHandle = Auth.auth().addStateDidChangeListener { [weak self] _, _ in
+                Task { await self?.loadSuggestions() }
+            }
         }
-        // first attempt
-        Task { await loadSuggestions() }
-    }
 
+        deinit {
+            if let h = authHandle { Auth.auth().removeStateDidChangeListener(h) }
+        }
     // ───────────────────── refresh
     func loadSuggestions() async {
         do {
