@@ -3,12 +3,14 @@ from django.contrib.auth import get_user_model
 from django.contrib.gis.geos import Point
 from datetime import date
 from drf_yasg.utils import swagger_serializer_method
+from django.db.models import Q
 
 from apps.matches.models import Match
 from apps.swipes.models import Swipe
 from apps.swipes.serializers import SwipeSerializer
 from apps.matches.serializers import MatchSerializer
 from .models import FriendRequest, User, ProfilePicture  # Add ProfilePicture to imports
+
 
 
 class ProfilePictureSerializer(serializers.ModelSerializer):
@@ -139,7 +141,7 @@ class FriendRequestSerializer(serializers.ModelSerializer):
 
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True, required=True)
+    phone_number = serializers.CharField(max_length=15, required=False)
     confirm_password = serializers.CharField(write_only=True, required=True)
 
     class Meta:

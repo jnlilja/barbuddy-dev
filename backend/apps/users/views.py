@@ -13,6 +13,7 @@ from barbuddy_api.authentication import FirebaseAuthentication
 
 from .models import FriendRequest, ProfilePicture
 import logging
+from django.core.exceptions import ValidationError
 
 logger = logging.getLogger(__name__)
 
@@ -156,11 +157,19 @@ class UserViewSet(viewsets.ModelViewSet):
         logger.info(f"Register user request data: {request.data}")
         serializer = UserRegistrationSerializer(data=request.data)
         if serializer.is_valid():
-            user = serializer.save()
-            logger.info(f"User created successfully: {user.id}")
-            return Response({
-                'user': UserSerializer(user).data,  # Ensure this uses the updated serializer
-                'message': 'User registered successfully'
-            }, status=status.HTTP_201_CREATED)
+            try:
+                user = serializer.save()
+                user.clean()  # Explicitly call the clean method
+                logger.info(f"User created successfully: {user.id}")
+                return Response({
+                    'user': UserSerializer(user).data,
+                    'message': 'User registered successfully'
+                }, status=status.HTTP_201_CREATED)
+            except ValidationError as e:
+                logger.error(f"Validation error: {e.message_dict}")
+                return Response({'error': e.message_dict}, status=status.HTTP_400_BAD_REQUEST)
+            except Exception as e:
+                logger.error(f"Unexpected error: {str(e)}")
+                return Response({'error': 'An unexpected error occurred.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         logger.error(f"Registration failed: {serializer.errors}")
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

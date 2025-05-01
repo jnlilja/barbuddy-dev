@@ -2,6 +2,7 @@ from django.db import models
 from django.core.exceptions import ValidationError
 from django.db.models import Avg
 from django.contrib.gis.db import models as gis
+from django.db import transaction
 
 from apps.users.models import User
 
