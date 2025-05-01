@@ -2,6 +2,8 @@ name: iOS starter workflow
 
 on:
   push:
+    paths-ignore:
+      - 'README.md'
     branches: [ "network-call-refactor" ] 
   pull_request:
     branches: [ "network-call-refactor" ]
