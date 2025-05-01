@@ -2,6 +2,7 @@ from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from django.contrib.gis.geos import Point
 from datetime import date
+from drf_yasg.utils import swagger_serializer_method
 
 from apps.matches.models import Match
 from apps.swipes.models import Swipe
@@ -39,13 +40,14 @@ class UserSerializer(serializers.ModelSerializer):
         read_only_fields = ["vote_weight"]
 
     def get_location(self, obj):
-        if (obj.location):
+        if obj.location:
             return {
                 "latitude": obj.location.y,
                 "longitude": obj.location.x
             }
         return None
 
+    @swagger_serializer_method(serializer_or_field=ProfilePictureSerializer(many=True))
     def get_profile_pictures(self, obj):
         pictures = obj.profile_pictures.all()
         return [
@@ -57,10 +59,12 @@ class UserSerializer(serializers.ModelSerializer):
             for pic in pictures
         ]
 
+    @swagger_serializer_method(serializer_or_field=serializers.ListField(child=serializers.DictField()))
     def get_swipes(self, obj):
         swipes = Swipe.objects.filter(swiper=obj)
         return [{"id": swipe.id, "status": swipe.status} for swipe in swipes]
 
+    @swagger_serializer_method(serializer_or_field=serializers.ListField(child=serializers.DictField()))
     def get_matches(self, obj):
         matches = Match.objects.filter(
             (Q(user1=obj) | Q(user2=obj)) & Q(status="connected")
@@ -72,7 +76,7 @@ class UserSerializer(serializers.ModelSerializer):
         raw_location = self.initial_data.get('location')
 
         if raw_location:
-            try: 
+            try:
                 lat = raw_location['latitude']
                 lon = raw_location['longitude']
                 validated_data['location'] = Point(lon, lat, srid=4326)
