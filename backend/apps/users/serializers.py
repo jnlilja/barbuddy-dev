@@ -46,17 +46,26 @@ class UserSerializer(serializers.ModelSerializer):
             }
         return None
 
-    def get_matches(self, obj):
-        matches = Match.objects.filter(user1=obj, status='connected') | Match.objects.filter(user2=obj, status='connected')
-        return ", ".join([str(match.id) for match in matches])
+    def get_profile_pictures(self, obj):
+        pictures = obj.profile_pictures.all()
+        return [
+            {
+                "id": pic.id,
+                "url": pic.image.url,
+                "is_primary": pic.is_primary,
+            }
+            for pic in pictures
+        ]
 
     def get_swipes(self, obj):
         swipes = Swipe.objects.filter(swiper=obj)
-        return ", ".join([str(swipe.id) for swipe in swipes])
+        return [{"id": swipe.id, "status": swipe.status} for swipe in swipes]
 
-    def get_profile_pictures(self, obj):
-        pictures = obj.profile_pictures.all()
-        return ", ".join([pic.image.url for pic in pictures])
+    def get_matches(self, obj):
+        matches = Match.objects.filter(
+            (Q(user1=obj) | Q(user2=obj)) & Q(status="connected")
+        )
+        return [{"id": match.id, "status": match.status} for match in matches]
 
     def to_internal_value(self, data):
         validated_data = super().to_internal_value(data)

@@ -159,7 +159,7 @@ class UserViewSet(viewsets.ModelViewSet):
             user = serializer.save()
             logger.info(f"User created successfully: {user.id}")
             return Response({
-                'user': UserSerializer(user).data,
+                'user': UserSerializer(user).data,  # Ensure this uses the updated serializer
                 'message': 'User registered successfully'
             }, status=status.HTTP_201_CREATED)
         logger.error(f"Registration failed: {serializer.errors}")
