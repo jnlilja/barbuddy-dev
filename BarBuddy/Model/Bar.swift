@@ -21,3 +21,34 @@ struct Bar: Identifiable {
         Deal.dealData.filter { $0.location == name }
     }
 }
+
+struct BarImage: Codable {
+    var id: Int
+    var image: String
+    var caption: String
+    var uploadedAt: String
+}
+
+struct BarVote: Codable {
+    var id: Int
+    var bar: String
+    var crowdSize: String
+    var waitTime: String
+    var timeStamp: String
+}
+// Commented out since the old struct is still in use
+//struct BarStatus: Codable {
+//    var id: Int
+//    var bar: Int
+//    var crowdSize: String
+//    var waitTime: String
+//    var lastUpdated: String
+//}
+
+struct BarHours: Codable {
+    var id: Int
+    var bar: Int
+    var openTime: String
+    var closeTime: String
+    var isClosed: Bool
+}

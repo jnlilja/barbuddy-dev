@@ -20,6 +20,7 @@ final class NetworkManager {
         self.session = session
     }
     
+    // MARK: Users
     /// GET /users – returns the full users list
     func fetchUsers() async throws -> [User] {
         let endpoint = baseURL + "users/"
@@ -106,13 +107,6 @@ final class NetworkManager {
     
     // MARK: - User Registration
     /// POST /users/register_user/ – registers a new user
-    /// - Parameters:
-    ///   - user: The user to register.
-    ///   - Throws: An error if the request fails or the response cannot be decoded.
-    ///   - Returns: The registered user.
-    ///   - Note: The user must be authenticated with Firebase before calling this method.
-    ///   - Important: This method does not handle the Firebase authentication process.
-    /// POST /users/register_user/ – registers a new user
     /// - Parameter user: The user information to register
     /// - Returns: The registered user from the server response
     /// - Throws: APIError or NetworkError if registration fails
@@ -125,7 +119,6 @@ final class NetworkManager {
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         
         // Add timeout to prevent hanging requests
-        request.timeoutInterval = 30
         
         do {
             encoder.keyEncodingStrategy = .convertToSnakeCase
@@ -172,9 +165,104 @@ final class NetworkManager {
             throw NetworkError.httpError
         }
     }
+    
+    // MARK: - Bar Hours
+    
+    func fetchBarHours() async throws -> [BarHours] {
+        let endpoint = baseURL + "bars-hours/"
+        guard let url = URL(string: endpoint) else { throw APIError.badURL }
+        guard let tokenID = try await Auth.auth().currentUser?.getIDToken() else {
+            print("No token found")
+            throw APIError.noToken
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        do {
+            let (data, response) = try await session.data(for: request)
+            guard let httpResponse = response as? HTTPURLResponse else {
+                throw NetworkError.invalidResponse
+            }
+            print("Fetch bar hours Code status: \(httpResponse.statusCode)")
+            
+            if !(200...299).contains(httpResponse.statusCode) {
+                let errorMessage = String(data: data, encoding: .utf8) ?? "Unknown error"
+                print("Server error: \(httpResponse.statusCode) - \(errorMessage)")
+                throw NetworkError.httpError
+            }
+            decoder.keyDecodingStrategy = .convertFromSnakeCase
+            return try decoder.decode([BarHours].self, from: data)
+        } catch {
+            print("Failed to decode bar hours data: \(error)")
+            throw NetworkError.decodingFailed
+        }
+    }
+    
+    func fetchBarHours(for id: Int) async throws -> BarHours {
+        let endpoint = baseURL + "bars-hours/\(id)/"
+        guard let url = URL(string: endpoint) else { throw APIError.badURL }
+        guard let tokenID = try await Auth.auth().currentUser?.getIDToken() else {
+            print("No token found")
+            throw APIError.noToken
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("Bearer \(tokenID)", forHTTPHeaderField: "Authorization")
         
         
+            let (data, response) = try await session.data(for: request)
+            guard let httpResponse = response as? HTTPURLResponse else {
+                throw NetworkError.invalidResponse
+            }
+            print("Fetch bar hours Code status: \(httpResponse.statusCode)")
+            
+            if !(200...299).contains(httpResponse.statusCode){
+                throw NetworkError.invalidResponse
+            }
+        do {
+            decoder.keyDecodingStrategy = .convertFromSnakeCase
+            return try decoder.decode(BarHours.self, from: data)
+        } catch {
+            print("Decoding failed: \(error)")
+            throw NetworkError.decodingFailed
+        }
+    }
+    
+    func postBarHours(_ barHours: BarHours) async throws {
+        let endpoint = baseURL + "bars-hours/"
+        guard let url = URL(string: endpoint) else { throw APIError.badURL }
+        guard let tokenID = try await Auth.auth().currentUser?.getIDToken() else {
+            print( "No token available")
+            throw APIError.noToken
+        }
         
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("Bearer \(tokenID)", forHTTPHeaderField: "Authorization")
+        
+        do {
+            let (data, response) = try await session.data(for: request)
+            guard let httpResponse = response as? HTTPURLResponse else {
+                throw NetworkError.invalidResponse
+            }
+            if !(200...299).contains(httpResponse.statusCode) {
+                print("Server error: \(httpResponse.statusCode)")
+                throw NetworkError.httpError
+            }
+            encoder.keyEncodingStrategy = .convertToSnakeCase
+            request.httpBody = try encoder.encode(barHours)
+        }
+    }
+        
+        
+        //        // MARK: - Post User Profile Pictures
         //        private func postPictures(of user: User) async throws {
         //            try await withThrowingTaskGroup { group in
         //
