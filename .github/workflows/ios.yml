@@ -1,13 +1,13 @@
-name: iOS Starter Workflow
+name: iOS starter workflow
 
 on:
   push:
-    branches: [ "network-call-refactor" ]
+    branches: [ "network-call-refactor" ] 
   pull_request:
     branches: [ "network-call-refactor" ]
 
 jobs:
-  build-and-test:
+  build:
     name: BarBuddy iOS Build and Test
     runs-on: macos-latest
 
@@ -20,34 +20,33 @@ jobs:
         with:
           xcode-version: '16.2'
 
-      - name: Determine Default Scheme
-        id: scheme
-        run: |
-          echo "::set-output name=SCHEME::$(xcodebuild -list -json \
-            | ruby -r json -e 'puts JSON.parse(STDIN.read)[\"project\"][\"schemes\"][0]')"
+      - name: Verify Xcode Version
+        run: xcodebuild -version
 
-      - name: Pick iPhone Simulator
-        id: device
+      - name: Set Default Scheme
         run: |
-          # pick the first iPhone simulator available
-          NAME=$(xcrun simctl list devices available \
-            | grep -oE 'iPhone [0-9]+' \
-            | head -n1)
-          echo "::set-output name=DEVICE::${NAME}"
+          scheme_list=$(xcodebuild -list -json | tr -d "\n")
+          default=$(echo $scheme_list | ruby -e "require 'json'; puts JSON.parse(STDIN.gets)['project']['targets'][0]")
+          echo $default | cat >default
+          echo Using default scheme: $default
 
-      - name: Build for Testing
+      - name: Build
+        env:
+          scheme: ${{ 'default' }}
+          platform: ${{ 'iOS Simulator' }}
         run: |
-          # always prefer workspace if present
-          TARGET=$(ls *.xcworkspace 2>/dev/null || ls *.xcodeproj)
-          xcodebuild build-for-testing \
-            -scheme "${{ steps.scheme.outputs.SCHEME }}" \
-            -workspace "$TARGET" \
-            -destination "platform=iOS Simulator,name=${{ steps.device.outputs.DEVICE }}"
+          device=`xcrun xctrace list devices 2>&1 | grep -oE 'iPhone 15' | head -1 | awk '{$1=$1;print}' | sed -e "s/ Simulator$//"`
+          if [ $scheme = default ]; then scheme=$(cat default); fi
+          file_to_build=$(ls -A | grep -i .xcworkspace || ls -A | grep -i .xcodeproj)
+          xcodebuild build-for-testing -scheme "$scheme" -project "$file_to_build" -destination "platform=$platform,name=$device"
 
-      - name: Run Tests
+      - name: Test
+        env:
+          scheme: ${{ 'default' }}
+          platform: ${{ 'iOS Simulator' }}
         run: |
-          TARGET=$(ls *.xcworkspace 2>/dev/null || ls *.xcodeproj)
-          xcodebuild test-without-building \
-            -scheme "${{ steps.scheme.outputs.SCHEME }}" \
-            -workspace "$TARGET" \
-            -destination "platform=iOS Simulator,name=${{ steps.device.outputs.DEVICE }}"
+          device=`xcrun xctrace list devices 2>&1 | grep -oE 'iPhone 16' | head -1 | awk '{$1=$1;print}' | sed -e "s/ Simulator$//"`
+          if [ $scheme = default ]; then scheme=$(cat default); fi
+          if [ "`ls -A | grep -i \\.xcworkspace\$`" ]; then filetype_parameter="workspace" && file_to_build="`ls -A | grep -i \\.xcworkspace\$`"; else filetype_parameter="project" && file_to_build="`ls -A | grep -i \\.xcodeproj\$`"; fi
+          file_to_build=`echo $file_to_build | awk '{$1=$1;print}'`
+          xcodebuild test-without-building -scheme "$scheme" -"$filetype_parameter" "$file_to_build" -destination "platform=$platform,name=$device"
