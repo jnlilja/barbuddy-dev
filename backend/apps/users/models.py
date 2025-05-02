@@ -47,15 +47,10 @@ class User(AbstractUser):
             )
             if age < 18 or age > 120:
                 raise ValidationError({'date_of_birth': 'User must be between 18 and 120 years old.'})
-        
-        # Validate email is unique
-        # if User.objects.filter(email=self.email).exclude(pk=self.pk).exists():
-        #     raise ValidationError({'email': 'This email is already in use.'})
 
         if self.pk is None or User.objects.filter(email=self.email).exclude(pk=self.pk).exists():
             raise ValidationError({'email': 'This email is already in use.'})
-        
-        # Validate username is unique
+
         if User.objects.filter(username=self.username).exclude(pk=self.pk).exists():
             raise ValidationError({'username': 'This username is already taken.'})
 
@@ -74,6 +69,7 @@ class User(AbstractUser):
         ]
 
     def save(self, *args, **kwargs):
+        # Remove self.clean() to avoid re-validation during every save
         account_weights = {
             'regular': 1,
             'trusted': 2,
@@ -102,6 +98,8 @@ from django.contrib.auth import get_user_model
 
 User = get_user_model()
 
+from django.db import transaction
+
 class ProfilePicture(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="profile_pictures")
     image = models.ImageField(upload_to="profile_pictures/")
@@ -109,13 +107,14 @@ class ProfilePicture(models.Model):
     uploaded_at = models.DateTimeField(auto_now_add=True)
 
     def save(self, *args, **kwargs):
-        if self.is_primary:
-            # Set all other pictures of this user to not primary
-            ProfilePicture.objects.filter(user=self.user, is_primary=True).update(is_primary=False)
-        # If this is the user's first picture, make it primary
-        elif not ProfilePicture.objects.filter(user=self.user).exists():
-            self.is_primary = True
-        super().save(*args, **kwargs)
+        with transaction.atomic():
+            if self.is_primary:
+                # Set all other pictures of this user to not primary
+                ProfilePicture.objects.filter(user=self.user, is_primary=True).update(is_primary=False)
+            # If this is the user's first picture, make it primary
+            elif not ProfilePicture.objects.filter(user=self.user).exists():
+                self.is_primary = True
+            super().save(*args, **kwargs)
 
     class Meta:
         ordering = ['-is_primary', '-uploaded_at']

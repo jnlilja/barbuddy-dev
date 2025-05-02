@@ -12,6 +12,10 @@ from .permissions import IsOwnerOrReadOnly
 from barbuddy_api.authentication import FirebaseAuthentication
 
 from .models import FriendRequest, ProfilePicture
+import logging
+from django.core.exceptions import ValidationError
+
+logger = logging.getLogger(__name__)
 
 User = get_user_model()
 
@@ -150,11 +154,22 @@ class UserViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['POST'], permission_classes=[permissions.AllowAny])
     def register_user(self, request):
+        logger.info(f"Register user request data: {request.data}")
         serializer = UserRegistrationSerializer(data=request.data)
         if serializer.is_valid():
-            user = serializer.save()
-            return Response({
-                'user': UserSerializer(user).data,
-                'message': 'User registered successfully'
-            }, status=status.HTTP_201_CREATED)
+            try:
+                user = serializer.save()
+                user.clean()  # Explicitly call the clean method
+                logger.info(f"User created successfully: {user.id}")
+                return Response({
+                    'user': UserSerializer(user).data,
+                    'message': 'User registered successfully'
+                }, status=status.HTTP_201_CREATED)
+            except ValidationError as e:
+                logger.error(f"Validation error: {e.message_dict}")
+                return Response({'error': e.message_dict}, status=status.HTTP_400_BAD_REQUEST)
+            except Exception as e:
+                logger.error(f"Unexpected error: {str(e)}")
+                return Response({'error': 'An unexpected error occurred.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        logger.error(f"Registration failed: {serializer.errors}")
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
