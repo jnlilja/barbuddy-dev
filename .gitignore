@@ -7,7 +7,7 @@ backend/venv-3.11.8
 env/
 venv/
 .venv/
-.DS_Store/
+.DS_Store
 
 # Environment file for iOS
 .env
