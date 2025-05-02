@@ -112,7 +112,7 @@ final class NetworkManager {
     /// - Parameter user: The user information to register
     /// - Returns: The registered user from the server response
     /// - Throws: APIError or NetworkError if registration fails
-    func postUser(user: CreateUserRequest) async throws -> User {
+    func postUser(user: CreateUserRequest) async throws -> TopLevelResponse {
         let endpoint = baseURL + "users/register_user/"
         guard let url = URL(string: endpoint) else { throw APIError.badURL }
         
@@ -122,6 +122,7 @@ final class NetworkManager {
         
         do {
             encoder.keyEncodingStrategy = .convertToSnakeCase
+            encoder.outputFormatting = .prettyPrinted
             let encodedData = try encoder.encode(user)
             request.httpBody = encodedData
             print("Request payload: \(String(data: encodedData, encoding: .utf8) ?? "No data")")
@@ -138,8 +139,6 @@ final class NetworkManager {
             print("Response data: \(String(data: data, encoding: .utf8) ?? "No response data")")
             print("Data length: \(data.count) bytes")
             print("Raw data: \(data as NSData)")
-
-
             
             guard let httpResponse = response as? HTTPURLResponse else {
                 throw NetworkError.invalidResponse
@@ -156,7 +155,7 @@ final class NetworkManager {
             // Try to decode the response
             do {
                 decoder.keyDecodingStrategy = .convertFromSnakeCase
-                return try decoder.decode(User.self, from: data)
+                return try decoder.decode(TopLevelResponse.self, from: data)
             } catch {
                 print("Decoding error: \(error)")
                 if let decodingError = error as? DecodingError {
@@ -365,10 +364,9 @@ final class NetworkManager {
             print("Successfully deleted bar hours with ID: \(barHours.id)")
         } catch {
             print("Delete request failed: \(error)")
-            throw NetworkError.httpError
+            throw NetworkError.deleteFailed
         }
     }
-        
 }
     
     

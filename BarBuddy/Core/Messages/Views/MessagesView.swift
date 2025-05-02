@@ -43,7 +43,7 @@ struct MessagesView: View {
                                 DirectMessageRow(
                                     name: user.firstName,
                                     message: "Hey man, how's it going?",
-                                    location: String(user.location) + ", " + String(user.location)
+                                    location: String(user.location ?? "Unknown Location") + ", " + String(user.location ?? "Unknown Location")
                                 )
                             }
                             .listRowBackground(Color("DarkBlue"))

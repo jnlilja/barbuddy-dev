@@ -16,4 +16,5 @@ enum NetworkError: Error {
     case httpError
     case pictureDecodingFailed
     case primaryPictureEncodingFailed
+    case deleteFailed
 }

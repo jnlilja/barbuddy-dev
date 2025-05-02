@@ -40,7 +40,8 @@ final class AuthViewModel: ObservableObject {
             self.authUser = result.user
 
             // Store profile through REST POST and fetch the user
-            self.currentUser = try await NetworkManager.shared.postUser(user: profile)
+            let response = try await NetworkManager.shared.postUser(user: profile)
+            self.currentUser = response.user
             print("✅ New user created & stored.")
         } catch APIError.badURL {
             print("❌ Sign‑up failed: Invalid URL.")

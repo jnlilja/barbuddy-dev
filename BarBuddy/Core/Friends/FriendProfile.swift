@@ -63,7 +63,7 @@ struct FriendProfile: View {
 
                         HStack(spacing: 4) {
                             Image(systemName: "mappin.circle.fill")
-                            Text(user.location.description)
+                            Text(user.location ?? "")
                         }
                         .frame(maxWidth: .infinity)
                     }

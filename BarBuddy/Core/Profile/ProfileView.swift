@@ -5,8 +5,8 @@
 //  Created by Jessica Lilja on 2/5/25.
 //
 
-import SwiftUI
 import SDWebImageSwiftUI
+import SwiftUI
 
 struct ProfileView: View {
     @EnvironmentObject private var authVM: AuthViewModel
@@ -27,10 +27,12 @@ struct ProfileView: View {
     private var filteredFriends: [User] {
         guard !searchText.isEmpty else { return userFriends.friends }
         let q = searchText.lowercased()
-        let first = userFriends.friends.filter { $0.firstName.lowercased().contains(q) }
-        let last  = userFriends.friends.filter {
-            !$0.firstName.lowercased().contains(q) &&
-            $0.lastName.lowercased().contains(q)
+        let first = userFriends.friends.filter {
+            $0.firstName.lowercased().contains(q)
+        }
+        let last = userFriends.friends.filter {
+            !$0.firstName.lowercased().contains(q)
+                && $0.lastName.lowercased().contains(q)
         }
         return first + last
     }
@@ -46,14 +48,19 @@ struct ProfileView: View {
                         VStack(spacing: 25) {
                             // Profile header
                             Group {
-                                if !user.profilePictures[0].image.isEmpty {
-                                    WebImage(url: URL(string: user.profilePictures[0].image))
-                                        .resizable()
-                                        .scaledToFill()
-                                        .frame(width: 120, height: 120)
-                                        .clipShape(Circle())
-                                        .overlay(Circle().stroke(Color.white, lineWidth: 4))
-                                        .shadow(radius: 7)
+                                if let profilePicture = user.profilePictures.first(where: { $0.isPrimary })?.image {
+                                    WebImage(url: URL(string: profilePicture))
+                                    .resizable()
+                                    .scaledToFill()
+                                    .frame(width: 120, height: 120)
+                                    .clipShape(Circle())
+                                    .overlay(
+                                        Circle().stroke(
+                                            Color.white,
+                                            lineWidth: 4
+                                        )
+                                    )
+                                    .shadow(radius: 7)
                                 } else {
                                     Circle()
                                         .fill(Color.gray.opacity(0.3))
@@ -74,68 +81,113 @@ struct ProfileView: View {
                             // Tabs
                             ProfileTabsView { selectedTab in
                                 // MARK: Photos
-                               if selectedTab == 0 {
-                                   LazyVGrid(columns: [
-                                       GridItem(.fixed(gridCellWidth), spacing: 15),
-                                       GridItem(.fixed(gridCellWidth), spacing: 15),
-                                       GridItem(.fixed(gridCellWidth))
-                                   ], spacing: 15) {
-                                       if !user.profilePictures[0].image.isEmpty {
-                                           //ForEach(profilePictures.filter { !$0.isPrimary }, id: \.self) { image in
-                                               ZStack(alignment: .topTrailing) {
-                                                   WebImage(url: URL(string: user.profilePictures[0].image)) { image in
-                                                       image.resizable()
-                                                           
-                                                   } placeholder: {
-                                                       RoundedRectangle(cornerRadius: 10)
-                                                   }
-                                                   .scaledToFill()
-                                                   .frame(width: gridCellWidth, height: gridCellWidth)
-                                                   .clipped()
-                                                   .cornerRadius(10)
-                                                   .onTapGesture {
-                                                       selectedImage = user.profilePictures[0].image
-                                                       isImageExpanded = true
-                                                   }
-                                                       
-                                                   Button {
-                                                       // edit
-                                                   } label: {
-                                                       Circle()
-                                                           .fill(Color("Salmon"))
-                                                           .frame(width: 30, height: 30)
-                                                           .overlay(
-                                                               Image(systemName: "pencil")
-                                                                   .font(.system(size: 12))
-                                                                   .foregroundColor(.white)
-                                                           )
-                                                   }
-                                                   .padding(8)
-                                               }
-                                           //}
-                                       }
-                                   }
-                                   .padding(.horizontal, 16)
+                                if selectedTab == 0 {
+                                    LazyVGrid(
+                                        columns: [
+                                            GridItem(
+                                                .fixed(gridCellWidth),
+                                                spacing: 15
+                                            ),
+                                            GridItem(
+                                                .fixed(gridCellWidth),
+                                                spacing: 15
+                                            ),
+                                            GridItem(.fixed(gridCellWidth)),
+                                        ],
+                                        spacing: 15
+                                    ) {
+                                        if !user.profilePictures.isEmpty {
+                                            ForEach(user.profilePictures.filter { !$0.isPrimary }, id: \.self) { picture in
+                                                ZStack(alignment: .topTrailing) {
+                                                    WebImage(url: URL(string: picture.image)) { webImage in
+                                                        webImage.resizable()
+
+                                                    } placeholder: {
+                                                        RoundedRectangle(
+                                                            cornerRadius: 10
+                                                        )
+                                                    }
+                                                    .scaledToFill()
+                                                    .frame(
+                                                        width: gridCellWidth,
+                                                        height: gridCellWidth
+                                                    )
+                                                    .clipped()
+                                                    .cornerRadius(10)
+                                                    .onTapGesture {
+                                                        selectedImage = picture.image
+                                                        isImageExpanded = true
+                                                    }
+
+                                                    Button {
+                                                        // edit
+                                                    } label: {
+                                                        Circle()
+                                                            .fill(Color("Salmon"))
+                                                            .frame(
+                                                                width: 30,
+                                                                height: 30
+                                                            )
+                                                            .overlay(
+                                                                Image(systemName:"pencil")
+                                                                .font(
+                                                                    .system(
+                                                                        size: 12
+                                                                    )
+                                                                )
+                                                                .foregroundColor(.white)
+                                                            )
+                                                    }
+                                                    .padding(8)
+                                                }
+                                            }
+                                        }
+                                    }
+                                    .padding(.horizontal, 16)
                                 }
                                 // MARK: User's Info
                                 else if selectedTab == 1 {
                                     // Info sections
                                     VStack(alignment: .leading, spacing: 20) {
-                                        InfoSection(title: "Basic Info", items: [
-                                            InfoItem(icon: "calendar",         text: user.dateOfBirth ?? ""),
-                                            InfoItem(icon: "mappin.circle.fill", text: user.hometown)
-                                        ])
-                                        InfoSection(title: "Work & Education", items: [
-                                            InfoItem(icon: "graduationcap.fill", text: user.jobOrUniversity)
-                                        ])
-                                        InfoSection(title: "Preferences", items: [
-                                            InfoItem(icon: "wineglass.fill",      text: user.favoriteDrink),
-                                            InfoItem(icon: "person.2.fill",      text: user.sexualPreference ?? "")
-                                        ])
+                                        InfoSection(
+                                            title: "Basic Info",
+                                            items: [
+                                                InfoItem(
+                                                    icon: "calendar",
+                                                    text: user.dateOfBirth ?? ""
+                                                ),
+                                                InfoItem(
+                                                    icon: "mappin.circle.fill",
+                                                    text: user.hometown
+                                                ),
+                                            ]
+                                        )
+                                        InfoSection(
+                                            title: "Work & Education",
+                                            items: [
+                                                InfoItem(
+                                                    icon: "graduationcap.fill",
+                                                    text: user.jobOrUniversity
+                                                )
+                                            ]
+                                        )
+                                        InfoSection(
+                                            title: "Preferences",
+                                            items: [
+                                                InfoItem(
+                                                    icon: "wineglass.fill",
+                                                    text: user.favoriteDrink
+                                                ),
+                                                InfoItem(
+                                                    icon: "person.2.fill",
+                                                    text: user.sexualPreference
+                                                        ?? ""
+                                                ),
+                                            ]
+                                        )
                                     }
                                     .padding(.horizontal, 16)
-                                }
-                                else if selectedTab == 2 {
+                                } else if selectedTab == 2 {
                                     // Friends list
                                     if userFriends.friends.isEmpty {
                                         Text("No friends yet.")
@@ -143,13 +195,16 @@ struct ProfileView: View {
                                             .padding()
                                     } else {
                                         ForEach(userFriends.friends) { friend in
-                                            NavigationLink(destination: FriendProfile(user: friend)) {
+                                            NavigationLink(
+                                                destination: FriendProfile(
+                                                    user: friend
+                                                )
+                                            ) {
                                                 FriendRow(friend: friend)
                                             }
                                         }
                                     }
-                                }
-                                else {
+                                } else {
                                     SettingsView()
                                 }
                             }
@@ -198,7 +253,8 @@ struct ProfileView: View {
                     .background(Color("DarkBlue"))
 
                     List(filteredFriends) { friend in
-                        NavigationLink(destination: FriendProfile(user: friend)) {
+                        NavigationLink(destination: FriendProfile(user: friend))
+                        {
                             Text("\(friend.firstName) \(friend.lastName)")
                                 .foregroundColor(.white)
                         }
@@ -222,7 +278,10 @@ struct ProfileView: View {
                 }
                 ToolbarItem(placement: .navigationBarLeading) {
                     NavigationLink(destination: RequestsView()) {
-                        Label("Friend Requests", systemImage: "person.crop.circle.badge.plus")
+                        Label(
+                            "Friend Requests",
+                            systemImage: "person.crop.circle.badge.plus"
+                        )
                     }
                     .tint(Color("Salmon"))
                 }
@@ -236,7 +295,7 @@ struct ProfileView: View {
                 }
             }
         }
-        .tint(.salmon) // ← Apply Salmon tint to back button
+        .tint(.salmon)  // ← Apply Salmon tint to back button
     }
 }
 
@@ -245,24 +304,26 @@ struct ProfileView: View {
 struct FriendRow: View {
     let friend: User
     var body: some View {
-        HStack {
-            Image(friend.profilePictures[0].image)
-                .resizable()
-                .scaledToFill()
-                .frame(width: 60, height: 60)
-                .clipShape(Circle())
-            VStack(alignment: .leading) {
-                Text("\(friend.firstName) \(friend.lastName)")
-                    .font(.headline)
-                    .foregroundColor(.white)
-                Text(friend.hometown)
-                    .font(.subheadline)
-                    .foregroundColor(.white)
+        if let profilePicture = friend.profilePictures.first(where: { $0.isPrimary })?.image {
+            HStack {
+                WebImage(url: URL(string: profilePicture))
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: 60, height: 60)
+                    .clipShape(Circle())
+                VStack(alignment: .leading) {
+                    Text("\(friend.firstName) \(friend.lastName)")
+                        .font(.headline)
+                        .foregroundColor(.white)
+                    Text(friend.hometown)
+                        .font(.subheadline)
+                        .foregroundColor(.white)
+                }
+                Spacer()
             }
-            Spacer()
+            .padding(.vertical, 8)
+            .padding(.horizontal, 16)
         }
-        .padding(.vertical, 8)
-        .padding(.horizontal, 16)
     }
 }
 
@@ -270,7 +331,7 @@ struct TabButton: View {
     let text: String
     let isSelected: Bool
     let action: () -> Void
-    
+
     var body: some View {
         Button(action: action) {
             Text(text)
@@ -319,34 +380,71 @@ struct InfoItem: Identifiable {
 }
 
 //uncomment block to see how profile looks
-#Preview("Example"){
+#Preview("Example") {
     ProfileView()
-      .environmentObject({
-          // build & seed your AuthViewModel in one expression
-          let vm = AuthViewModel()
-//          let dummyPic = "https://media.istockphoto.com/id/1388645967/photo/pensive-thoughtful-contemplating-caucasian-young-man-thinking-about-future-planning-new.jpg?s=612x612&w=0&k=20&c=Keax_Or9RivnYV_9VoOLjknWQP8iaxYXc4jS9rwBmcc="
-//          let dummyPic2 = "https://media.istockphoto.com/id/1550540247/photo/decision-thinking-and-asian-man-in-studio-with-glasses-questions-and-brainstorming-on-grey.jpg?s=612x612&w=0&k=20&c=u0axNDq0EuPp8cEjR5mmVOaAt4FvRCTnbD4SQt66WTw="
-//          let dummyPic3 = "https://plus.unsplash.com/premium_photo-1683121541367-eeb807eddb03?w=900&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTN8fGJlZXJ8ZW58MHx8MHx8fDA%3D"
-          vm.currentUser = User(
-            id: 1,
-            username: "jdoe",
-            firstName: "John",
-            lastName: "Doe",
-            email: "jdoe@example.com",
-            password: "",
-            dateOfBirth: "1990-01-01",
-            hometown: "Springfield",
-            jobOrUniversity: "Example U",
-            favoriteDrink: "Coffee",
-            location: "Location(latitude: 20, longitude: 20)",
-            profilePictures: [ProfilePictures(id: 9, image: "", isPrimary: true, uploadedAt: "")],
-            matches: [Match(id: 0, user1: 1, user1Details: MatchUser(id: 0, username: "", profilePicture: ""), user2: 4, user2Details: MatchUser(id: 1, username: "", profilePicture: ""), status: "", createdAt: "", disconnectedBy: 7, disconnectedByUsername: "")],
-            swipes: [Swipe(id: 0, swiperUsername: "", swipedOn: 1, status: "", timestamp: "")],
-            voteWeight: 0,
-            accountType: "regular",
-            sexualPreference: "straight",
-            phoneNumber: ""
-          )
-          return vm
-      }())
+        .environmentObject(
+            {
+                // build & seed your AuthViewModel in one expression
+                let vm = AuthViewModel()
+                //          let dummyPic = "https://media.istockphoto.com/id/1388645967/photo/pensive-thoughtful-contemplating-caucasian-young-man-thinking-about-future-planning-new.jpg?s=612x612&w=0&k=20&c=Keax_Or9RivnYV_9VoOLjknWQP8iaxYXc4jS9rwBmcc="
+                //          let dummyPic2 = "https://media.istockphoto.com/id/1550540247/photo/decision-thinking-and-asian-man-in-studio-with-glasses-questions-and-brainstorming-on-grey.jpg?s=612x612&w=0&k=20&c=u0axNDq0EuPp8cEjR5mmVOaAt4FvRCTnbD4SQt66WTw="
+                //          let dummyPic3 = "https://plus.unsplash.com/premium_photo-1683121541367-eeb807eddb03?w=900&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTN8fGJlZXJ8ZW58MHx8MHx8fDA%3D"
+                vm.currentUser = User(
+                    id: 1,
+                    username: "jdoe",
+                    firstName: "John",
+                    lastName: "Doe",
+                    email: "jdoe@example.com",
+                    password: "",
+                    dateOfBirth: "1990-01-01",
+                    hometown: "Springfield",
+                    jobOrUniversity: "Example U",
+                    favoriteDrink: "Coffee",
+                    location: "Location(latitude: 20, longitude: 20)",
+                    profilePictures: [
+                        ProfilePictures(
+                            id: 9,
+                            image: "",
+                            isPrimary: true,
+                            uploadedAt: ""
+                        )
+                    ],
+                    matches: [
+                        Match(
+                            id: 0,
+                            user1: 1,
+                            user1Details: MatchUser(
+                                id: 0,
+                                username: "",
+                                profilePicture: ""
+                            ),
+                            user2: 4,
+                            user2Details: MatchUser(
+                                id: 1,
+                                username: "",
+                                profilePicture: ""
+                            ),
+                            status: "",
+                            createdAt: "",
+                            disconnectedBy: 7,
+                            disconnectedByUsername: ""
+                        )
+                    ],
+                    swipes: [
+                        Swipe(
+                            id: 0,
+                            swiperUsername: "",
+                            swipedOn: 1,
+                            status: "",
+                            timestamp: ""
+                        )
+                    ],
+                    voteWeight: 0,
+                    accountType: "regular",
+                    sexualPreference: "straight",
+                    phoneNumber: ""
+                )
+                return vm
+            }()
+        )
 }

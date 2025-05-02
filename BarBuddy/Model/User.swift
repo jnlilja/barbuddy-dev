@@ -12,13 +12,13 @@ struct User: Codable, Identifiable {
     var username: String
     var firstName: String
     var lastName: String
-    var email: String
-    var password: String
+    var email: String?
+    var password: String?
     var dateOfBirth: String?
     var hometown: String
     var jobOrUniversity: String
     var favoriteDrink: String
-    var location: String
+    var location: String?
     var profilePictures: [ProfilePictures]
     var matches: [Match]
     var swipes: [Swipe]
@@ -44,4 +44,16 @@ struct CreateUserRequest: Codable {
     let accountType: String
     let sexualPreference: String?
     let phoneNumber: String?
+}
+/*
+ Since API returns in the following format for users:
+ 
+ "user" : {user data...}
+ message: "Some message"
+ 
+ This wrapper is necessary to decode correctly
+ */
+struct TopLevelResponse: Codable {
+    let user: User
+    let message: String
 }
