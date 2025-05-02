@@ -140,6 +140,8 @@ class FriendRequestSerializer(serializers.ModelSerializer):
         read_only_fields = ['from_user', 'timestamp', 'status']
 
 
+
+
 class UserRegistrationSerializer(serializers.ModelSerializer):
     phone_number = serializers.CharField(max_length=15, required=False)
     confirm_password = serializers.CharField(write_only=True, required=True)
@@ -170,6 +172,8 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         if age > 120:
             raise serializers.ValidationError("Age cannot exceed 120.")
         return value
+
+
 
     def create(self, validated_data):
         validated_data.pop('confirm_password')

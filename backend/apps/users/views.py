@@ -14,6 +14,9 @@ from barbuddy_api.authentication import FirebaseAuthentication
 from .models import FriendRequest, ProfilePicture
 import logging
 from django.core.exceptions import ValidationError
+from firebase_admin import auth as firebase_auth
+
+
 
 logger = logging.getLogger(__name__)
 
@@ -152,17 +155,32 @@ class UserViewSet(viewsets.ModelViewSet):
         serializer = ProfilePictureSerializer(pictures, many=True)
         return Response(serializer.data)
 
+
+
     @action(detail=False, methods=['POST'], permission_classes=[permissions.AllowAny])
     def register_user(self, request):
-        logger.info(f"Register user request data: {request.data}")
+        #logger.info(f"Register user request data: {request.data}")
         serializer = UserRegistrationSerializer(data=request.data)
         if serializer.is_valid():
             try:
+                # Save the user in the Django backend
                 user = serializer.save()
                 user.clean()  # Explicitly call the clean method
+
+                # Create a Firebase user
+                firebase_user = firebase_auth.create_user(
+                    uid=str(user.id),  # Use a unique identifier, e.g., user.id
+                    email=user.email,
+                    display_name=f"{user.first_name} {user.last_name}"
+                )
+
+                # Generate a Firebase custom token
+                custom_token = firebase_auth.create_custom_token(firebase_user.uid)
+
                 logger.info(f"User created successfully: {user.id}")
                 return Response({
                     'user': UserSerializer(user).data,
+                    'firebase_token': custom_token.decode('utf-8'),  # Return the token
                     'message': 'User registered successfully'
                 }, status=status.HTTP_201_CREATED)
             except ValidationError as e:
