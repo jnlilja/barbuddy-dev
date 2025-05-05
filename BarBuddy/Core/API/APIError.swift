@@ -5,12 +5,15 @@
 //  Created by Elliot Gambale on 4/16/25.
 //
 
-import Foundation   // ← gives access to LocalizedError
+import Foundation
 
 /// All networking / auth‑related failures in one place.
 enum APIError: Error {
     case badURL
     case noToken
+    case noUser
+    case badRequest
+    case serverError
     case transport(Error)    // URLSession / Auth failures
     case encoding(Error)     // JSONEncoder / JSONSerialization failed
     case decoding(Error)     // JSONDecoder failed
@@ -25,6 +28,12 @@ extension APIError: LocalizedError {
         case .transport(let e):  return e.localizedDescription
         case .encoding(let e):   return "Encoding failed: \(e.localizedDescription)"
         case .decoding(let e):   return "Decoding failed: \(e.localizedDescription)"
+        case .noUser:
+            return "No User"
+        case .badRequest:
+            return "Bad Request"
+        case .serverError:
+            return "Server Error"
         }
     }
 }

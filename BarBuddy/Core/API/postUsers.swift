@@ -9,6 +9,11 @@
 import SwiftUI
 @preconcurrency import FirebaseAuth
 
+struct RegisterUserResponse: Codable {
+    let id: Int
+    let username: String
+}
+
 // MARK: - Data model sent to backend
 struct PostUser: Codable {
     var username: String
@@ -25,11 +30,60 @@ struct PostUser: Codable {
     var sexual_preference: String
 }
 
+struct RegisterResponse: Decodable {
+    let user: RegisterUserResponse
+    let firebase_token: String
+    let message: String
+}
+
 // MARK: - Networking service
 @MainActor
 final class PostUserAPIService {
+    
     static let shared = PostUserAPIService()
-    private let baseURL = URL(string: "barbuddy-backend-148659891217.us-central1.run.app/api")!   // ← Edit
+    
+    private let baseURL = URL(string: "https://barbuddy-backend-148659891217.us-central1.run.app/api")!   // ← Edit
+    
+    func register(user: SignUpUser) async -> Result<RegisterResponse, APIError> {
+        
+        guard let url = URL(string: "https://barbuddy-backend-148659891217.us-central1.run.app/api/users/register_user/") else {
+            return .failure(.badURL)
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        do { request.httpBody = try JSONEncoder().encode(user) }
+        
+        catch {
+            return .failure(.badURL)
+        }
+        
+        do {
+            let (data, response) = try await URLSession.shared.data(for: request)
+            if let responseStatusCode = response as? HTTPURLResponse {
+                if responseStatusCode.statusCode >= 400 {
+                    print("bad response \(responseStatusCode.statusCode)")
+                    return .failure(.badURL)
+                }
+            }
+            
+            if let jsonString = String(data: data, encoding: .utf8) {
+                print("json string: \(jsonString)")
+            }
+            
+            do {
+                let responseModel = try JSONDecoder().decode(RegisterResponse.self, from: data)
+                return .success(responseModel)
+            } catch(let error) {
+                print("decoding error")
+                print(error.localizedDescription)
+                return .failure(.badURL)
+            }
+        } catch {
+            return .failure(.badURL)
+        }
+    }
 
     /// POST /users – create a profile document in your backend
     func create(user: PostUser, completion: @escaping @Sendable (Result<Void, APIError>) -> Void) {
@@ -96,43 +150,6 @@ extension PostUserAPIService {
         try await withCheckedThrowingContinuation { cont in
             self.updateLocation(lat: lat, lon: lon) { result in
                 cont.resume(with: result)
-            }
-        }
-    }
-}
-
-extension GetUserAPIService {
-    /// GET /users/{id}/ – async helper to fetch a single user record by id
-    func fetchUser(id: Int) async throws -> GetUser {
-        try await withCheckedThrowingContinuation { cont in
-            guard let holder = Auth.auth().currentUser else {
-                return cont.resume(throwing: APIError.noToken)
-            }
-            holder.getIDToken { tok, err in
-                if let err = err { return cont.resume(throwing: APIError.transport(err)) }
-                guard let tok = tok else { return cont.resume(throwing: APIError.noToken) }
-
-                // Build endpoint locally (cannot access private baseURL)
-                let base = URL(string: "https://YOUR_API_BASE_URL")!  // ← keep in sync
-                let url  = base.appendingPathComponent("users").appendingPathComponent(String(id))
-
-                var req = URLRequest(url: url)
-                req.setValue("Bearer \(tok)", forHTTPHeaderField: "Authorization")
-
-                URLSession.shared.dataTask(with: req) { data, _, error in
-                    if let error = error {
-                        return cont.resume(throwing: APIError.transport(error))
-                    }
-                    guard let data = data else {
-                        return cont.resume(throwing: APIError.badURL)
-                    }
-                    do {
-                        let user = try JSONDecoder().decode(GetUser.self, from: data)
-                        cont.resume(returning: user)
-                    } catch {
-                        cont.resume(throwing: APIError.decoding(error))
-                    }
-                }.resume()
             }
         }
     }

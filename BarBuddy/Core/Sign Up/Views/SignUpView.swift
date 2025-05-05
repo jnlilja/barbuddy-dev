@@ -4,7 +4,7 @@ import SwiftUI
 struct SignUpView: View {
     @Binding var path: NavigationPath
     @EnvironmentObject private var viewModel: SignUpViewModel
-    @EnvironmentObject private var authVM: AuthViewModel
+    @EnvironmentObject private var authVM: SessionManager
 
     var body: some View {
         ZStack {
@@ -74,7 +74,8 @@ struct SignUpView: View {
 
                 // ───────── Sign‑up button
                 Button {
-                    guard viewModel.runClientValidation() else { return }
+                    guard viewModel.runClientValidation() else { return
+                    }
                     path.append(SignUpNavigation.ageVerification)
                 } label: {
                     Text("Sign Up")

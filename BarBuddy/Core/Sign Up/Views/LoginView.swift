@@ -17,7 +17,7 @@ struct LoginView: View {
     
     @StateObject private var viewModel = SignUpViewModel()
     @State private var path = NavigationPath()
-    @EnvironmentObject private var authVM: AuthViewModel
+    @EnvironmentObject var sessionManager: SessionManager
     @StateObject private var vm = LoginViewModel()       // pulls profile via /users
 
     var body: some View {
@@ -64,7 +64,7 @@ struct LoginView: View {
                     // ───────── Login button
                     Button {
                         Task {
-                            await authVM.signIn(email: email, password: password)
+                            await sessionManager.signIn(email: email, password: password)
                             // authVM.currentUser is now filled by AuthViewModel;
                             // dismiss or navigate to the main app UI here if you like.
                         }
@@ -82,6 +82,12 @@ struct LoginView: View {
                     }
                     .font(.subheadline)
                     .foregroundColor(Color("DarkPurple"))
+                }
+                
+                if sessionManager.isLoading {
+                    LoadingScreenView()
+                        .navigationBarBackButtonHidden()
+                        .transition(.blurReplace)
                 }
             }
             //        .sheet(isPresented: $showingSignUpSheet) {
@@ -106,6 +112,15 @@ struct LoginView: View {
                    isPresented: $showingAlert,
                    actions: { Button("OK", role: .cancel) { } },
                    message: { Text(alertMessage) })
+            .alert("Sign Up Error", isPresented: $sessionManager.showErrorAlert) {
+                Button {
+                    
+                } label: {
+                    Text("OK")
+                }
+            } message: {
+                Text(sessionManager.errorMessage)
+            }
         }
         .environmentObject(viewModel)
         .tint(.salmon)
@@ -121,5 +136,5 @@ struct LoginView: View {
 #Preview("Login View") {
     LoginView()
         .environmentObject(SignUpViewModel())
-        .environmentObject(AuthViewModel())
+        .environmentObject(SessionManager())
 }

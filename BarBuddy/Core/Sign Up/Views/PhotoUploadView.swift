@@ -9,12 +9,10 @@ import PhotosUI
 import SwiftUI
 
 struct PhotoUploadView: View {
-    @EnvironmentObject var authViewModel: AuthViewModel
+    @EnvironmentObject var sessionManager: SessionManager
     @EnvironmentObject var signUpViewModel: SignUpViewModel
-
     @State private var selectedImages: [UIImage] = []
     @State private var photoPickerItems: [PhotosPickerItem] = []
-    @State private var isLoading: Bool = false
 
     let minPhotos = 4
     let maxPhotos = 6
@@ -72,12 +70,10 @@ struct PhotoUploadView: View {
                 Spacer()
 
                 Button(action: {
-                    withAnimation { isLoading = true }
                     Task {
                         let profile = signUpViewModel.buildProfile()
-                        await authViewModel.signUp(
-                            profile: profile,
-                            password: signUpViewModel.newPassword
+                        await sessionManager.signUp(
+                            profile: profile
                         )
                     }
                 }) {
@@ -93,17 +89,27 @@ struct PhotoUploadView: View {
                 .padding(.bottom, 50)
             }
 
-            if isLoading {
+            if sessionManager.isLoading {
                 LoadingScreenView()
                     .navigationBarBackButtonHidden()
                     .transition(.blurReplace)
             }
         }
+        .alert("Sign Up Error", isPresented: $sessionManager.showErrorAlert) {
+            Button {
+                
+            } label: {
+                Text("OK")
+            }
+        } message: {
+            Text(sessionManager.errorMessage)
+        }
+
     }
 }
 
 #Preview("Photo Upload") {
     PhotoUploadView()
         .environmentObject(SignUpViewModel())
-        .environmentObject(AuthViewModel())
+        .environmentObject(SessionManager())
 }

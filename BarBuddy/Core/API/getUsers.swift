@@ -33,7 +33,49 @@ struct GetUser: Codable, Identifiable, Hashable {
 @MainActor
 final class GetUserAPIService {
     static let shared = GetUserAPIService()
-    private let baseURL = URL(string: "barbuddy-backend-148659891217.us-central1.run.app/api")!   // ← Replace
+    private let baseURL = URL(string: "https://barbuddy-backend-148659891217.us-central1.run.app/api")!   // ← Replace
+    
+    func getUser() async -> Result<GetUser, APIError> {
+        guard let currentUser = Auth.auth().currentUser else { return .failure(.noUser) }
+        let userId = currentUser.uid
+        do {
+            guard let url = URL(string: "https://barbuddy-backend-148659891217.us-central1.run.app/api/users/\(userId)/") else {
+                return .failure(.badURL)
+            }
+            let idToken = try await currentUser.getIDToken()
+            var request = URLRequest(url: url)
+            request.httpMethod = "GET"
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            request.setValue("Bearer \(idToken)", forHTTPHeaderField: "Authorization")
+            let (data, response) = try await URLSession.shared.data(for: request)
+            
+            if let jsonString = String(data: data, encoding: .utf8) {
+                print("json string: \(jsonString)")
+            }
+            
+            if let response = response as? HTTPURLResponse {
+                let statusCode = response.statusCode
+                if statusCode > 400 {
+                    print("bad request")
+                    return .failure(.badRequest)
+                }
+                if statusCode > 500 {
+                    print("internal server error")
+                    return .failure(.serverError)
+                }
+            }
+            do {
+                let user = try JSONDecoder().decode(GetUser.self, from: data)
+                return .success(user)
+            } catch(let error) {
+                print(error.localizedDescription)
+                return .failure(.badURL)
+            }
+        } catch {
+            return .failure(.badRequest)
+        }
+    }
+    
 
     /// GET /users – returns the full users list
     func fetchUsers(completion: @escaping @Sendable (Result<[GetUser], APIError>) -> Void) {
@@ -44,8 +86,12 @@ final class GetUserAPIService {
         currentUser.getIDToken { idToken, err in
             if let err = err { return completion(.failure(.transport(err))) }
             guard let idToken = idToken else { return completion(.failure(.noToken)) }
+            
+            guard let url = URL(string: "https://barbuddy-backend-148659891217.us-central1.run.app/api/users/") else {
+                return completion(.failure(.badURL))
+            }
 
-            let endpoint = self.baseURL.appendingPathComponent("users")
+            let endpoint = url
             var request  = URLRequest(url: endpoint)
             request.httpMethod = "GET"
             request.setValue("Bearer \(idToken)", forHTTPHeaderField: "Authorization")
@@ -64,6 +110,45 @@ final class GetUserAPIService {
         }
     }
 }
+
+extension GetUserAPIService {
+    
+    /// GET /users/{id}/ – async helper to fetch a single user record by id
+    func fetchUser(id: Int) async throws -> GetUser {
+        try await withCheckedThrowingContinuation { cont in
+            guard let holder = Auth.auth().currentUser else {
+                return cont.resume(throwing: APIError.noToken)
+            }
+            holder.getIDToken { tok, err in
+                if let err = err { return cont.resume(throwing: APIError.transport(err)) }
+                guard let tok = tok else { return cont.resume(throwing: APIError.noToken) }
+
+                // Build endpoint locally (cannot access private baseURL)
+                let base = URL(string: "https://YOUR_API_BASE_URL")!  // ← keep in sync
+                let url  = base.appendingPathComponent("users").appendingPathComponent(String(id))
+
+                var req = URLRequest(url: url)
+                req.setValue("Bearer \(tok)", forHTTPHeaderField: "Authorization")
+
+                URLSession.shared.dataTask(with: req) { data, _, error in
+                    if let error = error {
+                        return cont.resume(throwing: APIError.transport(error))
+                    }
+                    guard let data = data else {
+                        return cont.resume(throwing: APIError.badURL)
+                    }
+                    do {
+                        let user = try JSONDecoder().decode(GetUser.self, from: data)
+                        cont.resume(returning: user)
+                    } catch {
+                        cont.resume(throwing: APIError.decoding(error))
+                    }
+                }.resume()
+            }
+        }
+    }
+}
+
 // MARK: - Async/Await convenience
 extension GetUserAPIService {
     /// Async wrapper around the callback‑based fetchUsers.

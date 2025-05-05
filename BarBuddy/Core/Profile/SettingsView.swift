@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct SettingsView: View {
-    @EnvironmentObject var viewModel: AuthViewModel
+    @EnvironmentObject var viewModel: SessionManager
     var body: some View {
 
         Button {
@@ -35,5 +35,5 @@ struct SettingsView: View {
 
 #Preview {
     SettingsView()
-        .environmentObject(AuthViewModel())
+        .environmentObject(SessionManager())
 }

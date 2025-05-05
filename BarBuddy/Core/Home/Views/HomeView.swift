@@ -58,6 +58,6 @@ struct HomeView: View {
 
 #Preview("Home Tab Bar") {
     HomeView()
-        .environmentObject(AuthViewModel())
+        .environmentObject(SessionManager())
         .environmentObject(MapViewModel())
 }

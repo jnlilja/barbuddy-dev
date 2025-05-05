@@ -17,7 +17,7 @@ final class SwipeViewModel: ObservableObject {
     @Published var errorMessage: String?              // banner text
 
     // Inject the global auth model from your App file:
-    @EnvironmentObject var authVM: AuthViewModel
+    @EnvironmentObject var authVM: SessionManager
 
     // ───────────────────────────────────────── Initial load
     init() {

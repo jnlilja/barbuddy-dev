@@ -86,5 +86,5 @@ struct SwipeView: View {
 
 #Preview {
     SwipeView()
-        .environmentObject(AuthViewModel())
+        .environmentObject(SessionManager())
 }

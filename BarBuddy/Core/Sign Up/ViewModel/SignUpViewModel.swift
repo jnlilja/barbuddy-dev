@@ -31,13 +31,14 @@ final class SignUpViewModel: ObservableObject {
     @Published var alertMessage     = ""
     @Published var showingAlert     = false
     
-    func buildProfile() -> PostUser {
-            PostUser(
+    func buildProfile() -> SignUpUser {
+        SignUpUser(
                 username: newUsername,
                 first_name: firstName,
                 last_name: lastName,
                 email: email,
                 password: newPassword,
+                confirm_password: confirmPassword,
                 date_of_birth: dateOfBirth,
                 hometown: hometown,
                 job_or_university: jobOrUniversity,
@@ -49,14 +50,25 @@ final class SignUpViewModel: ObservableObject {
         }
 
     // MARK: - Public entry point from the UI
-    func validateAndSignUp() {
+    func validateAndSignUp() -> Bool {
         // 1) Basic client‑side validation
-        guard isValidEmailFormat(email) else { return fire("Please enter a valid email.") }
-        guard newUsername.count >= 3 else { return fire("Username must be ≥ 3 characters.") }
-        guard isValidPasswordFormat(newPassword) else {
-            return fire("Password must be ≥ 8 characters with a number & special char.")
+        guard isValidEmailFormat(email) else {
+            fire("Please enter a valid email.")
+            return false
         }
-        guard newPassword == confirmPassword else { return fire("Passwords do not match.") }
+        guard newUsername.count >= 3 else {
+            fire("Username must be ≥ 3 characters.")
+            return false
+        }
+        guard isValidPasswordFormat(newPassword) else {
+            fire("Password must be ≥ 8 characters with a number & special char.")
+            return false
+        }
+        guard newPassword == confirmPassword else { fire("Passwords do not match.")
+            return false
+        }
+        
+        return true
 
         // 2) Build profile & call Auth + API
 //        let profile = PostUser(
@@ -73,6 +85,8 @@ final class SignUpViewModel: ObservableObject {
 //            account_type: "regular",
 //            sexual_preference: sexualPreference
 //        )
+        
+        //await signUp(profile: profile)
 //
 //        Task {
 //            await signUp(profile: profile)
@@ -83,14 +97,29 @@ final class SignUpViewModel: ObservableObject {
     private func signUp(profile: PostUser) async {
         do {
             // 1) Create Firebase Auth account
-            _ = try await Auth.auth().createUser(withEmail: profile.email,
-                                                 password: profile.password)
+//            _ = try await Auth.auth().createUser(withEmail: profile.email,
+//                                                 password: profile.password)
 
             // 2) Send profile JSON to your API
-            try await PostUserAPIService.shared.create(user: profile)
-
-            alertMessage = "Account created successfully!"
-            showingAlert = true
+            
+            //TODO: - refactor to SignupUser
+            //let result = await PostUserAPIService.shared.register(user: profile)
+            
+//            switch result {
+//            case .success(let success):
+//                //load ID token
+//                
+//                print("✅ New user created & stored.")
+//            case .failure(let failure):
+//                print("an error occured")
+//                alertMessage = "Sign up failed"
+//                showingAlert = true
+//            }
+            
+//            try await PostUserAPIService.shared.create(user: profile)
+//
+//            alertMessage = "Account created successfully!"
+//            showingAlert = true
         } catch {
             fire(error.localizedDescription)
         }
