@@ -33,11 +33,19 @@ class UserViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user = self.request.user
         if not user or not user.is_authenticated:
-            print("❌ User not authenticated in get_queryset")
+            print("User not authenticated in get_queryset")
             return User.objects.none()
-        if user.is_superuser:
-            print("✅ Superuser accessing all users")
+            
+        # For detail view (GET /users/{id}/), allow accessing any user
+        if self.action == 'retrieve':
+            print("Retrieving specific user by ID")
             return User.objects.all()
+            
+        if user.is_superuser:
+            print("Superuser accessing all users")
+            return User.objects.all()
+            
+        # For list and other methods, only return the current user
         print(f"✅ Regular user {user.username} accessing their own profile")
         return User.objects.filter(id=user.id)
 
