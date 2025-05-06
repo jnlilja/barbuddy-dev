@@ -25,8 +25,10 @@ class FirebaseAuthentication(BaseAuthentication):
             raise AuthenticationFailed('Invalid Firebase ID token')
 
         try:
-            user = User.objects.get(username=uid)
+            # Look for user by firebase_uid instead of username
+            user = User.objects.get(firebase_uid=uid)
         except User.DoesNotExist:
-            user = User.objects.create_user(username=uid)
+            # Don't auto-create users - this should be handled by registration
+            raise AuthenticationFailed('User not found')
 
         return (user, None)
