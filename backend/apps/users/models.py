@@ -14,6 +14,9 @@ class User(AbstractUser):
     vote_weight = models.IntegerField(default=1)
     friends = models.ManyToManyField('self', symmetrical=True, blank=True)
 
+    firebase_uid = models.CharField(max_length=128, blank=True, null=True, unique=True)
+
+
     SEXUAL_PREFERENCE_CHOICES = [
         ('straight', 'Straight'),
         ('gay', 'Gay'),
