@@ -14,10 +14,20 @@ from barbuddy_api.authentication import FirebaseAuthentication
 from .models import FriendRequest, ProfilePicture
 import logging
 from django.core.exceptions import ValidationError
+from firebase_admin import auth
 
 logger = logging.getLogger(__name__)
 
 User = get_user_model()
+
+def create_firebase_token(uid):
+    """Create a Firebase custom token for the given UID."""
+    try:
+        custom_token = auth.create_custom_token(uid)
+        return custom_token.decode('utf-8')
+    except Exception as e:
+        logger.error(f"Error creating Firebase token: {str(e)}")
+        raise
 
 class UserViewSet(viewsets.ModelViewSet):
     authentication_classes = [FirebaseAuthentication]
@@ -33,11 +43,19 @@ class UserViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user = self.request.user
         if not user or not user.is_authenticated:
-            print("❌ User not authenticated in get_queryset")
+            print("User not authenticated in get_queryset")
             return User.objects.none()
-        if user.is_superuser:
-            print("✅ Superuser accessing all users")
+            
+        # For detail view (GET /users/{id}/), allow accessing any user
+        if self.action == 'retrieve':
+            print("Retrieving specific user by ID")
             return User.objects.all()
+            
+        if user.is_superuser:
+            print("Superuser accessing all users")
+            return User.objects.all()
+            
+        # For list and other methods, only return the current user
         print(f"✅ Regular user {user.username} accessing their own profile")
         return User.objects.filter(id=user.id)
 
@@ -160,9 +178,17 @@ class UserViewSet(viewsets.ModelViewSet):
             try:
                 user = serializer.save()
                 user.clean()  # Explicitly call the clean method
+                
+                # Create Firebase token with user's ID and set the UID
+                firebase_token = create_firebase_token(str(user.id))
+                # Extract UID from token and save to user
+                user.firebase_uid = str(user.id)  # Using user ID as Firebase UID
+                user.save()
+                
                 logger.info(f"User created successfully: {user.id}")
                 return Response({
                     'user': UserSerializer(user).data,
+                    'firebase_token': firebase_token,
                     'message': 'User registered successfully'
                 }, status=status.HTTP_201_CREATED)
             except ValidationError as e:
