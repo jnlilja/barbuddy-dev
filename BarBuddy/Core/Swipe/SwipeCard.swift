@@ -51,12 +51,12 @@ struct SwipeCard: View {
 
                 Divider().overlay(Color.white)
 
-                Label("DOB: \(profile.date_of_birth)", systemImage: "calendar")
-                if !profile.job_or_university.isEmpty {
-                    Label(profile.job_or_university, systemImage: "graduationcap")
+                Label("DOB: \((profile.date_of_birth ?? "N/A"))", systemImage: "calendar")
+                if !(profile.job_or_university ?? "").isEmpty {
+                    Label((profile.job_or_university ?? ""), systemImage: "graduationcap")
                 }
-                if !profile.favorite_drink.isEmpty {
-                    Label("Fav drink: \(profile.favorite_drink)", systemImage: "wineglass")
+                if !(profile.favorite_drink ?? "").isEmpty {
+                    Label("Fav drink: \((profile.favorite_drink ?? ""))", systemImage: "wineglass")
                 }
             }
             .labelStyle(.titleAndIcon)

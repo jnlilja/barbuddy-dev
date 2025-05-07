@@ -14,7 +14,8 @@ struct SplashView: View {
     
     var body: some View {
         ZStack {
-            Color("DarkPurple")
+            //762CA8
+            Color(hex: "#762CA8")
                 .ignoresSafeArea()
             VStack {
                 Image("BarBuddy Launch Screen")

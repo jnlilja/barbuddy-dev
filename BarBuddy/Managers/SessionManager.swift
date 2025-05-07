@@ -62,6 +62,7 @@ class SessionManager: ObservableObject {
         isLoading = true
         do {
             let result = try await Auth.auth().signIn(withEmail: email, password: password)
+            self.authUser = result.user
             await fetchLoggedInUser()
             //authUser = result.user
             //try await loadCurrentUser(email: email)
@@ -82,7 +83,8 @@ class SessionManager: ObservableObject {
             switch result {
             case .success(let success):
                 let idToken = success.firebase_token
-                let _ = try await Auth.auth().signIn(withCustomToken: idToken)
+                let authUser = try await Auth.auth().signIn(withCustomToken: idToken)
+                self.authUser = authUser.user
                 print("✅ New user signed in.")
                 await fetchLoggedInUser()
                 //try await loadCurrentUser(email: profile.email)
@@ -147,16 +149,21 @@ class SessionManager: ObservableObject {
     }
 
     // MARK: - Private helpers
-    private func loadCurrentUser(email: String) async throws {
-        // If your backend echoes the profile record (with id) after sign‑up,
-        // you could store that id in UserDefaults, then:
-        //
-        // currentUser = try await GetUserAPIService.shared.fetchUser(id: savedId)
-        //
-        // For the moment we’ll stick with email filtering:
-        let users = try await GetUserAPIService.shared.fetchUsers()
-        currentUser = users.first(where: { $0.email == email })
-    }
+//    private func loadCurrentUser(email: String) async throws {
+//        // If your backend echoes the profile record (with id) after sign‑up,
+//        // you could store that id in UserDefaults, then:
+//        //
+//        // currentUser = try await GetUserAPIService.shared.fetchUser(id: savedId)
+//        //
+//        // For the moment we’ll stick with email filtering:
+//        do {
+//            let users = try await GetUserAPIService.shared.fetchUsers()
+//            currentUser = users.first(where: { $0.email == email })
+//        } catch {
+//            
+//        }
+//        
+//    }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

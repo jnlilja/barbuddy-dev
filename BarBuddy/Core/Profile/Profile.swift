@@ -45,8 +45,7 @@ struct ProfileView: View {
                         VStack(spacing: 25) {
                             // Profile header
                             Group {
-                                if let key = user.profile_pictures?.keys.first,
-                                   let pic = user.profile_pictures?[key] {
+                                   if let pic = user.profile_pictures.first {
                                     Image(pic)
                                         .resizable()
                                         .scaledToFill()
@@ -92,7 +91,7 @@ struct ProfileView: View {
                                     GridItem(.fixed(gridCellWidth), spacing: 15),
                                     GridItem(.fixed(gridCellWidth))
                                 ], spacing: 15) {
-                                    ForEach(user.profile_pictures?.values.sorted() ?? [], id: \.self) { img in
+                                    ForEach(user.profile_pictures.sorted() ?? [], id: \.self) { img in
                                         ZStack(alignment: .topTrailing) {
                                             Image(img)
                                                 .resizable()
@@ -126,15 +125,15 @@ struct ProfileView: View {
                                 // Info sections
                                 VStack(alignment: .leading, spacing: 20) {
                                     InfoSection(title: "Basic Info", items: [
-                                        InfoItem(icon: "calendar",         text: user.date_of_birth),
-                                        InfoItem(icon: "mappin.circle.fill", text: user.hometown)
+                                        InfoItem(icon: "calendar",         text: user.date_of_birth ?? ""),
+                                        InfoItem(icon: "mappin.circle.fill", text: user.hometown ?? "")
                                     ])
                                     InfoSection(title: "Work & Education", items: [
-                                        InfoItem(icon: "graduationcap.fill", text: user.job_or_university)
+                                        InfoItem(icon: "graduationcap.fill", text: user.job_or_university ?? "")
                                     ])
                                     InfoSection(title: "Preferences", items: [
-                                        InfoItem(icon: "wineglass.fill",      text: user.favorite_drink),
-                                        InfoItem(icon: "person.2.fill",      text: user.sexual_preference)
+                                        InfoItem(icon: "wineglass.fill",      text: user.favorite_drink ?? ""),
+                                        InfoItem(icon: "person.2.fill",      text: user.sexual_preference ?? "")
                                     ])
                                 }
                                 .padding(.horizontal, 16)
@@ -244,7 +243,7 @@ struct FriendRow: View {
     let friend: GetUser
     var body: some View {
         HStack {
-            Image(friend.profile_pictures?.values.first ?? "")
+            Image(friend.profile_pictures.first ?? "")
                 .resizable()
                 .scaledToFill()
                 .frame(width: 60, height: 60)
@@ -253,7 +252,7 @@ struct FriendRow: View {
                 Text("\(friend.first_name) \(friend.last_name)")
                     .font(.headline)
                     .foregroundColor(.white)
-                Text(friend.hometown)
+                Text(friend.hometown ?? "")
                     .font(.subheadline)
                     .foregroundColor(.white)
             }
@@ -329,16 +328,15 @@ struct InfoItem: Identifiable {
             username: "jdoe",
             first_name: "John",
             last_name: "Doe",
-            email: "jdoe@example.com",
+            date_of_birth: "1990-01-01", email: "jdoe@example.com",
             password: "",
-            date_of_birth: "1990-01-01",
             hometown: "Springfield",
             job_or_university: "Example U",
             favorite_drink: "Coffee",
             location: "Springfield",
-            profile_pictures: ["pic1":"TestImage"],
-            matches: "",
-            swipes: "",
+            profile_pictures: [],
+            matches: [],
+            swipes: [],
             vote_weight: 0,
             account_type: "regular",
             sexual_preference: "straight"

@@ -127,6 +127,7 @@ final class MatchingService {
 extension UserProfile {
     /// Parses `location` as “lat,lon” → coordinate, if possible.
     var coordinate: CLLocationCoordinate2D? {
+        guard let location = location else { return nil }
         let parts = location
             .split(separator: ",")
             .map { $0.trimmingCharacters(in: .whitespaces) }
@@ -140,6 +141,7 @@ extension UserProfile {
     /// Your age in years, used for proximity sorting.
     var ageInYears: Int {
         let fmt = DateFormatter(); fmt.dateFormat = "yyyy-MM-dd"
+        guard let date_of_birth = date_of_birth else { return 0 }
         guard let dob = fmt.date(from: date_of_birth) else { return 0 }
         return Calendar.current.dateComponents([.year], from: dob, to: Date()).year ?? 0
     }

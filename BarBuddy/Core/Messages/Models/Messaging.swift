@@ -13,8 +13,8 @@ import PusherSwift
 
 // MARK: - ChatMessage model
 /// Renamed from `Message` to avoid conflicts with other types
-public struct ChatMessage: Codable, Identifiable {
-    public let id: Int
+struct ChatMessage: Codable, Identifiable {
+    var id: Int?
     public let sender: Int
     public let recipient: Int
     public let content: String
@@ -32,7 +32,7 @@ private struct MessageRequest: Codable {
 
 // MARK: - MessagingService
 @MainActor
-public final class MessagingService: ObservableObject {
+final class MessagingService: ObservableObject {
     public static let shared = MessagingService()
 
     private let baseURL = URL(string: "barbuddy-backend-148659891217.us-central1.run.app/api")!
@@ -40,14 +40,17 @@ public final class MessagingService: ObservableObject {
     private var channel: PusherChannel?
 
     /// Published list of all messages (filtered in views)
-    @Published public var messages: [ChatMessage] = []
+    @Published var messages: [ChatMessage] = []
 
     // Build an authenticated URLRequest
     private func makeAuthRequest(path: String) async throws -> URLRequest {
         guard let token = try await Auth.auth().currentUser?.getIDToken() else {
             throw URLError(.userAuthenticationRequired)
         }
-        var req = URLRequest(url: baseURL.appendingPathComponent(path))
+        guard let url = URL(string: "https://barbuddy-backend-148659891217.us-central1.run.app/api/\(path)/") else {
+            throw URLError(.badURL)
+        }
+        var req = URLRequest(url: url)
         req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         return req
     }
@@ -58,6 +61,9 @@ public final class MessagingService: ObservableObject {
             var req = try await makeAuthRequest(path: "messages")
             req.httpMethod = "GET"
             let (data, _) = try await URLSession.shared.data(for: req)
+            
+            
+            
             let decoded = try JSONDecoder().decode([ChatMessage].self, from: data)
             messages = decoded
         } catch {
@@ -74,7 +80,11 @@ public final class MessagingService: ObservableObject {
             req.httpBody = try JSONEncoder().encode(MessageRequest(recipient: recipientID, content: content))
 
             let (data, _) = try await URLSession.shared.data(for: req)
+            if let jsonData = String(data: data, encoding: .utf8) {
+                print("sent data " + jsonData)
+            }
             let sent = try JSONDecoder().decode(ChatMessage.self, from: data)
+            
             messages.append(sent)
             await triggerPusherEvent(for: sent)
         } catch {

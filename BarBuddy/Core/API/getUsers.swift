@@ -14,24 +14,25 @@ struct GetUser: Codable, Identifiable, Hashable {
     var username: String
     var first_name: String
     var last_name: String
-    var email: String
-    var password: String
-    var date_of_birth: String
-    var hometown: String
-    var job_or_university: String
-    var favorite_drink: String
-    var location: String
-    var profile_pictures: [String: String]?
-    var matches: String
-    var swipes: String
-    var vote_weight: Int
-    var account_type: String
-    var sexual_preference: String
+    var date_of_birth: String?
+    var email: String?
+    var password: String?
+    var hometown: String?
+    var job_or_university: String?
+    var favorite_drink: String?
+    var location: String?
+    var profile_pictures: [String] = []
+    var matches: [String] = []
+    var swipes: [String] = []
+    var vote_weight: Int = 0
+    var account_type: String = ""
+    var sexual_preference: String?
 }
 
 // MARK: - Network service
 @MainActor
 final class GetUserAPIService {
+    
     static let shared = GetUserAPIService()
     private let baseURL = URL(string: "https://barbuddy-backend-148659891217.us-central1.run.app/api")!   // ← Replace
     
@@ -75,40 +76,32 @@ final class GetUserAPIService {
             return .failure(.badRequest)
         }
     }
-    
 
     /// GET /users – returns the full users list
-    func fetchUsers(completion: @escaping @Sendable (Result<[GetUser], APIError>) -> Void) {
+    func fetchUsers() async -> Result<[GetUser], APIError> {
         guard let currentUser = Auth.auth().currentUser else {
-            return completion(.failure(.noToken))
+            return .failure(.noToken)
         }
-
-        currentUser.getIDToken { idToken, err in
-            if let err = err { return completion(.failure(.transport(err))) }
-            guard let idToken = idToken else { return completion(.failure(.noToken)) }
-            
+        do {
+            let idToken = try await currentUser.getIDToken()
             guard let url = URL(string: "https://barbuddy-backend-148659891217.us-central1.run.app/api/users/") else {
-                return completion(.failure(.badURL))
+                return .failure(.badURL)
             }
-
             let endpoint = url
             var request  = URLRequest(url: endpoint)
             request.httpMethod = "GET"
             request.setValue("Bearer \(idToken)", forHTTPHeaderField: "Authorization")
-
-            URLSession.shared.dataTask(with: request) { data, _, error in
-                if let error = error { return completion(.failure(.transport(error))) }
-                guard let data = data else { return completion(.success([])) }
-
-                do {
-                    let users = try JSONDecoder().decode([GetUser].self, from: data)
-                    completion(.success(users))
-                } catch {
-                    completion(.failure(.decoding(error)))
-                }
-            }.resume()
+            let (data, _) = try await URLSession.shared.data(for: request)
+            if let jsonData = String(data: data, encoding: .utf8) {
+                print("messages json \(jsonData)")
+            }
+            let users = try JSONDecoder().decode([GetUser].self, from: data)
+            return .success(users)
+        } catch {
+            return .failure(.decoding(error))
         }
     }
+    
 }
 
 extension GetUserAPIService {
@@ -150,16 +143,16 @@ extension GetUserAPIService {
 }
 
 // MARK: - Async/Await convenience
-extension GetUserAPIService {
-    /// Async wrapper around the callback‑based fetchUsers.
-    func fetchUsers() async throws -> [GetUser] {
-        try await withCheckedThrowingContinuation { continuation in
-            self.fetchUsers { result in
-                continuation.resume(with: result)
-            }
-        }
-    }
-}
+//extension GetUserAPIService {
+//    /// Async wrapper around the callback‑based fetchUsers.
+//    func fetchUsers() async throws -> [GetUser] {
+//        try await withCheckedThrowingContinuation { continuation in
+//            self.fetchUsers { result in
+//                continuation.resume(with: result)
+//            }
+//        }
+//    }
+//}
 
 
 // MARK: - ViewModel
@@ -169,18 +162,30 @@ final class UsersViewModel: ObservableObject {
     @Published var errorMessage = ""
     @Published var showingError = false
 
-    func loadUsers() {
-        GetUserAPIService.shared.fetchUsers { [weak self] result in
-            Task { @MainActor in
-                switch result {
-                case .success(let list):
-                    self?.users = list
-                case .failure(let err):
-                    self?.errorMessage = err.localizedDescription
-                    self?.showingError = true
-                }
-            }
+    func loadUsers() async {
+        
+        let result = await GetUserAPIService.shared.fetchUsers()
+        switch result {
+        case .success(let success):
+            print("did find users in messages")
+            self.users = success
+        case .failure(_):
+            errorMessage = "Failed to get users"
         }
+        
+        
+//        GetUserAPIService.shared.fetchUsers { [weak self] result in
+//            Task { @MainActor in
+//                switch result {
+//                case .success(let list):
+//                    print("messages did find success")
+//                    self?.users = list
+//                case .failure(let err):
+//                    self?.errorMessage = err.localizedDescription
+//                    self?.showingError = true
+//                }
+//            }
+//        }
     }
 }
 
@@ -193,12 +198,13 @@ struct ContentViewGet: View {
             List(vm.users) { user in
                 VStack(alignment: .leading) {
                     Text(user.username).font(.headline)
-                    Text(user.email).font(.subheadline)
+                    Text(user.email ?? "No email provided").font(.subheadline)
                 }
             }
             .navigationTitle("Users")
-            .refreshable { vm.loadUsers() }
-            .onAppear      { vm.loadUsers() }
+            .task {
+                await vm.loadUsers()
+            }
             .alert("Error",
                    isPresented: $vm.showingError,
                    actions: { Button("OK", role: .cancel) { vm.showingError = false } },
@@ -208,7 +214,7 @@ struct ContentViewGet: View {
 }
 
 extension GetUser {
-    static let MOCK_DATA = GetUser(id: 0, username: "user123", first_name: "Rob", last_name: "Smith", email: "mail@mail.com", password: "", date_of_birth: "", hometown: "", job_or_university: "", favorite_drink: "", location: "Hideaway", matches: "", swipes: "", vote_weight: 1, account_type: "", sexual_preference: "")
+    static let MOCK_DATA = GetUser(id: 0, username: "user123", first_name: "Rob", last_name: "Smith", date_of_birth: "", email: "mail@mail.com", password: "", hometown: "", job_or_university: "", favorite_drink: "", location: "Hideaway", matches: [], swipes: [], vote_weight: 1, account_type: "", sexual_preference: "")
 
 }
 

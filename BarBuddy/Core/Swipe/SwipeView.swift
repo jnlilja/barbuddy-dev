@@ -1,14 +1,13 @@
 import SwiftUI
 
 struct SwipeView: View {
+    @EnvironmentObject var sessionManager: SessionManager
     @StateObject private var vm = SwipeViewModel()
 
     var body: some View {
         NavigationView {
             ZStack {
                 Color("DarkBlue").ignoresSafeArea()
-
-
                     // ——— Card stack ———
                     ZStack {
                         if vm.users.isEmpty {
@@ -40,6 +39,11 @@ struct SwipeView: View {
                 }
             }
             .navigationBarHidden(true)
+            .task {
+                if let user = sessionManager.currentUser {
+                    await vm.loadSuggestions(username: user.username)
+                }
+            }
         }
     }
 

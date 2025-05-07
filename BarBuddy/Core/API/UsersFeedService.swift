@@ -15,20 +15,20 @@ struct UserProfile: Identifiable, Codable, Hashable {
     let username: String
     let first_name: String
     let last_name: String
-    let email: String
-    let hometown: String
-    let job_or_university: String
-    let favorite_drink: String
-    let location: String
-    let profile_pictures: [String: String]?
-    let date_of_birth: String
-    let sexual_preference: String
+    var email: String?
+    var hometown: String?
+    var job_or_university: String?
+    var favorite_drink: String?
+    var location: String?
+    var profile_pictures: [String] = []
+    var date_of_birth: String?
+    var sexual_preference: String?
     // Convenience
     var displayName: String { "\(first_name) \(last_name)".trimmingCharacters(in: .whitespaces) }
 
     /// Returns the URL of the **first** picture in `profile_pictures`
     var profilePicURL: URL? {
-        guard let first = profile_pictures?.values.first else { return nil }
+        guard let first = profile_pictures.first else { return nil }
         return URL(string: first)
     }
 }
@@ -62,11 +62,21 @@ final class UsersFeedService {
         guard let uid = Auth.auth().currentUser else { throw UsersAPIError.noToken }
         let idToken = try await uid.getIDToken()
 
-        var request = URLRequest(url: baseURL.appendingPathComponent("users"))
+        //var request = URLRequest(url: baseURL.appendingPathComponent("users"))
+        guard let url = URL(string: "https://barbuddy-backend-148659891217.us-central1.run.app/api/users/") else {
+            return []
+        }
+        
+        var request = URLRequest(url: url)
         request.setValue("Bearer \(idToken)", forHTTPHeaderField: "Authorization")
 
         do {
             let (data, _) = try await URLSession.shared.data(for: request)
+            
+            if let jsonData = String(data: data, encoding: .utf8) {
+                print("suggestions json \(jsonData)")
+            }
+            
             return try JSONDecoder().decode([UserProfile].self, from: data)
         } catch let e as DecodingError {
             throw UsersAPIError.decoding(e)

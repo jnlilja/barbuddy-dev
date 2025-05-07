@@ -8,6 +8,7 @@
 import Foundation
 import SwiftUI
 import Combine
+import FirebaseAuth
 
 @MainActor
 final class SwipeViewModel: ObservableObject {
@@ -17,26 +18,30 @@ final class SwipeViewModel: ObservableObject {
     @Published var errorMessage: String?              // banner text
 
     // Inject the global auth model from your App file:
-    @EnvironmentObject var authVM: SessionManager
+    //@EnvironmentObject var authVM: SessionManager
 
     // ───────────────────────────────────────── Initial load
-    init() {
-        Task { await loadSuggestions() }
-    }
+//    init() {
+//        Task { await loadSuggestions() }
+//    }
 
     /// Refresh the swipe stack.
-    func loadSuggestions() async {
+    func loadSuggestions(username: String) async {
         // 1.  Grab the full user feed
         do {
             let feed = try await UsersFeedService.shared.fetchAll()
+            
+//            guard let currentUser = Auth.auth().currentUser else {
+//                return
+//            }
 
             // 2.  Identify “me” (match by e‑mail or uid)
             guard
-                let myEmail  = authVM.authUser?.email,
-                let me       = feed.first(where: { $0.email == myEmail })
+                //let myId  = currentUser.uid,
+                let me = feed.first(where: { $0.username == username })
             else {
                 errorMessage = "Could not determine current profile."
-                users        = []
+                users = []
                 return
             }
 

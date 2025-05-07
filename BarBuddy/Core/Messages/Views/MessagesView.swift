@@ -11,6 +11,7 @@ struct MessagesView: View {
     @StateObject private var vm = UsersViewModel()
     @State private var currentUserID: Int? = nil
     @State private var isLoadingUserID = true
+    @EnvironmentObject private var authVM: SessionManager
 
     var body: some View {
         NavigationStack {
@@ -19,7 +20,7 @@ struct MessagesView: View {
                     ZStack {
                         Color.darkBlue
                             .ignoresSafeArea()
-                        ProgressView("Loading Messages…")
+                        ProgressView("Loading Messages...")
                             .foregroundColor(.white)
                     }
                 } else {
@@ -76,29 +77,19 @@ struct MessagesView: View {
                     }
                 }
             }
-            .onAppear {
-                vm.loadUsers()
-            }
             .task {
-                await fetchCurrentUserID()
+                await vm.loadUsers()
+            }
+            .onAppear {
+                fetchCurrentUserID()
             }
         }
     }
 
     /// Fetch backend user list, match on Firebase UID, store numeric ID
-    private func fetchCurrentUserID() async {
-        guard let firebaseUID = Auth.auth().currentUser?.uid else {
-            isLoadingUserID = false
-            return
-        }
-        do {
-            let users = try await GetUserAPIService.shared.fetchUsers()
-            if let me = users.first(where: { $0.username == firebaseUID }) {
-                currentUserID = me.id
-            }
-        } catch {
-            print("⚠️ fetchCurrentUserID error: \(error)")
-        }
+    private func fetchCurrentUserID() {
+        guard let currentUser = authVM.currentUser else { return }
+        currentUserID = currentUser.id
         isLoadingUserID = false
     }
 }

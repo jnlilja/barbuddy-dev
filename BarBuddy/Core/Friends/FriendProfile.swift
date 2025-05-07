@@ -20,7 +20,7 @@ struct FriendProfile: View {
             VStack(spacing: 0) {
                 // Photo Gallery
                 TabView {
-                    ForEach(user.profile_pictures?.values.sorted() ?? [], id: \.self) { imageName in
+                    ForEach(user.profile_pictures.sorted() ?? [], id: \.self) { imageName in
                         Image(imageName)
                             .resizable()
                             .scaledToFill()
@@ -44,7 +44,7 @@ struct FriendProfile: View {
                         Spacer()
                         HStack(spacing: 4) {
                             Image(systemName: "heart.fill")
-                            Text(user.hometown)
+                            Text(user.hometown ?? "")
                         }
                         .foregroundColor(Color("DarkPurple"))
                     }
@@ -54,13 +54,13 @@ struct FriendProfile: View {
                     HStack {
                         HStack(spacing: 4) {
                             Image(systemName: "calendar")
-                            Text(user.date_of_birth)
+                            Text(user.date_of_birth ?? "No date of birth")
                         }
                         .frame(maxWidth: .infinity)
 
                         HStack(spacing: 4) {
                             Image(systemName: "mappin.circle.fill")
-                            Text(user.location)
+                            Text(user.location ?? "No location provided")
                         }
                         .frame(maxWidth: .infinity)
                     }
@@ -70,19 +70,19 @@ struct FriendProfile: View {
                     HStack {
                         HStack(spacing: 4) {
                             Image(systemName: "graduationcap.fill")
-                            Text(user.job_or_university)
+                            Text(user.job_or_university ?? "")
                         }
                         .frame(maxWidth: .infinity)
 
                         HStack(spacing: 4) {
                             Image(systemName: "wineglass.fill")
-                            Text(user.favorite_drink)
+                            Text(user.favorite_drink ?? "")
                         }
                         .frame(maxWidth: .infinity)
 
                         HStack(spacing: 4) {
                             Image(systemName: "person.2.fill")
-                            Text(user.sexual_preference)
+                            Text(user.sexual_preference ?? "No gender specified")
                         }
                         .frame(maxWidth: .infinity)
                     }
@@ -120,16 +120,15 @@ struct FriendProfile_Previews: PreviewProvider {
                     username: "sampleuser",
                     first_name: "Sample",
                     last_name: "User",
-                    email: "sample@example.com",
+                    date_of_birth: "1990-01-01", email: "sample@example.com",
                     password: "password",
-                    date_of_birth: "1990-01-01",
                     hometown: "Springfield",
                     job_or_university: "Example University",
                     favorite_drink: "Coffee",
                     location: "Springfield",
-                    profile_pictures: ["profilePic": "TestImage"],
-                    matches: "Loves SwiftUI",
-                    swipes: "",
+                    profile_pictures: [],
+                    matches: [],
+                    swipes: [],
                     vote_weight: 0,
                     account_type: "regular",
                     sexual_preference: "straight"
