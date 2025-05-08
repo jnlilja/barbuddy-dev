@@ -3,6 +3,10 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.contrib.auth import get_user_model
 from django.db.models import Q
+from apps.swipes.models import Swipe
+
+
+
 
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from apps.matches.models import Match
@@ -15,6 +19,7 @@ from .models import FriendRequest, ProfilePicture
 import logging
 from django.core.exceptions import ValidationError
 from firebase_admin import auth
+
 
 logger = logging.getLogger(__name__)
 
@@ -199,3 +204,18 @@ class UserViewSet(viewsets.ModelViewSet):
                 return Response({'error': 'An unexpected error occurred.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         logger.error(f"Registration failed: {serializer.errors}")
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=False, methods=['GET'], permission_classes=[permissions.IsAuthenticated])
+    def list_all_users(self, request):
+        swiped_users = Swipe.objects.filter(swiper=request.user).values_list('swiped_on', flat=True)
+        users = User.objects.exclude(id__in=swiped_users).exclude(id=request.user.id)
+        serializer = UserSerializer(users, many=True)
+
+        simplified_data = [{
+            "id": user.id,
+            "username": user.username,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+        } for user in users]
+        
+        return Response(simplified_data)    

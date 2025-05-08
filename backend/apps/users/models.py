@@ -97,9 +97,9 @@ class FriendRequest(models.Model):
         return f"{self.from_user} -> {self.to_user} [{self.status}]"
 
 
-from django.contrib.auth import get_user_model
+# from django.contrib.auth import get_user_model
 
-User = get_user_model()
+# User = get_user_model()
 
 from django.db import transaction
 
