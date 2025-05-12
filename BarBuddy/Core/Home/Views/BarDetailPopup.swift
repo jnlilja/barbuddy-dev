@@ -274,18 +274,18 @@ struct BarDetailPopup: View {
         }
     }
 }
-struct BarDetailPopup_Previews: PreviewProvider {
-    static var previews: some View {
-        BarDetailPopup(
-            bar: Bar(
-                name: "Hideaway",
-                location: CLLocationCoordinate2D(
-                    latitude: 32.7961859,
-                    longitude: -117.2558475
-                )
-            )
-        )
-        .environmentObject(MapViewModel())
-        .previewLayout(.sizeThatFits)
-    }
-}
+//struct BarDetailPopup_Previews: PreviewProvider {
+//    static var previews: some View {
+//        BarDetailPopup(
+//            bar: Bar(
+//                name: "Hideaway",
+//                location: CLLocationCoordinate2D(
+//                    latitude: 32.7961859,
+//                    longitude: -117.2558475
+//                )
+//            )
+//        )
+//        .environmentObject(MapViewModel())
+//        .previewLayout(.sizeThatFits)
+//    }
+//}

@@ -5,6 +5,7 @@
 //
 import SwiftUI
 import MapKit
+
 struct BarCard: View {
     let bar: Bar
     @EnvironmentObject var viewModel: MapViewModel
@@ -55,16 +56,17 @@ struct BarCard: View {
         viewModel.bars.firstIndex(where: { $0.id == bar.id }) ?? -1
     }
 }
-struct BarCard_Previews: PreviewProvider {
-    static var previews: some View {
-        BarCard(bar: Bar(
-            name: "Hideaway",
-            location: CLLocationCoordinate2D(latitude: 32.7961859,
-                                             longitude: -117.2558475)
-        ))
-        .environmentObject(MapViewModel())
-        .previewLayout(.sizeThatFits)
-        .padding()
-    }
-}
+
+//struct BarCard_Previews: PreviewProvider {
+//    static var previews: some View {
+//        BarCard(bar: Bar(
+//            name: "Hideaway",
+//            location: CLLocationCoordinate2D(latitude: 32.7961859,
+//                                             longitude: -117.2558475)
+//        ))
+//        .environmentObject(MapViewModel())
+//        .previewLayout(.sizeThatFits)
+//        .padding()
+//    }
+//}
 

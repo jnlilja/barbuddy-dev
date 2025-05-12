@@ -15,17 +15,14 @@ struct SplashView: View {
     var body: some View {
         ZStack {
             //762CA8
-            Color(hex: "#762CA8")
+            Color("DarkPurple")
                 .ignoresSafeArea()
             VStack {
-                Image("BarBuddy Launch Screen")
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(width: 250)
+                
                 HStack {
                     ProgressView()
                         .tint(.white)
-                    Text("Loading...")
+                    Text("Loading Bar Buddy...")
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundStyle(.white)
                 }

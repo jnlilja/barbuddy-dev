@@ -42,6 +42,35 @@ public actor BarStatusService {
     public static let shared = BarStatusService()
     private let baseURL = URL(string: "barbuddy-backend-148659891217.us-central1.run.app/api")!
     private init() {}
+    
+    //GET bars
+    func fetchBars() async -> Bars? {
+        let url = URL(string: "https://barbuddy-backend-148659891217.us-central1.run.app/api/bars/")!
+        guard let currentUser = Auth.auth().currentUser else {
+            return nil
+        }
+        do {
+            let idToken = try await currentUser.getIDToken()
+            var request = URLRequest(url: url)
+            request.httpMethod = "GET"
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            request.setValue("Bearer \(idToken)", forHTTPHeaderField: "Authorization")
+            let (data, _) = try await URLSession.shared.data(for: request)
+            if let jsonString = String(data: data, encoding: .utf8) {
+                print("bar json")
+                print(jsonString)
+            } else {
+                print("no json data for bars")
+            }
+            let decoder = JSONDecoder()
+            decoder.dateDecodingStrategy = .iso8601
+            let bars = try decoder.decode(Bars.self, from: data)
+            return bars
+        } catch {
+            print("error getting bars")
+            return nil
+        }
+    }
 
     // GET /bar-status/
     public func fetchStatuses() async throws -> [BarStatus] {

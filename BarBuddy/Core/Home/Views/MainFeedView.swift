@@ -9,7 +9,7 @@ import SwiftUI
 struct MainFeedView: View {
     @EnvironmentObject var viewModel: MapViewModel
     @State private var bottomSheetPosition: BottomSheetPosition = .relative(0.86)
-    @State private var selectedItem: UUID?
+    @State private var selectedItem: Int?
     @State private var isDetailPresented = false
     @State private var searchText = ""
     @Environment(\.colorScheme) var colorScheme
@@ -29,46 +29,53 @@ struct MainFeedView: View {
     }
     // MARK: — Map Layer
     private var mapLayer: some View {
-        Map(position: $viewModel.cameraPosition, selection: $selectedItem) {
-            ForEach(viewModel.bars) { bar in
-                Annotation(bar.name, coordinate: bar.location) {
-                    annotationView(for: bar)
-                }
-            }
-            UserAnnotation()
-        }
-        .onChange(of: selectedItem) { _, new in
-            isDetailPresented = new != nil
-        }
-        .mapControls {
-            MapUserLocationButton()
-            MapCompass()
-            MapPitchToggle()
-        }
-        .ignoresSafeArea(.keyboard)
-        .onAppear { locationViewModel.startLocationServices() }
-        .sheet(isPresented: $isDetailPresented) {
-            if let bar = selectedBar {
-                BarDetailPopup(bar: bar)
-                    .environmentObject(viewModel)
-            }
-        }
-        .tint(.salmon)
+        Text("To be fixed")
+//        Map(position: $viewModel.cameraPosition, selection: $selectedItem) {
+//            ForEach(viewModel.bars) { bar in
+//                Annotation(bar.name, coordinate: bar.location) {
+//                    annotationView(for: bar)
+//                }
+//            }
+//            UserAnnotation()
+//        }
+//        .onChange(of: selectedItem) { _, new in
+//            isDetailPresented = new != nil
+//        }
+//        .mapControls {
+//            MapUserLocationButton()
+//            MapCompass()
+//            MapPitchToggle()
+//        }
+//        .ignoresSafeArea(.keyboard)
+//        .onAppear { locationViewModel.startLocationServices() }
+//        .sheet(isPresented: $isDetailPresented) {
+//            if let bar = selectedBar {
+//                BarDetailPopup(bar: bar)
+//                    .environmentObject(viewModel)
+//            }
+//        }
+//        .tint(.salmon)
     }
     private func annotationView(for bar: Bar) -> some View {
         ZStack {
-            if bar.events.isEmpty {
-                Circle()
-                    .frame(width: 30, height: 30)
-                    .foregroundStyle(.darkBlue)
-            } else {
-                Circle()
-                    .stroke(lineWidth: 4)
-                    .frame(width: 30, height: 30)
-                    .background(.darkBlue)
-                    .clipShape(Circle())
-                    .foregroundStyle(Gradient(colors: [.salmon, .neonPink]))
-            }
+            Circle()
+                .stroke(lineWidth: 4)
+                .frame(width: 30, height: 30)
+                .background(.darkBlue)
+                .clipShape(Circle())
+                .foregroundStyle(Gradient(colors: [.salmon, .neonPink]))
+//            if bar.events.isEmpty {
+//                Circle()
+//                    .frame(width: 30, height: 30)
+//                    .foregroundStyle(.darkBlue)
+//            } else {
+//                Circle()
+//                    .stroke(lineWidth: 4)
+//                    .frame(width: 30, height: 30)
+//                    .background(.darkBlue)
+//                    .clipShape(Circle())
+//                    .foregroundStyle(Gradient(colors: [.salmon, .neonPink]))
+//            }
             Image(systemName: "wineglass.fill")
                 .font(.headline)
                 .foregroundColor(.white)
