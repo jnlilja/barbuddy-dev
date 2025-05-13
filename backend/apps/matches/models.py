@@ -25,8 +25,18 @@ class Match(models.Model):
 
     def clean(self):
         super().clean()
-        if self.user1 == self.user2:
-            raise ValidationError("A user cannot match with themselves.")
+        # Only check if both users are set
+        if hasattr(self, 'user1_id') and hasattr(self, 'user2_id') and self.user1_id and self.user2_id:
+            if self.user1_id == self.user2_id:
+                raise ValidationError("A user cannot match with themselves.")
+            
+            existing_match = Match.objects.filter(
+                (models.Q(user1=self.user1) & models.Q(user2=self.user2)) |
+                (models.Q(user1=self.user2) & models.Q(user2=self.user1))
+            ).exclude(pk=self.pk).exists()
+
+            if existing_match:
+                raise ValidationError("A match between these users already exists.")
 
         if self.status not in dict(self.STATUS_CHOICES):
             raise ValidationError({'status': f"Invalid status. Choose from: {', '.join(dict(self.STATUS_CHOICES).keys())}"})
@@ -36,14 +46,5 @@ class Match(models.Model):
 
         if self.disconnected_by and self.disconnected_by not in [self.user1, self.user2]:
             raise ValidationError({'disconnected_by': 'Only matched users can disconnect the match.'})
-
-        existing_match = Match.objects.filter(
-            (models.Q(user1=self.user1) & models.Q(user2=self.user2)) |
-            (models.Q(user1=self.user2) & models.Q(user2=self.user1))
-        ).exclude(pk=self.pk).exists()
-
-        if existing_match:
-            raise ValidationError("A match between these users already exists.")
-
     def __str__(self):
         return f"{self.user1} - {self.user2} ({self.status})"

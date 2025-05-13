@@ -32,3 +32,5 @@ class FirebaseAuthentication(BaseAuthentication):
             raise AuthenticationFailed('User not found')
 
         return (user, None)
+    
+    
