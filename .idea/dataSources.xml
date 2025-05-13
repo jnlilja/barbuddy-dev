@@ -22,5 +22,12 @@
       <jdbc-url>jdbc:postgresql://104.198.101.205:5432/barbuddy</jdbc-url>
       <working-dir>$ProjectFileDir$</working-dir>
     </data-source>
+    <data-source source="LOCAL" name="CoTex@Localhost" uuid="5e0274df-958a-4fba-97f2-d2c3d3483f3a">
+      <driver-ref>postgresql</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>org.postgresql.Driver</jdbc-driver>
+      <jdbc-url>jdbc:postgresql://localhost:5435/brandon</jdbc-url>
+      <working-dir>$ProjectFileDir$</working-dir>
+    </data-source>
   </component>
 </project>
