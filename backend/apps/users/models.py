@@ -51,8 +51,15 @@ class User(AbstractUser):
             if age < 18 or age > 120:
                 raise ValidationError({'date_of_birth': 'User must be between 18 and 120 years old.'})
 
-        if self.pk is None or User.objects.filter(email=self.email).exclude(pk=self.pk).exists():
-            raise ValidationError({'email': 'This email is already in use.'})
+        # Only check email uniqueness if this is a new user (no pk) 
+        # or if the email has changed for an existing user
+        if not hasattr(self, '_skip_email_validation') and self.email:
+            if self.pk is None:  # New user
+                if User.objects.filter(email=self.email).exists():
+                    raise ValidationError({'email': 'This email is already in use.'})
+            else:  # Existing user
+                if User.objects.exclude(pk=self.pk).filter(email=self.email).exists():
+                    raise ValidationError({'email': 'This email is already in use.'})
 
         if User.objects.filter(username=self.username).exclude(pk=self.pk).exists():
             raise ValidationError({'username': 'This username is already taken.'})
@@ -72,7 +79,13 @@ class User(AbstractUser):
         ]
 
     def save(self, *args, **kwargs):
-        # Remove self.clean() to avoid re-validation during every save
+        # Extract and remove skip_validation from kwargs if present
+        skip_validation = kwargs.pop('skip_validation', False)
+        
+        # Remove self.clean() call when skip_validation is True
+        if not skip_validation:
+            self.clean()
+            
         account_weights = {
             'regular': 1,
             'trusted': 2,
