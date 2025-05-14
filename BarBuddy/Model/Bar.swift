@@ -7,17 +7,19 @@
 
 import CoreLocation
 
-struct Bar: Identifiable {
-    let id = UUID()
+// TODO: Update bar model
+struct Bar: Codable, Identifiable {
+    var id: Int?
     let name: String
-    let location: CLLocationCoordinate2D
-    var musicGenre: String?
-    var usersAtBar: Int?
-    var averageRating: String?
-    var events: [Event] {
-        Event.eventData.filter { $0.location == name }
-    }
-    var deals: [Deal] {
-        Deal.dealData.filter { $0.location == name }
-    }
+    let address: String
+    var averagePrice: String
+    let latitude: Double
+    let longitude: Double
+    var location: String
+    var usersAtBar: Int
+    var currentStatus: String
+    var averageRating: String
+    var images: [BarImage]
+    var currentUserCount: String
+    var activityLevel: String
 }

@@ -31,8 +31,8 @@ struct BarCard: View {
                 .cornerRadius(10)
             // Dynamic Quick‑Info Bubbles
             HStack(spacing: 12) {
-                InfoTag(icon: "music.note",        text: viewModel.music[index] ?? "–")
-                InfoTag(icon: "person.3.fill",     text: viewModel.statuses[index]?.crowd_size ?? "–")
+                InfoTag(icon: "record.circle",        text: viewModel.statuses[index]?.waitTime ?? "-")
+                InfoTag(icon: "person.3.fill",     text: viewModel.statuses[index]?.crowdSize ?? "–")
                 InfoTag(icon: "dollarsign.circle", text: viewModel.pricing[index] ?? "–")
             }
             .frame(maxWidth: .infinity)

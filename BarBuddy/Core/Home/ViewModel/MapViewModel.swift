@@ -15,8 +15,7 @@ final class MapViewModel: ObservableObject {
     @Published var cameraPosition: MapCameraPosition = .userLocation(
         fallback: .automatic
     )
-    @Published var statuses: [Int: BarStatus] = [:]  // now Equatable
-    @Published var music: [Int: String] = [:]
+    @Published var statuses: [BarStatus]   // now Equatable
     @Published var pricing: [Int: String] = [:]
     // MARK: – Static list of bars in Pacific Beach
     let bars: [Bar] = [
@@ -218,42 +217,30 @@ final class MapViewModel: ObservableObject {
 
     func loadBarData() async {
         do {
-            async let rawStatuses = BarStatusService.shared.fetchStatuses()
-            async let voteSummaries = BarStatusService.shared
-                .fetchVoteSummaries()
-            let (statusList, summaries) = try await (rawStatuses, voteSummaries)
-
-            let threshold = 1
-            var kept: [Int: BarStatus] = [:]
-            for st in statusList {
-                let count = summaries.filter { $0.bar == st.bar }.count
-                if count > threshold { kept[st.bar] = st }
-            }
-            statuses = kept
+            self.statuses = try await BarStatusService.shared.fetchStatuses()
+            let summaries = try await BarStatusService.shared.fetchVoteSummaries()
+            
         } catch {
             print("Failed loading bar data:", error)
         }
     }
 
     /// Loads music & pricing choices
-    func loadMetadata() async {
-        do {
-            async let rawMusic = BarStatusService.shared.fetchMusic()
-            async let rawPricing = BarStatusService.shared.fetchPricing()
-            let (musicList, priceList) = try await (rawMusic, rawPricing)
-
-            var mDict: [Int: String] = [:]
-            for m in musicList { mDict[m.bar] = m.music }
-            music = mDict
-
-            var pDict: [Int: String] = [:]
-            for p in priceList { pDict[p.bar] = p.price_range }
-            pricing = pDict
-
-        } catch {
-            print("Failed loading metadata:", error)
-        }
-    }
+    // Is this function still needed?
+//    func loadMetadata() async {
+//        do {
+//            async let rawPricing = BarStatusService.shared.fetchPricing()
+//            let priceList = try await rawPricing
+//
+//
+//            var pDict: [Int: String] = [:]
+//            for p in priceList { pDict[p.bar] = p.price_range }
+//            pricing = pDict
+//
+//        } catch {
+//            print("Failed loading metadata:", error)
+//        }
+//    }
 
     func updateCameraPosition(bar: String) async {
         guard let coord = await fetchBarLocation(bar) else { return }
