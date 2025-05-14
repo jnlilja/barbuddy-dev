@@ -29,32 +29,31 @@ struct MainFeedView: View {
     }
     // MARK: — Map Layer
     private var mapLayer: some View {
-        Text("To be fixed")
-//        Map(position: $viewModel.cameraPosition, selection: $selectedItem) {
-//            ForEach(viewModel.bars) { bar in
-//                Annotation(bar.name, coordinate: bar.location) {
-//                    annotationView(for: bar)
-//                }
-//            }
-//            UserAnnotation()
-//        }
-//        .onChange(of: selectedItem) { _, new in
-//            isDetailPresented = new != nil
-//        }
-//        .mapControls {
-//            MapUserLocationButton()
-//            MapCompass()
-//            MapPitchToggle()
-//        }
-//        .ignoresSafeArea(.keyboard)
-//        .onAppear { locationViewModel.startLocationServices() }
-//        .sheet(isPresented: $isDetailPresented) {
-//            if let bar = selectedBar {
-//                BarDetailPopup(bar: bar)
-//                    .environmentObject(viewModel)
-//            }
-//        }
-//        .tint(.salmon)
+        Map(position: $viewModel.cameraPosition, selection: $selectedItem) {
+            ForEach(viewModel.bars) { bar in
+                Annotation(bar.name, coordinate: bar.coordinate) {
+                    annotationView(for: bar)
+                }
+            }
+            UserAnnotation()
+        }
+        .onChange(of: selectedItem) { _, new in
+            isDetailPresented = new != nil
+        }
+        .mapControls {
+            MapUserLocationButton()
+            MapCompass()
+            MapPitchToggle()
+        }
+        .ignoresSafeArea(.keyboard)
+        .onAppear { locationViewModel.startLocationServices() }
+        .sheet(isPresented: $isDetailPresented) {
+            if let bar = selectedBar {
+                BarDetailPopup(bar: bar)
+                    .environmentObject(viewModel)
+            }
+        }
+        .tint(.salmon)
     }
     private func annotationView(for bar: Bar) -> some View {
         ZStack {

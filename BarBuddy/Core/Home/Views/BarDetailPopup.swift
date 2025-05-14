@@ -11,24 +11,16 @@ struct BarDetailPopup: View {
     @Environment(\.dismiss) var dismiss
     @EnvironmentObject var viewModel: MapViewModel
     let bar: Bar
+
     @State private var waitButtonProperties = ButtonProperties(type: "wait")
     @State private var crowdButtonProperties = ButtonProperties(type: "crowd")
-    // Helper to find this bar’s index in the viewModel
-    private var idx: Int {
-        viewModel.bars.firstIndex { $0.id == bar.id } ?? -1
-    }
+
     // Dynamic values from your endpoints
-    private var musicType: String {
-        viewModel.music[idx] ?? "–"
-    }
     private var crowdSize: String {
-        viewModel.statuses[idx]?.crowd_size ?? "–"
-    }
-    private var priceRange: String {
-        viewModel.pricing[idx] ?? "–"
+        viewModel.statuses.first(where: { $0.bar == bar.id })?.crowdSize ?? "–"
     }
     private var waitTime: String {
-        viewModel.statuses[idx]?.wait_time ?? "–"
+        viewModel.statuses.first(where: { $0.bar == bar.id })?.waitTime ?? "–"
     }
     var body: some View {
         NavigationView {
@@ -47,9 +39,9 @@ struct BarDetailPopup: View {
                 }
                 // MARK: — Quick‑info bubbles (music, crowd, price)
                 HStack(spacing: 15) {
-                    InfoBubble(icon: "music.note", text: musicType)
+                    InfoBubble(icon: "record.circle", text: waitTime)
                     InfoBubble(icon: "flame.fill", text: crowdSize)
-                    InfoBubble(icon: "dollarsign.circle", text: priceRange)
+                    InfoBubble(icon: "dollarsign.circle", text: bar.averagePrice ?? "-")
                 }
                 // MARK: — Wait time & crowd voting
                 HStack(spacing: 30) {
@@ -69,16 +61,6 @@ struct BarDetailPopup: View {
                             }
 
                             Button {
-                                // send vote with current values
-                                Task {
-                                    try? await BarStatusService.shared
-                                        .submitVote(
-                                            barId: idx,
-                                            crowdSize: crowdSize,
-                                            waitTime: waitTime
-                                        )
-                                    await viewModel.loadBarData()
-                                }
                                 withAnimation(
                                     .spring(duration: 0.5, bounce: 0.3)
                                 ) {
@@ -131,16 +113,6 @@ struct BarDetailPopup: View {
                                 .bold()
                             }
                             Button {
-                                // send vote with current values
-                                Task {
-                                    try? await BarStatusService.shared
-                                        .submitVote(
-                                            barId: idx,
-                                            crowdSize: crowdSize,
-                                            waitTime: waitTime
-                                        )
-                                    await viewModel.loadBarData()
-                                }
                                 withAnimation(
                                     .spring(duration: 0.5, bounce: 0.3)
                                 ) {
@@ -199,8 +171,7 @@ struct BarDetailPopup: View {
             .padding()
             .navigationBarTitleDisplayMode(.inline)
         }
-        //        .presentationDetents([.large])
-        //        .presentationDragIndicator(.visible)
+
         // MARK: — Remove old “Feedback” view; overlay existing vote menus
         .overlay {
             // Wait‑time menu
@@ -274,18 +245,22 @@ struct BarDetailPopup: View {
         }
     }
 }
-//struct BarDetailPopup_Previews: PreviewProvider {
-//    static var previews: some View {
-//        BarDetailPopup(
-//            bar: Bar(
-//                name: "Hideaway",
-//                location: CLLocationCoordinate2D(
-//                    latitude: 32.7961859,
-//                    longitude: -117.2558475
-//                )
-//            )
-//        )
-//        .environmentObject(MapViewModel())
-//        .previewLayout(.sizeThatFits)
-//    }
-//}
+#Preview(traits: .sizeThatFitsLayout) {
+    BarDetailPopup(
+        bar: Bar(
+            name: "Hideaway",
+            address: "4474 Mission Blvd, San Diego, CA 92109",
+            averagePrice: "$$",
+            latitude: 32.7961859,
+            longitude: -117.2558475,
+            location: "",
+            usersAtBar: 10,
+            currentStatus: "",
+            averageRating: "",
+            images: [BarImage(image: "", uploadedAt: "")],
+            currentUserCount: "",
+            activityLevel: "Packed"
+        )
+    )
+    .environmentObject(MapViewModel())
+}

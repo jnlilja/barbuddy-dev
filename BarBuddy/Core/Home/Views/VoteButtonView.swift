@@ -15,6 +15,7 @@ struct VoteButtonView: View {
     var body: some View {
         Button {
             print("Tapped \(text)")
+            properties.selection = text
             withAnimation {
                 properties.selectedOption = true
             }
