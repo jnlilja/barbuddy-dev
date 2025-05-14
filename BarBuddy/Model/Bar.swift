@@ -7,7 +7,7 @@
 
 import CoreLocation
 
-typealias Bars = [Bars]
+typealias Bars = [Bar]
 
 struct Bar: Codable, Identifiable {
     var id: Int?
