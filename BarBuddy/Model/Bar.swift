@@ -7,6 +7,8 @@
 
 import CoreLocation
 
+typealias Bars = [Bars]
+
 struct Bar: Codable, Identifiable {
     var id: Int?
     let name: String

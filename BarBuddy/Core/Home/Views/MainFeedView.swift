@@ -57,18 +57,24 @@ struct MainFeedView: View {
     }
     private func annotationView(for bar: Bar) -> some View {
         ZStack {
-            if bar.events.isEmpty {
-                Circle()
-                    .frame(width: 30, height: 30)
-                    .foregroundStyle(.darkBlue)
-            } else {
-                Circle()
-                    .stroke(lineWidth: 4)
-                    .frame(width: 30, height: 30)
-                    .background(.darkBlue)
-                    .clipShape(Circle())
-                    .foregroundStyle(Gradient(colors: [.salmon, .neonPink]))
-            }
+            Circle()
+                .stroke(lineWidth: 4)
+                .frame(width: 30, height: 30)
+                .background(.darkBlue)
+                .clipShape(Circle())
+                .foregroundStyle(Gradient(colors: [.salmon, .neonPink]))
+//            if bar.events.isEmpty {
+//                Circle()
+//                    .frame(width: 30, height: 30)
+//                    .foregroundStyle(.darkBlue)
+//            } else {
+//                Circle()
+//                    .stroke(lineWidth: 4)
+//                    .frame(width: 30, height: 30)
+//                    .background(.darkBlue)
+//                    .clipShape(Circle())
+//                    .foregroundStyle(Gradient(colors: [.salmon, .neonPink]))
+//            }
             Image(systemName: "wineglass.fill")
                 .font(.headline)
                 .foregroundColor(.white)

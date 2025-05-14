@@ -19,7 +19,7 @@ actor BarStatusService {
     private init(session: URLSession = .shared) {
         self.session = session
     }
-    
+   
     // GET /bar-status/
     func fetchStatuses() async throws -> [BarStatus] {
         let endpoint = baseURL + "bar-status/"

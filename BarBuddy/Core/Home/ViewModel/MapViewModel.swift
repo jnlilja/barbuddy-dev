@@ -20,6 +20,7 @@ final class MapViewModel: ObservableObject {
     
     // MARK: – Static list of bars 
     let bars: [Bar] = [
+      
         Bar(
             name: "Mavericks Beach Club",
             address: "860 Garnet Ave, San Diego, CA 92109",

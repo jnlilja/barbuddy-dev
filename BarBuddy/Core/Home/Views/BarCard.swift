@@ -5,6 +5,7 @@
 //
 import SwiftUI
 import MapKit
+
 struct BarCard: View {
     let bar: Bar
     @EnvironmentObject var viewModel: MapViewModel
@@ -77,4 +78,5 @@ struct BarCard: View {
     .environmentObject(MapViewModel())
     .padding()
 }
+
 
