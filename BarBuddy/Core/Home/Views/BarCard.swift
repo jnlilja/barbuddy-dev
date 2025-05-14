@@ -10,6 +10,14 @@ struct BarCard: View {
     @EnvironmentObject var viewModel: MapViewModel
     @Environment(\.colorScheme) var colorScheme
     @State private var showingSwipe = false
+    
+    private var waitTime: String {
+        viewModel.statuses.first(where: { $0.bar == bar.id })?.waitTime ?? "-"
+    }
+    private var crowdSize: String {
+        viewModel.statuses.first(where: { $0.bar == bar.id })?.crowdSize ?? "-"
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             // Bar Header
@@ -31,9 +39,9 @@ struct BarCard: View {
                 .cornerRadius(10)
             // Dynamic Quick‑Info Bubbles
             HStack(spacing: 12) {
-                InfoTag(icon: "record.circle",        text: viewModel.statuses[index]?.waitTime ?? "-")
-                InfoTag(icon: "person.3.fill",     text: viewModel.statuses[index]?.crowdSize ?? "–")
-                InfoTag(icon: "dollarsign.circle", text: viewModel.pricing[index] ?? "–")
+                InfoTag(icon: "record.circle",        text: waitTime)
+                InfoTag(icon: "person.3.fill",     text: crowdSize)
+                InfoTag(icon: "dollarsign.circle", text: bar.averagePrice ?? "-")
             }
             .frame(maxWidth: .infinity)
             // Single “Meet People Here” button
@@ -50,21 +58,23 @@ struct BarCard: View {
                 .environmentObject(viewModel)
         }
     }
-    // Helper to find this bar’s index
-    private var index: Int {
-        viewModel.bars.firstIndex(where: { $0.id == bar.id }) ?? -1
-    }
 }
-struct BarCard_Previews: PreviewProvider {
-    static var previews: some View {
-        BarCard(bar: Bar(
-            name: "Hideaway",
-            location: CLLocationCoordinate2D(latitude: 32.7961859,
-                                             longitude: -117.2558475)
-        ))
-        .environmentObject(MapViewModel())
-        .previewLayout(.sizeThatFits)
-        .padding()
-    }
+#Preview(traits: .sizeThatFitsLayout) {
+    BarCard(bar: Bar(
+        name: "Moonshine Beach",
+        address: "1165 Garnet Ave, San Diego, CA 92109",
+        averagePrice: "",
+        latitude: 32.7980179,
+        longitude: -117.2484153,
+        location: "",
+        usersAtBar: 0,
+        currentStatus: "",
+        averageRating: "",
+        images: [],
+        currentUserCount: "",
+        activityLevel: ""
+    ))
+    .environmentObject(MapViewModel())
+    .padding()
 }
 

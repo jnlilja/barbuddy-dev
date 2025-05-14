@@ -11,19 +11,23 @@ struct Bar: Codable, Identifiable {
     var id: Int?
     let name: String
     let address: String
-    var averagePrice: String
+    var averagePrice: String?
     let latitude: Double
     let longitude: Double
-    var location: String
-    var usersAtBar: Int
-    var currentStatus: String
-    var averageRating: String
+    var location: String?
+    var usersAtBar: Int?
+    var currentStatus: String?
+    var averageRating: String?
     var images: [BarImage]
-    var currentUserCount: String
-    var activityLevel: String
+    var currentUserCount: String?
+    var activityLevel: String?
     
     // To easier pin location on map, swift's codable protocol ignores computed properties
     var coordinate: CLLocationCoordinate2D {
         CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
+    }
+    
+    var events: [Event] {
+        Event.eventData.filter { $0.barName == name }
     }
 }

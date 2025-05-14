@@ -9,7 +9,7 @@ import SwiftUI
 struct MainFeedView: View {
     @EnvironmentObject var viewModel: MapViewModel
     @State private var bottomSheetPosition: BottomSheetPosition = .relative(0.86)
-    @State private var selectedItem: UUID?
+    @State private var selectedItem: Int?
     @State private var isDetailPresented = false
     @State private var searchText = ""
     @Environment(\.colorScheme) var colorScheme
@@ -31,7 +31,7 @@ struct MainFeedView: View {
     private var mapLayer: some View {
         Map(position: $viewModel.cameraPosition, selection: $selectedItem) {
             ForEach(viewModel.bars) { bar in
-                Annotation(bar.name, coordinate: bar.location) {
+                Annotation(bar.name, coordinate: bar.coordinate) {
                     annotationView(for: bar)
                 }
             }

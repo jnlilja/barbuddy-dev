@@ -14,17 +14,10 @@ struct BarDetailPopup: View {
 
     @State private var waitButtonProperties = ButtonProperties(type: "wait")
     @State private var crowdButtonProperties = ButtonProperties(type: "crowd")
-   
-    // Helper to find this bar’s index in the viewModel
-    private var idx: Int {
-        viewModel.bars.firstIndex { $0.id == bar.id } ?? -1
-    }
+
     // Dynamic values from your endpoints
     private var crowdSize: String {
         viewModel.statuses.first(where: { $0.bar == bar.id })?.crowdSize ?? "–"
-    }
-    private var priceRange: String {
-        bar.averagePrice
     }
     private var waitTime: String {
         viewModel.statuses.first(where: { $0.bar == bar.id })?.waitTime ?? "–"
@@ -48,7 +41,7 @@ struct BarDetailPopup: View {
                 HStack(spacing: 15) {
                     InfoBubble(icon: "record.circle", text: waitTime)
                     InfoBubble(icon: "flame.fill", text: crowdSize)
-                    InfoBubble(icon: "dollarsign.circle", text: priceRange)
+                    InfoBubble(icon: "dollarsign.circle", text: bar.averagePrice ?? "-")
                 }
                 // MARK: — Wait time & crowd voting
                 HStack(spacing: 30) {
@@ -120,16 +113,6 @@ struct BarDetailPopup: View {
                                 .bold()
                             }
                             Button {
-                                // send vote with current values
-//                                Task {
-//                                    try? await BarStatusService.shared
-//                                        .submitVote(
-//                                            barId: idx,
-//                                            crowdSize: crowdSize,
-//                                            waitTime: waitTime
-//                                        )
-//                                    await viewModel.loadBarData()
-//                                }
                                 withAnimation(
                                     .spring(duration: 0.5, bounce: 0.3)
                                 ) {
@@ -262,18 +245,22 @@ struct BarDetailPopup: View {
         }
     }
 }
-struct BarDetailPopup_Previews: PreviewProvider {
-    static var previews: some View {
-        BarDetailPopup(
-            bar: Bar(
-                name: "Hideaway",
-                location: CLLocationCoordinate2D(
-                    latitude: 32.7961859,
-                    longitude: -117.2558475
-                )
-            )
+#Preview(traits: .sizeThatFitsLayout) {
+    BarDetailPopup(
+        bar: Bar(
+            name: "Hideaway",
+            address: "4474 Mission Blvd, San Diego, CA 92109",
+            averagePrice: "$$",
+            latitude: 32.7961859,
+            longitude: -117.2558475,
+            location: "",
+            usersAtBar: 10,
+            currentStatus: "",
+            averageRating: "",
+            images: [BarImage(image: "", uploadedAt: "")],
+            currentUserCount: "",
+            activityLevel: "Packed"
         )
-        .environmentObject(MapViewModel())
-        .previewLayout(.sizeThatFits)
-    }
+    )
+    .environmentObject(MapViewModel())
 }
