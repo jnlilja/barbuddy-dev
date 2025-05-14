@@ -7,7 +7,6 @@
 
 import CoreLocation
 
-// TODO: Update bar model
 struct Bar: Codable, Identifiable {
     var id: Int?
     let name: String
@@ -22,4 +21,9 @@ struct Bar: Codable, Identifiable {
     var images: [BarImage]
     var currentUserCount: String
     var activityLevel: String
+    
+    // To easier pin location on map, swift's codable protocol ignores computed properties
+    var coordinate: CLLocationCoordinate2D {
+        CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
+    }
 }

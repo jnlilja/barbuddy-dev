@@ -68,13 +68,6 @@ struct BarDetailPopup: View {
                             }
 
                             Button {
-                                // send vote with current values
-                                
-//                                Task {
-//                                    try? await BarStatusService.shared.submitVote(vote: vote)
-//                                    
-//                                    await viewModel.loadBarData()
-//                                }
                                 withAnimation(
                                     .spring(duration: 0.5, bounce: 0.3)
                                 ) {
@@ -128,15 +121,15 @@ struct BarDetailPopup: View {
                             }
                             Button {
                                 // send vote with current values
-                                Task {
-                                    try? await BarStatusService.shared
-                                        .submitVote(
-                                            barId: idx,
-                                            crowdSize: crowdSize,
-                                            waitTime: waitTime
-                                        )
-                                    await viewModel.loadBarData()
-                                }
+//                                Task {
+//                                    try? await BarStatusService.shared
+//                                        .submitVote(
+//                                            barId: idx,
+//                                            crowdSize: crowdSize,
+//                                            waitTime: waitTime
+//                                        )
+//                                    await viewModel.loadBarData()
+//                                }
                                 withAnimation(
                                     .spring(duration: 0.5, bounce: 0.3)
                                 ) {
