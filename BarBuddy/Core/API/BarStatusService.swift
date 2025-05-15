@@ -9,7 +9,7 @@
 import Foundation
 @preconcurrency import FirebaseAuth
 
-// MARK: – Models matching your DRF serializers
+// Models matching your DRF serializers
 actor BarStatusService {
     static let shared = BarStatusService()
     private let session: URLSession
@@ -18,31 +18,11 @@ actor BarStatusService {
     
     private init(session: URLSession = .shared) {
         self.session = session
-    }
-   
-    // GET /bar-status/
-    func fetchStatuses() async throws -> [BarStatus] {
-        let endpoint = baseURL + "bar-status/"
-        guard let url = URL(string: endpoint) else {
-            throw APIError.badURL
-        }
-        guard let token = try await SessionManager().authUser?.getIDToken() else {
-            throw APIError.noToken
-        }
-        var request = URLRequest(url: url)
-        request.httpMethod = "GET"
-        request.setValue("application/json", forHTTPHeaderField: "Accept")
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        
-        let (data, response) = try await session.data(from: url)
-        if let httpResponse = response as? HTTPURLResponse, !(200...299).contains(httpResponse.statusCode) {
-            print("Error fetching statuses: \(httpResponse.statusCode)")
-            throw URLError(.badServerResponse)
-        }
         decoder.keyDecodingStrategy = .convertFromSnakeCase
-        return try decoder.decode([BarStatus].self, from: data)
+        encoder.keyEncodingStrategy = .convertToSnakeCase
     }
+    
+    // MARK: Bar Vote
     
     // GET /bar-votes/summary/
     func fetchVoteSummaries() async throws -> [BarVote] {
@@ -63,7 +43,6 @@ actor BarStatusService {
         guard (response as? HTTPURLResponse)?.statusCode == 200 else {
             throw URLError(.badServerResponse)
         }
-        decoder.keyDecodingStrategy = .convertFromSnakeCase
         return try decoder.decode([BarVote].self, from: data)
     }
     
@@ -82,13 +61,89 @@ actor BarStatusService {
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         
-        encoder.keyEncodingStrategy = .convertToSnakeCase
         request.httpBody = try encoder.encode(vote)
         let (_, response) = try await session.data(for: request)
         guard (response as? HTTPURLResponse)?.statusCode == 201 else {
             throw URLError(.badServerResponse)
         }
     }
+    
+    func fetchBarVote(for voteID: Int) async throws -> BarVote {
+        let endpoint = baseURL + "bar-votes/\(voteID)/"
+        guard let url = URL(string: endpoint) else {
+            throw APIError.badURL
+        }
+        guard let token = try await SessionManager().authUser?.getIDToken() else {
+            throw APIError.noToken
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        
+        let (data, response) = try await session.data(from: url)
+        
+        if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode != 200 {
+            throw APIError.badRequest
+        }
+        
+        return try decoder.decode(BarVote.self, from: data)
+    }
+    
+    func putBarVote(voteID: Int) async throws {
+        let endpoint = baseURL + "bar-votes/\(voteID)/"
+        guard let url = URL(string: endpoint) else {
+            throw APIError.badURL
+        }
+        guard let token = try await SessionManager().authUser?.getIDToken() else {
+            throw APIError.noToken
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "PUT"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        
+        _ = try await session.data(for: request)
+    }
+    
+    func patchBarVote(voteID: Int) async throws {
+        let endpoint = baseURL + "bar-votes/\(voteID)/"
+        guard let url = URL(string: endpoint) else {
+            throw APIError.badURL
+        }
+        guard let token = try await SessionManager().authUser?.getIDToken() else {
+            throw APIError.noToken
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "PATCH"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        
+        _ = try await session.data(for: request)
+    }
+    
+    func deleteBarVote(voteID: Int) async throws {
+        let endpoint = baseURL + "bar-votes/\(voteID)/"
+        guard let url = URL(string: endpoint) else {
+            throw APIError.badURL
+        }
+        guard let token = try await SessionManager().authUser?.getIDToken() else {
+            throw APIError.noToken
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "DELETE"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        
+        _ = try await session.data(for: request)
+    }
+    
+    // MARK: Bar Hours
     
     func postBarHours(hours: BarHours) async throws -> BarHours {
         let endpoint = baseURL + "bar-hours/"
@@ -103,7 +158,6 @@ actor BarStatusService {
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         
-        encoder.keyEncodingStrategy = .convertToSnakeCase
         request.httpBody = try encoder.encode(hours)
         
         let (data, response) = try await session.data(for: request)
@@ -116,7 +170,7 @@ actor BarStatusService {
     }
     
     func fetchBarHours(barID: Int) async throws -> BarHours {
-        let endpoint = baseURL + "bar-hours/{\(barID)/"
+        let endpoint = baseURL + "bar-hours/\(barID)/"
         guard let url = URL(string: endpoint) else {
             throw APIError.badURL
         }
@@ -139,8 +193,92 @@ actor BarStatusService {
         return try decoder.decode(BarHours.self, from: data)
     }
     
-    func fetchBarStatus(barID: Int) async throws -> BarStatus {
-        let endpoint = baseURL + "bar-status/{\(barID)/"
+    func barHoursBulkUpdate(hour: BarHours) async throws {
+        let endpoint = baseURL + "bar-hours/bulk_update/"
+        guard let url = URL(string: endpoint) else {
+            throw APIError.badURL
+        }
+        guard let token = try await SessionManager().authUser?.getIDToken() else {
+            throw APIError.noToken
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        
+        let (_, response) = try await session.data(for: request)
+        
+        if let response = response as? HTTPURLResponse, (200...299).contains(response.statusCode) {
+            throw APIError.badRequest
+        }
+    }
+    
+    func patchBarHours(id: Int) async throws {
+        let endpoint = baseURL + "bar-hours/\(id)/"
+        guard let url = URL(string: endpoint) else {
+            throw APIError.badURL
+        }
+        guard let token = try await SessionManager().authUser?.getIDToken() else {
+            throw APIError.noToken
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "PATCH"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        
+        let (_, response) = try await session.data(for: request)
+    }
+    
+    func deleteBarHours(id: Int) async throws {
+        let endpoint = baseURL + "bar-hours/\(id)/"
+        guard let url = URL(string: endpoint) else {
+            throw APIError.badURL
+        }
+        guard let token = try await SessionManager().authUser?.getIDToken() else {
+            throw APIError.noToken
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "DELETE"
+        request.setValue( "Bearer \(token)", forHTTPHeaderField: "Authorization")
+        request.setValue( "application/json", forHTTPHeaderField: "Content-Type")
+        
+        let (_, response) = try await session.data(for: request)
+        
+        if let response = response as? HTTPURLResponse, !(200...299).contains(response.statusCode) {
+            throw APIError.badRequest
+        }
+    }
+    
+    // MARK: Bar Status
+    
+    // GET /bar-status/
+    func fetchStatuses() async throws -> [BarStatus] {
+        let endpoint = baseURL + "bar-status/"
+        guard let url = URL(string: endpoint) else {
+            throw APIError.badURL
+        }
+        guard let token = try await SessionManager().authUser?.getIDToken() else {
+            throw APIError.noToken
+        }
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        
+        let (data, response) = try await session.data(from: url)
+        if let httpResponse = response as? HTTPURLResponse, !(200...299).contains(httpResponse.statusCode) {
+            print("Error fetching statuses: \(httpResponse.statusCode)")
+            throw URLError(.badServerResponse)
+        }
+        return try decoder.decode([BarStatus].self, from: data)
+    }
+    
+    func fetchBarStatus(statusID: Int) async throws -> BarStatus {
+        let endpoint = baseURL + "bar-status/\(statusID)/"
         guard let url = URL(string: endpoint) else {
             throw APIError.badURL
         }
@@ -163,8 +301,88 @@ actor BarStatusService {
         return try decoder.decode(BarStatus.self, from: data)
     }
     
-    func fetchBar(barID: Int) async throws -> Bar {
-        let endpoint = baseURL + "bar/{\(barID)/"
+    func postBarStatus(barStatus: BarStatus) async throws -> BarStatus {
+        let endpoint = baseURL + "bar-status/"
+        guard let url = URL(string: endpoint) else {
+            throw APIError.badURL
+        }
+        guard let token = try await SessionManager().authUser?.getIDToken() else {
+            throw APIError.noToken
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        
+        request.httpBody = try encoder.encode(barStatus)
+        
+        let (data, response) = try await session.data(for: request)
+        guard let response = response as? HTTPURLResponse, (200...299).contains(response.statusCode) else {
+            throw APIError.badRequest
+        }
+        return try decoder.decode(BarStatus.self, from: data)
+    }
+    
+    func putBarStatus(statusID: Int) async throws {
+        let endpoint = baseURL + "bar-status/\(statusID)/"
+        guard let url = URL(string: endpoint) else {
+            throw APIError.badURL
+        }
+        guard let token = try await SessionManager().authUser?.getIDToken() else {
+            throw APIError.noToken
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "PUT"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        
+        let (data, response) = try await session.data(for: request)
+        guard let response = response as? HTTPURLResponse, (200...299).contains(response.statusCode) else {
+            throw APIError.badRequest
+        }
+        _ = try await session.data(for: request)
+    }
+    
+    func patchBarStatus(statusID: Int) async throws {
+        let endpoint = baseURL + "bar-status/\(statusID)/"
+        guard let url = URL(string: endpoint) else {
+            throw APIError.badURL
+        }
+        guard let token = try await SessionManager().authUser?.getIDToken() else {
+            throw APIError.noToken
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "PATCH"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        
+        _ = try await session.data(for: request)
+    }
+    
+    func deleteBarStatus(statusID: Int) async throws {
+        let endpoint = baseURL + "bar-status/\(statusID)/"
+        guard let url = URL(string: endpoint) else {
+            throw APIError.badURL
+        }
+        guard let token = try await SessionManager().authUser?.getIDToken() else {
+            throw APIError.noToken
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "DELETE"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        
+        _ = try await session.data(for: request)
+    }
+    
+    // MARK: Bars
+    
+    func fetchBar(id: Int) async throws -> Bar {
+        let endpoint = baseURL + "bars/\(id)/"
         guard let url = URL(string: endpoint) else {
             throw APIError.badURL
         }
@@ -184,5 +402,260 @@ actor BarStatusService {
         }
         return try decoder.decode(Bar.self, from: data)
     }
-
+    
+    func putBar(id: Int) async throws {
+        let endpoint = baseURL + "bars/\(id)/"
+        guard let url = URL(string: endpoint) else {
+            throw APIError.badURL
+        }
+        guard let token = try await SessionManager().authUser?.getIDToken() else {
+            throw APIError.noToken
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "PUT"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        
+        let (_, response) = try await session.data(for: request)
+        guard let response = response as? HTTPURLResponse, (200...299).contains(response.statusCode) else {
+            throw APIError.badRequest
+        }
+    }
+    
+    func patchBar(id: Int) async throws {
+        let endpoint = baseURL + "bars/\(id)/"
+        guard let url = URL(string: endpoint) else {
+            throw APIError.badURL
+        }
+        guard let token = try await SessionManager().authUser?.getIDToken() else {
+            throw APIError.noToken
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "PATCH"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        
+        let (_, response) = try await session.data(for: request)
+        guard let response = response as? HTTPURLResponse, (200...299).contains(response.statusCode) else {
+            throw APIError.badRequest
+        }
+    }
+    
+    func deleteBar(id: Int) async throws {
+        let endpoint = baseURL + "bars/\(id)/"
+        guard let url = URL(string: endpoint) else {
+            throw APIError.badURL
+        }
+        guard let token = try await SessionManager().authUser?.getIDToken() else {
+            throw APIError.noToken
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "DELETE"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        
+        let (_, response) = try await session.data(for: request)
+        guard let response = response as? HTTPURLResponse, (200...299).contains(response.statusCode) else {
+            throw APIError.badRequest
+        }
+    }
+    
+    func getBarAggretedVote(id: Int) async throws -> Bar {
+        let endpoint = baseURL + "bars/\(id)/aggregated-vote/"
+        guard let url = URL(string: endpoint) else {
+            throw APIError.badURL
+        }
+        guard let token = try await SessionManager().authUser?.getIDToken() else {
+            throw APIError.noToken
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        
+        let (data, response) = try await session.data(for: request)
+        guard let response = response as? HTTPURLResponse, (200...299).contains(response.statusCode) else {
+            throw APIError.badRequest
+        }
+        return try decoder.decode(Bar.self, from: data)
+    }
+    
+    func fetchAllBars() async throws -> [Bar] {
+        let endpoint = baseURL + "bars/"
+        guard let url = URL(string: endpoint) else {
+            throw APIError.badURL
+        }
+        guard let token = try await SessionManager().authUser?.getIDToken() else {
+            throw APIError.noToken
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        
+        let (data, response) = try await session.data(for: request)
+        guard let response = response as? HTTPURLResponse, (200...299).contains(response.statusCode) else {
+            throw APIError.badRequest
+        }
+        return try decoder.decode([Bar].self, from: data)
+    }
+    
+    func fetchMostActiveBars() async throws -> [Bar] {
+        let endpoint = baseURL + "bars/most-active/"
+        guard let url = URL(string: endpoint) else {
+            throw APIError.badURL
+        }
+        guard let token = try await SessionManager().authUser?.getIDToken() else {
+            throw APIError.noToken
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        
+        let (data, response) = try await session.data(for: request)
+        guard let response = response as? HTTPURLResponse, (200...299).contains(response.statusCode) else {
+            throw APIError.badRequest
+        }
+        
+        return try decoder.decode([Bar].self, from: data)
+    }
+    
+    func fetchImages(for barID: Int) async throws -> [BarImage] {
+        let endpoint = baseURL + "bars/\(barID)/images/"
+        guard let url = URL(string: endpoint) else {
+            throw APIError.badURL
+        }
+        guard let token = try await SessionManager().authUser?.getIDToken() else {
+            throw APIError.noToken
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.setValue( "application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        
+        let (data, response) = try await session.data(for: request)
+        guard let response = response as? HTTPURLResponse, (200...299).contains(response.statusCode) else {
+            throw APIError.badRequest
+        }
+        
+        return try decoder.decode([BarImage].self, from: data)
+    }
+    
+    func postImage(for barID: Int) async throws -> BarImage {
+        let endpoint = baseURL + "bars/\(barID)/images/"
+        guard let url = URL(string: endpoint) else {
+            throw APIError.badURL
+        }
+        guard let token = try await SessionManager().authUser?.getIDToken() else {
+            throw APIError.noToken
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue( "application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        
+        let (data, response) = try await session.data(for: request)
+        guard let response = response as? HTTPURLResponse, (200...299).contains(response.statusCode) else {
+            throw APIError.badRequest
+        }
+        
+        // Leaving this here for now since way may need to return
+        return try decoder.decode(BarImage.self, from: data)
+    }
+    
+    func fetchBarImage(bar: Int, imageID: Int) async throws -> BarImage {
+        let endpoint = baseURL + "bars/\(bar)/images/\(imageID)/"
+        guard let url = URL(string: endpoint) else {
+            throw APIError.badURL
+        }
+        guard let token = try await SessionManager().authUser?.getIDToken() else {
+            throw APIError.noToken
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.setValue( "application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        
+        let (data, response) = try await session.data(for: request)
+        guard let response = response as? HTTPURLResponse, (200...299).contains(response.statusCode) else {
+            throw APIError.badRequest
+        }
+        
+        return try decoder.decode(BarImage.self, from: data)
+    }
+    
+    func updateBarImage(bar: Int, imageID: Int) async throws {
+        let endpoint = baseURL + "bars/\(bar)/images/\(imageID)/"
+        guard let url = URL(string: endpoint) else {
+            throw APIError.badURL
+        }
+        guard let token = try await SessionManager().authUser?.getIDToken() else {
+            throw APIError.noToken
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "PUT"
+        request.setValue( "application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        
+        let (_, response) = try await session.data(for: request)
+        guard let response = response as? HTTPURLResponse, (200...299).contains(response.statusCode) else {
+            throw APIError.badRequest
+        }
+    }
+    
+    func patchBarImage(bar: Int, imageID: Int) async throws {
+        let endpoint = baseURL + "bars/\(bar)/images/\(imageID)/"
+        guard let url = URL(string: endpoint) else {
+            throw APIError.badURL
+        }
+        guard let token = try await SessionManager().authUser?.getIDToken() else {
+            throw APIError.noToken
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "PATCH"
+        request.setValue( "application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        
+        let (_, response) = try await session.data(for: request)
+        guard let response = response as? HTTPURLResponse, (200...299).contains(response.statusCode) else {
+            throw APIError.badRequest
+        }
+    }
+    
+    func deleteBarImage(bar: Int, imageID: Int) async throws {
+        let endpoint = baseURL + "bars/\(bar)/images/\(imageID)/"
+        guard let url = URL(string: endpoint) else {
+            throw APIError.badURL
+        }
+        guard let token = try await SessionManager().authUser?.getIDToken() else {
+            throw APIError.noToken
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "DELETE"
+        request.setValue( "application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        
+        let (_, response) = try await session.data(for: request)
+        guard let response = response as? HTTPURLResponse, (200...299).contains(response.statusCode) else {
+            throw APIError.badRequest
+        }
+    }
 }

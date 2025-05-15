@@ -11,16 +11,15 @@ import SwiftUI
 
 @MainActor
 final class MapViewModel: ObservableObject {
-    // MARK: – Published properties so SwiftUI updates when they change
     @Published var cameraPosition: MapCameraPosition = .userLocation(
         fallback: .automatic
     )
     @Published var statuses: [BarStatus] = []
     @Published var pricing: [Int: String] = [:]
-    
-    // MARK: – Static list of bars 
-    let bars: [Bar] = [
-      
+
+    // MARK: – Static list of bars
+    /// Type Bars is a typealias of [Bar]
+    let bars: Bars = [
         Bar(
             name: "Mavericks Beach Club",
             address: "860 Garnet Ave, San Diego, CA 92109",
@@ -101,7 +100,7 @@ final class MapViewModel: ObservableObject {
             longitude: -117.2506176,
             images: [],
         ),
-        
+
         Bar(
             name: "Moonshine Beach",
             address: "1165 Garnet Ave, San Diego, CA 92109",
