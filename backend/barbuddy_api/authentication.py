@@ -32,7 +32,9 @@ class FirebaseAuthentication(BaseAuthentication):
     def authenticate(self, request):
         # Don't log all headers - this exposes sensitive information
         logger.info("Processing authentication request")
-        
+        if request.path.endswith('/register_user/'):
+            return None
+            
         # Try different header names for Authorization
         auth_header = None
         header_names = [
