@@ -43,10 +43,12 @@ class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
 
     def get_permissions(self):
-        if self.action == 'create':
+        """
+        Override to allow registration without authentication
+        """
+        if self.action == 'register_user':
             return [permissions.AllowAny()]
         return [permissions.IsAuthenticated(), IsOwnerOrReadOnly()]
-
 
     def list(self, request, *args, **kwargs):
         # return super().list(request, *args, **kwargs)
@@ -231,20 +233,14 @@ class UserViewSet(viewsets.ModelViewSet):
         if serializer.is_valid():
             try:
                 # Use transaction to ensure atomicity
-                with transaction.atomic():
-                    # Validate that email is unique before saving
-                    email = serializer.validated_data.get('email')
-                    if User.objects.filter(email=email).exists():
-                        raise ValidationError({'email': ['This email is already in use.']})
-                    
-                    user = serializer.save()
-                    user.clean()  # Explicitly call the clean method
-                    
-                    # Create Firebase token with user's ID and set the UID
-                    firebase_token = create_firebase_token(str(user.id))
-                    # Extract UID from token and save to user
-                    user.firebase_uid = str(user.id)  # Using user ID as Firebase UID
-                    user.save()
+                user = serializer.save()
+                user.clean()  # Explicitly call the clean method
+                
+                # Create Firebase token with user's ID and set the UID
+                firebase_token = create_firebase_token(str(user.id))
+                # Extract UID from token and save to user
+                user.firebase_uid = str(user.id)  # Using user ID as Firebase UID
+                user.save()
                 
                 logger.info(f"User created successfully: {user.id}")
                 return Response({
