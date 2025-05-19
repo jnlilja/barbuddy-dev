@@ -184,8 +184,8 @@ actor BarStatusService {
             throw APIError.badURL
         }
         guard let token = try await SessionManager().authUser?.getIDToken() else {
-            fatalError("No token found")
-        }
+                throw APIError.noToken
+            }
         
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
@@ -195,9 +195,10 @@ actor BarStatusService {
         
         let (data, response) = try await session.data(for: request)
         
-        if let response = response as? HTTPURLResponse, (200...299).contains(response.statusCode) {
-            throw APIError.badRequest
-        }
+        guard let http = response as? HTTPURLResponse,
+                  (200...299).contains(http.statusCode) else {
+                throw APIError.badRequest
+            }
         
         return try decoder.decode(BarHours.self, from: data)
     }
