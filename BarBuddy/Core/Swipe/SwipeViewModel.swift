@@ -29,15 +29,15 @@ class SwipeViewModel: ObservableObject {
         selectedBar = bar
         isFiltered = true
         
-        filteredUsers = users.filter { user in
-            guard let userLocation = user.location else { return false }
-            let barCoreLocation = CLLocation(latitude: bar.location.latitude, longitude: bar.location.longitude)
-            let userCoreLocation = CLLocation(latitude: userLocation.latitude, longitude: userLocation.longitude)
-            let distanceInMeters = barCoreLocation.distance(from: userCoreLocation)
-            let distanceInKm = distanceInMeters / 1000.0
-            
-            return distanceInKm <= radiusKm
-        }
+//        filteredUsers = users.filter { user in
+//            guard let userLocation = user.location else { return false }
+//            let barCoreLocation = CLLocation(latitude: bar.location.latitude, longitude: bar.location.longitude)
+//            let userCoreLocation = CLLocation(latitude: userLocation.latitude, longitude: userLocation.longitude)
+//            let distanceInMeters = barCoreLocation.distance(from: userCoreLocation)
+//            let distanceInKm = distanceInMeters / 1000.0
+//            
+//            return distanceInKm <= radiusKm
+//        }
     }
     
     func clearFilter() {

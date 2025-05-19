@@ -502,7 +502,7 @@ actor BarStatusService {
         return try decoder.decode(Bar.self, from: data)
     }
     
-    func fetchAllBars() async throws -> [Bar] {
+    func fetchAllBars() async throws -> [Bar]? {
         let endpoint = baseURL + "bars/"
         guard let url = URL(string: endpoint) else {
             throw APIError.badURL

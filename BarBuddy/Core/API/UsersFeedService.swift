@@ -55,6 +55,11 @@ struct UserProfile: Identifiable, Codable, Hashable, Equatable {
     
 }
 
+struct Location: Codable {
+    var latitude: Double
+    var longitude: Double
+}
+
 enum UsersAPIError: Error, LocalizedError {
     case noToken
     case transport(Error)

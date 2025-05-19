@@ -11,7 +11,7 @@ import Firebase
 @main
 struct BarBuddyApp: App {
     @StateObject private var sessionManager = SessionManager()
-    @StateObject private var mapViewModel = MapViewModel()
+    @State private var mapViewModel = MapViewModel()
     @StateObject private var tabManager = TabManager()
     
     init() {
@@ -70,7 +70,7 @@ struct BarBuddyApp: App {
                         .tag(4)
                 }
                 .accentColor(Color("Salmon"))
-                .environmentObject(mapViewModel)
+                .environment(mapViewModel)
                 .environmentObject(sessionManager)
             case .loggedOut:
                 LoginView()
