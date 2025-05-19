@@ -23,6 +23,7 @@ struct Bar: Codable, Identifiable, Hashable {
     var images: [BarImage]?
     var currentUserCount: String?
     var activityLevel: String?
+    var hours: [String: String] = [:]
     
     // To easier pin location on map, swift's codable protocol ignores computed properties
     var coordinate: CLLocationCoordinate2D {
@@ -31,5 +32,12 @@ struct Bar: Codable, Identifiable, Hashable {
     
     var events: [Event] {
         Event.eventData.filter { $0.bar == id }
+    }
+}
+extension Bar {
+    var todaysHours: String {
+        let weekdayIndex = Calendar.current.component(.weekday, from: Date()) - 1
+        let weekdayName = DateFormatter().weekdaySymbols[weekdayIndex]
+        return hours[weekdayName] ?? "Hours unavailable"
     }
 }

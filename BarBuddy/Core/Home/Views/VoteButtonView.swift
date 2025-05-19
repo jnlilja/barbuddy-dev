@@ -141,7 +141,7 @@ struct VoteButtonView: View {
                 name: "Test Bar",
                 address: "Test Address",
                 latitude: 0,
-                longitude: 0,
+                longitude: 0
             )
         )
     )

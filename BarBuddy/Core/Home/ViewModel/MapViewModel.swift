@@ -20,21 +20,21 @@ final class MapViewModel {
 
     // MARK: – Static list of bars
     /// Type Bars is a typealias of [Bar]
-    let bars: Bars = [
+    var bars: Bars = [
         Bar(id: 0,
             name: "Mavericks Beach Club",
             address: "860 Garnet Ave, San Diego, CA 92109",
             latitude: 32.7969526,
             longitude: -117.2543182,
-            images: [],
-        ),
+            images: []
+           ),
         Bar(
             id: 1,
             name: "Thrusters Lounge",
             address: "4633 Mission Blvd, San Diego, CA 92109",
             latitude: 32.7982187,
             longitude: -117.2558549,
-            images: [],
+            images: []
         ),
         Bar(
             id: 2,
@@ -42,7 +42,7 @@ final class MapViewModel {
             address: "710 Garnet Ave, San Diego, CA 92109",
             latitude: 32.7964687,
             longitude: -117.2565146,
-            images: [],
+            images: []
         ),
         Bar(
             id: 3,
@@ -50,7 +50,7 @@ final class MapViewModel {
             address: "4302 Mission Blvd, San Diego, CA 92109",
             latitude: 32.7937602,
             longitude: -117.2547777,
-            images: [],
+            images: []
         ),
         Bar(
             id: 4,
@@ -58,7 +58,7 @@ final class MapViewModel {
             address: "910 Grand Ave, San Diego, CA 92109",
             latitude: 32.7955066,
             longitude: -117.2528919,
-            images: [],
+            images: []
         ),
         Bar(
             id: 5,
@@ -66,7 +66,7 @@ final class MapViewModel {
             address: "4474 Mission Blvd, San Diego, CA 92109",
             latitude: 32.7961859,
             longitude: -117.2558475,
-            images: [],
+            images: []
         ),
         Bar(
             id: 6,
@@ -74,7 +74,7 @@ final class MapViewModel {
             address: "4609 Mission Blvd, San Diego, CA 92109",
             latitude: 32.7911123,
             longitude: -117.2540975,
-            images: [],
+            images: []
         ),
         Bar(
             id: 7,
@@ -82,7 +82,7 @@ final class MapViewModel {
             address: "4190 Mission Blvd, San Diego, CA 92109",
             latitude: 32.7924436,
             longitude: -117.2544375,
-            images: [],
+            images: []
         ),
         Bar(
             id: 8,
@@ -90,7 +90,7 @@ final class MapViewModel {
             address: "1014 Grand Ave, San Diego, CA 92109",
             latitude: 32.7959306,
             longitude: -117.2510682,
-            images: [],
+            images: []
         ),
         Bar(
             id: 9,
@@ -98,7 +98,7 @@ final class MapViewModel {
             address: "1060 Garnet Ave, San Diego, CA 92109",
             latitude: 32.7977653,
             longitude: -117.2506176,
-            images: [],
+            images: []
         ),
 
         Bar(
@@ -327,12 +327,253 @@ final class MapViewModel {
         )
     ]
 
+    private let BAR_HOURS: [String : [String : String]] = [
+        "Mavericks Beach Club": [
+            "Monday":    "4 PM – 2 AM",
+            "Tuesday":   "12 PM – 2 AM",
+            "Wednesday": "12 PM – 2 AM",
+            "Thursday":  "12 PM – 2 AM",
+            "Friday":    "12 PM – 2 AM",
+            "Saturday":  "10 AM – 2 AM",
+            "Sunday":    "10 AM – 12 AM"
+        ],
+        "Thrusters Lounge": [
+            "Monday":    "5 PM – 2 AM",
+            "Tuesday":   "5 PM – 2 AM",
+            "Wednesday": "5 PM – 2 AM",
+            "Thursday":  "5 PM – 2 AM",
+            "Friday":    "3 PM – 2 AM",
+            "Saturday":  "3 PM – 2 AM",
+            "Sunday":    "3 PM – 2 AM"
+        ],
+        "710 Beach Club": [
+            "Monday":    "11:30 AM – 2 AM",
+            "Tuesday":   "11:30 AM – 2 AM",
+            "Wednesday": "11:30 AM – 2 AM",
+            "Thursday":  "11:30 AM – 2 AM",
+            "Friday":    "11:30 AM – 2 AM",
+            "Saturday":  "10 AM – 2 AM",
+            "Sunday":    "10 AM – 2 AM"
+        ],
+        "Open Bar": [
+            "Monday":    "8 AM – 2 AM",
+            "Tuesday":   "8 AM – 2 AM",
+            "Wednesday": "8 AM – 2 AM",
+            "Thursday":  "8 AM – 2 AM",
+            "Friday":    "8 AM – 2 AM",
+            "Saturday":  "8 AM – 2 AM",
+            "Sunday":    "8 AM – 2 AM"
+        ],
+        "The Grass Skirt": [
+            "Monday":    "5 PM – 11 PM",
+            "Tuesday":   "5 PM – 11 PM",
+            "Wednesday": "5 PM – 11 PM",
+            "Thursday":  "5 PM – 12 AM",
+            "Friday":    "5 PM – 2 AM",
+            "Saturday":  "5 PM – 2 AM",
+            "Sunday":    "5 PM – 12 AM"
+        ],
+        "Hideaway": [
+            "Monday":    "11 AM – 2 AM",
+            "Tuesday":   "11 AM – 2 AM",
+            "Wednesday": "11 AM – 2 AM",
+            "Thursday":  "11 AM – 2 AM",
+            "Friday":    "11 AM – 2 AM",
+            "Saturday":  "9 AM – 2 AM",
+            "Sunday":    "9 AM – 2 AM"
+        ],
+        "Flamingo Deck": [
+            "Monday":    "12 PM – 12 AM",
+            "Tuesday":   "12 PM – 12 AM",
+            "Wednesday": "12 PM – 12 AM",
+            "Thursday":  "12 PM – 12 AM",
+            "Friday":    "12 PM – 2 AM",
+            "Saturday":  "10 AM – 2 AM",
+            "Sunday":    "10 AM – 12 AM"
+        ],
+        "The Beverly Beach Garden": [
+            "Monday":    "12 PM – 2 AM",
+            "Tuesday":   "12 PM – 2 AM",
+            "Wednesday": "12 PM – 2 AM",
+            "Thursday":  "12 PM – 2 AM",
+            "Friday":    "12 PM – 2 AM",
+            "Saturday":  "12 PM – 2 AM",
+            "Sunday":    "12 PM – 2 AM"
+        ],
+        "Riptides PB": [
+            "Monday":    "12 PM – 2 AM",
+            "Tuesday":   "12 PM – 2 AM",
+            "Wednesday": "12 PM – 2 AM",
+            "Thursday":  "12 PM – 2 AM",
+            "Friday":    "12 PM – 2 AM",
+            "Saturday":  "11 AM – 2 AM",
+            "Sunday":    "11 AM – 2 AM"
+        ],
+        "PB Avenue": [
+            "Monday":    "Closed",
+            "Tuesday":   "Closed",
+            "Wednesday": "Closed",
+            "Thursday":  "9 PM – 2 AM",
+            "Friday":    "9 PM – 2 AM",
+            "Saturday":  "9 PM – 2 AM",
+            "Sunday":    "10 PM – 2 AM"
+        ],
+        "Moonshine Beach": [
+            "Monday":    "Closed",
+            "Tuesday":   "5 PM – 1 AM",
+            "Wednesday": "Closed",
+            "Thursday":  "Closed",
+            "Friday":    "5 PM – 2 AM",
+            "Saturday":  "5 PM – 2 AM",
+            "Sunday":    "4 PM – 2 AM"
+        ],
+        "PB Shore Club": [
+            "Monday":    "10 AM – 2 AM",
+            "Tuesday":   "10 AM – 2 AM",
+            "Wednesday": "10 AM – 2 AM",
+            "Thursday":  "10 AM – 2 AM",
+            "Friday":    "10 AM – 2 AM",
+            "Saturday":  "9 AM – 2 AM",
+            "Sunday":    "9 AM – 12 AM"
+        ],
+        "Society PB": [
+            "Monday":    "4 PM – 2 AM",
+            "Tuesday":   "4 PM – 2 AM",
+            "Wednesday": "4 PM – 2 AM",
+            "Thursday":  "4 PM – 2 AM",
+            "Friday":    "4 PM – 2 AM",
+            "Saturday":  "1 PM – 2 AM",
+            "Sunday":    "9:30 AM – 2 AM"
+        ],
+        "Lahaina Beach House": [
+            "Monday":    "9 AM – 9 PM",
+            "Tuesday":   "9 AM – 9 PM",
+            "Wednesday": "9 AM – 9 PM",
+            "Thursday":  "9 AM – 9 PM",
+            "Friday":    "9 AM – 9 PM",
+            "Saturday":  "9 AM – 9 PM",
+            "Sunday":    "9 AM – 9 PM"
+        ],
+        "Break Point": [
+            "Monday":    "Closed",
+            "Tuesday":   "Closed",
+            "Wednesday": "4 PM – 2 AM",
+            "Thursday":  "4 PM – 2 AM",
+            "Friday":    "4 PM – 2 AM",
+            "Saturday":  "11 AM – 2 AM",
+            "Sunday":    "11 AM – 2 AM"
+        ],
+        "Dirty Birds": [
+            "Monday":    "11 AM – 10 PM",
+            "Tuesday":   "11 AM – 10 PM",
+            "Wednesday": "11 AM – 10 PM",
+            "Thursday":  "11 AM – 10 PM",
+            "Friday":    "11 AM – 11 PM",
+            "Saturday":  "11 AM – 11 PM",
+            "Sunday":    "9:30 AM – 9:30 PM"
+        ],
+        "bar Ella": [
+            "Monday":    "4 PM – 12 AM",
+            "Tuesday":   "4 PM – 12 AM",
+            "Wednesday": "4 PM – 12 AM",
+            "Thursday":  "4 PM – 12 AM",
+            "Friday":    "4 PM – 2 AM",
+            "Saturday":  "11 AM – 2 AM",
+            "Sunday":    "9:30 AM – 12 AM"
+        ],
+        "Alehouse": [
+            "Monday":    "11 AM – 2 AM",
+            "Tuesday":   "11 AM – 2 AM",
+            "Wednesday": "11 AM – 2 AM",
+            "Thursday":  "11 AM – 2 AM",
+            "Friday":    "11 AM – 2 AM",
+            "Saturday":  "10 AM – 2 AM",
+            "Sunday":    "10 AM – 2 AM"
+        ],
+        "The Duck Dive": [
+            "Monday":    "10 AM – 11 PM",
+            "Tuesday":   "10 AM – 11 PM",
+            "Wednesday": "10 AM – 11 PM",
+            "Thursday":  "10 AM – 11 PM",
+            "Friday":    "10 AM – 12 AM",
+            "Saturday":  "9 AM – 12 AM",
+            "Sunday":    "9 AM – 11 PM"
+        ],
+        "PB Local": [
+            "Monday":    "Closed",
+            "Tuesday":   "Closed",
+            "Wednesday": "4 PM – 2 AM",
+            "Thursday":  "4 PM – 2 AM",
+            "Friday":    "12 PM – 2 AM",
+            "Saturday":  "10 AM – 2 AM",
+            "Sunday":    "10 AM – 12 AM"
+        ],
+        "Firehouse": [
+            "Monday":    "11 AM – 12 AM",
+            "Tuesday":   "11 AM – 12 AM",
+            "Wednesday": "11 AM – 12 AM",
+            "Thursday":  "11 AM – 2 AM",
+            "Friday":    "11 AM – 2 AM",
+            "Saturday":  "10 AM – 2 AM",
+            "Sunday":    "10 AM – 12 AM"
+        ],
+        "Waterbar": [
+            "Monday":    "11 AM – 12 AM",
+            "Tuesday":   "11 AM – 12 AM",
+            "Wednesday": "11 AM – 12 AM",
+            "Thursday":  "11 AM – 12 AM",
+            "Friday":    "11 AM – 2 AM",
+            "Saturday":  "10 AM – 2 AM",
+            "Sunday":    "10 AM – 12 AM"
+        ],
+        "Tap Room": [
+            "Monday":    "11 AM – 12 AM",
+            "Tuesday":   "11 AM – 12 AM",
+            "Wednesday": "11 AM – 12 AM",
+            "Thursday":  "11 AM – 12 AM",
+            "Friday":    "11 AM – 2 AM",
+            "Saturday":  "10 AM – 2 AM",
+            "Sunday":    "10 AM – 12 AM"
+        ],
+        "The Collective": [
+            "Monday":    "6 PM – 10 PM",
+            "Tuesday":   "6 PM – 10 PM",
+            "Wednesday": "6 PM – 12 AM",
+            "Thursday":  "6 PM – 2 AM",
+            "Friday":    "6 PM – 2 AM",
+            "Saturday":  "6 PM – 2 AM",
+            "Sunday":    "6 AM – 2 AM"
+        ],
+        "Baja Beach Cafe": [
+            "Monday":    "8 AM – 12:30 AM",
+            "Tuesday":   "8 AM – 12:30 AM",
+            "Wednesday": "8 AM – 12:30 AM",
+            "Thursday":  "8 AM – 12:30 AM",
+            "Friday":    "8 AM – 2 AM",
+            "Saturday":  "8 AM – 2 AM",
+            "Sunday":    "8 AM – 12:30 AM"
+        ],
+        "Bare Back Grill": [
+            "Monday":    "10 AM – 10 PM",
+            "Tuesday":   "10 AM – 10 PM",
+            "Wednesday": "10 AM – 10 PM",
+            "Thursday":  "10 AM – 10 PM",
+            "Friday":    "10 AM – 11 PM",
+            "Saturday":  "10 AM – 11 PM",
+            "Sunday":    "10 AM – 10 PM"
+        ]
+    ]
+
+
     private let pacificBeachCoordinate = CLLocationCoordinate2D(
         latitude: 32.794,
         longitude: -117.253
     )
 
     init() {
+        for i in bars.indices {
+                bars[i].hours = BAR_HOURS[bars[i].name] ?? [:]
+            }
         Task { await loadBarData() }
     }
 
