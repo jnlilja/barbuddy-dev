@@ -25,9 +25,9 @@ struct BarSwipeCard: View {
             AsyncImage(url: barImageURL) { phase in
                 switch phase {
                 case .success(let img): img.resizable().scaledToFill()
-                case .failure(_):       Color.gray.opacity(0.3)
-                case .empty:            ProgressView()
-                @unknown default:       Color.gray.opacity(0.3)
+                case .failure(_): Color.gray.opacity(0.3)
+                case .empty: ProgressView()
+                @unknown default: Color.gray.opacity(0.3)
                 }
             }
             .frame(width: cardWidth, height: 400)
@@ -39,13 +39,16 @@ struct BarSwipeCard: View {
                     .font(.system(size: 28, weight: .bold))
                     .foregroundColor(.white)
 
-//                Text("\(profile.activityLevel)")
-//                    .font(.subheadline)
-//                    .foregroundColor(.white.opacity(0.8))
+                Text("\(profile.activityLevel ?? "-")")
+                    .font(.subheadline)
+                    .foregroundColor(.white.opacity(0.8))
 
                 Divider().overlay(Color.white)
 
-                Label("Price: \(profile.averagePrice ?? "-")", systemImage: "dollarsign.circle.fill")
+                Label(
+                    "Price: \(profile.averagePrice ?? "-")",
+                    systemImage: "dollarsign.circle.fill"
+                )
 
             }
             .labelStyle(.titleAndIcon)
@@ -59,4 +62,33 @@ struct BarSwipeCard: View {
         .shadow(radius: 8)
         .padding(.horizontal)
     }
+}
+
+#Preview {
+    BarSwipeCard(
+        profile: Bar(
+            id: 25,
+            name: "Bare Back Grill",
+            address: "4640 Mission Blvd, San Diego, CA 92109",
+            averagePrice: "$$",
+            latitude: 32.798274966357184,
+            longitude: -117.25623510971276,
+            location: "",
+            usersAtBar: 0,
+            currentStatus: "",
+            averageRating: "",
+            images: [
+                BarImage(
+                    image:
+                        "https://kingofhappyhour-prod.s3.amazonaws.com/cities/1/bars/917/bar_image/af348ef0-0e5a-41b5-9db2-771c5923d8e6/Bare%20Back%20Grill-%20Entrance.jpeg",
+                    uploadedAt: Date().formatted(
+                        date: .numeric,
+                        time: .standard
+                    )
+                )
+            ],
+            currentUserCount: "",
+            activityLevel: "Packed"
+        )
+    )
 }

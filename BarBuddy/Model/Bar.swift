@@ -30,6 +30,6 @@ struct Bar: Codable, Identifiable, Hashable {
     }
     
     var events: [Event] {
-        Event.eventData.filter { $0.barName == name }
+        Event.eventData.filter { $0.bar == id }
     }
 }
