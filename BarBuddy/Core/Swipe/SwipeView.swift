@@ -29,7 +29,7 @@ struct SwipeView: View {
     private func barFilterIndicator(bar: Bar) -> some View {
         HStack(spacing: 12) {
             // Bar image
-            if let firstImage = bar.images.first, let imageURL = URL(string: firstImage.image) {
+            if let firstImage = bar.images?.first, let imageURL = URL(string: firstImage.image) {
                 AsyncImage(url: imageURL) { phase in
                     switch phase {
                     case .success(let image):
@@ -195,7 +195,7 @@ struct SwipeView: View {
                     }
                 }
             }
-            .onChange(of: vm.searchText, { oldValue, newValue in
+            .onChange(of: vm.searchText, { _, newValue in
                 guard newValue.count > 0 else { return }
                 let queriedBars = vm.searchBars(query: newValue)
                 vm.barsSearchResult = queriedBars
@@ -204,14 +204,18 @@ struct SwipeView: View {
             .toolbarBackground(Color("DarkPurple"), for: .navigationBar)
             .toolbarColorScheme(.dark, for: .navigationBar)
             .task {
-                vm.isLoading = true
-                let bars = await BarStatusService.shared.fetchBars()
-                await vm.loadSuggestions()
-                vm.isLoading = false
-                if let bars = bars {
-                    vm.bars = bars
-                } else {
-                    print("never found bars")
+                do {
+                    vm.isLoading = true
+                    let bars = try await BarStatusService.shared.fetchAllBars()
+                    await vm.loadSuggestions()
+                    vm.isLoading = false
+                    if let bars = bars {
+                        vm.bars = bars
+                    } else {
+                        print("never found bars")
+                    }
+                } catch {
+                    print("Error fetching bars: \(error)")
                 }
             }
         }

@@ -9,7 +9,7 @@ import CoreLocation
 
 typealias Bars = [Bar]
 
-struct Bar: Codable, Identifiable {
+struct Bar: Codable, Identifiable, Hashable {
     var id: Int?
     let name: String
     let address: String
@@ -20,7 +20,7 @@ struct Bar: Codable, Identifiable {
     var usersAtBar: Int?
     var currentStatus: String?
     var averageRating: String?
-    var images: [BarImage]
+    var images: [BarImage]?
     var currentUserCount: String?
     var activityLevel: String?
     

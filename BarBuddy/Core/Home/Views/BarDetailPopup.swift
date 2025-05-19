@@ -9,8 +9,8 @@ import SwiftUI
 
 struct BarDetailPopup: View {
     @Environment(\.dismiss) var dismiss
-    @EnvironmentObject var viewModel: MapViewModel
-    let bar: Bar
+    @Environment(MapViewModel.self) var viewModel
+    @State var bar: Bar
 
     @State private var waitButtonProperties = ButtonProperties(type: "wait")
     @State private var crowdButtonProperties = ButtonProperties(type: "crowd")
@@ -145,16 +145,26 @@ struct BarDetailPopup: View {
                         .transition(.scale)
                     }
                 }
-                WebImage(
-                    url: URL(
-                        string:
-                            "https://media.istockphoto.com/id/1040303026/photo/draught-beer-in-glasses.jpg?s=612x612&w=0&k=20&c=MvDv_YtiG4l1bh9vNJv5Hyb-l8ZSCsMDbxutWnCh-78="
-                    )
-                )
-                .resizable()
-                .frame(width: 350, height: 250)
-                .clipShape(RoundedRectangle(cornerRadius: 20))
-
+                if let barImageURL = bar.images?.first?.image {
+                    WebImage(url: URL(string: barImageURL))
+                    .resizable()
+                    .frame(width: 350, height: 250)
+                    .clipShape(RoundedRectangle(cornerRadius: 20))
+                }
+                else {
+                    ZStack {
+                        Rectangle()
+                            .fill(Color("Salmon").opacity(0.2))
+                            .frame(width: 350, height: 250)
+                            .cornerRadius(20)
+                        
+                        Text("No image available")
+                            .foregroundColor(.darkBlue)
+                            .font(.headline)
+                            .padding()
+                    }
+                }
+                
                 // MARK: — Swipe Navigation
                 NavigationLink(destination: SwipeView()) {
                     HStack {
@@ -177,7 +187,7 @@ struct BarDetailPopup: View {
             // Wait‑time menu
             if waitButtonProperties.showMenu {
                 HStack {
-                    VoteWaitTimeView(properties: $waitButtonProperties)
+                    VoteWaitTimeView(properties: $waitButtonProperties, bar: $bar)
                         .offset(x: waitButtonProperties.offset)
                         .padding(.leading)
                         .gesture(
@@ -212,7 +222,7 @@ struct BarDetailPopup: View {
             if crowdButtonProperties.showMenu {
                 HStack {
                     Spacer()
-                    VoteCrowdSizeView(buttonProperties: $crowdButtonProperties)
+                    VoteCrowdSizeView(buttonProperties: $crowdButtonProperties, bar: $bar)
                         .offset(x: crowdButtonProperties.offset)
                         .padding(.trailing)
                         .gesture(
@@ -257,10 +267,9 @@ struct BarDetailPopup: View {
             usersAtBar: 10,
             currentStatus: "",
             averageRating: "",
-            images: [BarImage(image: "", uploadedAt: "")],
             currentUserCount: "",
             activityLevel: "Packed"
         )
     )
-    .environmentObject(MapViewModel())
+    .environment(MapViewModel())
 }

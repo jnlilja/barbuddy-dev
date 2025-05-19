@@ -6,7 +6,7 @@
 //
 
 import Foundation
-struct BarImage: Codable {
+struct BarImage: Codable, Hashable {
     var id: Int?
     var image: String
     var caption: String?

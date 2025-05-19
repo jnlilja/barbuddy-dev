@@ -8,7 +8,7 @@ import MapKit
 
 struct BarCard: View {
     let bar: Bar
-    @EnvironmentObject var viewModel: MapViewModel
+    @Environment(MapViewModel.self) var viewModel
     @Environment(\.colorScheme) var colorScheme
     @State private var showingSwipe = false
     
@@ -56,7 +56,7 @@ struct BarCard: View {
         .shadow(radius: 5)
         .sheet(isPresented: $showingSwipe) {
             SwipeView()
-                .environmentObject(viewModel)
+                .environment(viewModel)
         }
     }
 }
@@ -64,7 +64,6 @@ struct BarCard: View {
     BarCard(bar: Bar(
         name: "Moonshine Beach",
         address: "1165 Garnet Ave, San Diego, CA 92109",
-        averagePrice: "",
         latitude: 32.7980179,
         longitude: -117.2484153,
         location: "",
@@ -75,7 +74,7 @@ struct BarCard: View {
         currentUserCount: "",
         activityLevel: ""
     ))
-    .environmentObject(MapViewModel())
+    .environment(MapViewModel())
     .padding()
 }
 
