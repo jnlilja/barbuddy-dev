@@ -5,6 +5,7 @@
 //
 import SwiftUI
 import MapKit
+import SDWebImageSwiftUI
 
 struct BarCard: View {
     let bar: Bar
@@ -34,10 +35,18 @@ struct BarCard: View {
             Text(viewModel.todaysHours(for: bar))
                 .foregroundColor(colorScheme == .dark ? .nude : Color("DarkPurple"))
             // Image placeholder
-            Rectangle()
-                .fill(Color("DarkPurple").opacity(0.3))
+            if let barImageURL = bar.images?.first?.image {
+                WebImage(url: URL(string: barImageURL))
+                .resizable()
                 .frame(height: 200)
-                .cornerRadius(10)
+                .clipShape(RoundedRectangle(cornerRadius: 10))
+            }
+            else{
+                Rectangle()
+                    .fill(Color("DarkPurple").opacity(0.3))
+                    .frame(height: 200)
+                    .cornerRadius(10)
+            }
             // Dynamic Quick‑Info Bubbles
             HStack(spacing: 12) {
                 InfoTag(icon: "record.circle",        text: waitTime)
