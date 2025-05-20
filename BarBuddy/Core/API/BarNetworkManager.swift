@@ -1,5 +1,5 @@
 //
-//  BarStatusService.swift
+//  BarNetworkManager.swift
 //  BarBuddy
 //
 //  Created by Elliot Gambale on 4/18/25.
@@ -10,8 +10,8 @@ import Foundation
 @preconcurrency import FirebaseAuth
 
 // Models matching your DRF serializers
-actor BarStatusService {
-    static let shared = BarStatusService()
+actor BarNetworkManager {
+    static let shared = BarNetworkManager()
     private let session: URLSession
     private let baseURL = ProcessInfo.processInfo.environment["BASE_URL"] ?? ""
     private let (encoder, decoder) = (JSONEncoder(), JSONDecoder())
@@ -351,13 +351,13 @@ actor BarStatusService {
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         
-        let (data, response) = try await session.data(for: request)
+        let (_, response) = try await session.data(for: request)
         guard let response = response as? HTTPURLResponse, (200...299).contains(response.statusCode) else {
             throw APIError.badRequest
         }
     }
     
-    func patchBarStatus(statusID: Int) async throws {
+    func patchBarStatus(statusID: Int) async throws -> BarStatus {
         let endpoint = baseURL + "bar-status/\(statusID)/"
         guard let url = URL(string: endpoint) else {
             throw APIError.badURL
@@ -371,10 +371,12 @@ actor BarStatusService {
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         
-        let (_, response) = try await session.data(for: request)
+        let (data, response) = try await session.data(for: request)
         guard let response = response as? HTTPURLResponse, (200...299).contains(response.statusCode) else {
             throw APIError.badRequest
         }
+        
+        return try decoder.decode(BarStatus.self, from: data)
     }
     
     func deleteBarStatus(statusID: Int) async throws {

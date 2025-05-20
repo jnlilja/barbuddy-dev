@@ -21,7 +21,7 @@ struct VoteButtonView: View {
                     if let id = bar.id {
                         // Submit wait time
                         if properties.type == "wait" {
-                            try await BarStatusService.shared.submitVote(
+                            try await BarNetworkManager.shared.submitVote(
                                 vote: BarVote(
                                     bar: id,
                                     crowdSize: "",
@@ -34,7 +34,7 @@ struct VoteButtonView: View {
                             )
                         } else {
                             // Submit crowd size
-                            try await BarStatusService.shared.submitVote(
+                            try await BarNetworkManager.shared.submitVote(
                                 vote: BarVote(
                                     bar: id,
                                     crowdSize: text,

@@ -340,7 +340,7 @@ final class MapViewModel {
     }
 
     func loadBarData() async {
-        async let statusJob = BarStatusService.shared.fetchStatuses()
+        async let statusJob = BarNetworkManager.shared.fetchStatuses()
         async let hoursJob: ()  = loadBarHours()
 
             self.statuses = (try? await statusJob) ?? []
@@ -353,7 +353,7 @@ final class MapViewModel {
                 guard let id = bars[index].id else { continue }
 
                 do {
-                    let dto = try await BarStatusService.shared.fetchBarHours(barID: id)
+                    let dto = try await BarNetworkManager.shared.fetchBarHours(barID: id)
                     bars[index].hours = dto.toDictionary()
                 } catch {
                     print("⚠️  Hours error for \(bars[index].name):", error)
