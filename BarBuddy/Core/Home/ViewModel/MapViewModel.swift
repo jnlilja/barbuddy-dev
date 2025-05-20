@@ -11,12 +11,37 @@ import SwiftUI
 
 @MainActor
 @Observable
+
+
 final class MapViewModel {
     var cameraPosition: MapCameraPosition = .userLocation(
         fallback: .automatic
     )
     var statuses: [BarStatus] = []
     var pricing: [Int: String] = [:]
+    
+    private var barHoursCache: [Int: [BarHours.Day: BarHours]] = [:]
+
+    func todaysHours(for bar: Bar) -> String {
+        guard let id = bar.id else { return "Hours unavailable" }
+
+        // Calendar weekday → enum Day
+        let weekdayIndex = Calendar.current.component(.weekday, from: Date())   // 1 = Sun … 7 = Sat
+        let dayEnum: BarHours.Day = switch weekdayIndex {
+            case 1: .sunday
+            case 2: .monday
+            case 3: .tuesday
+            case 4: .wednesday
+            case 5: .thursday
+            case 6: .friday
+            default: .saturday
+        }
+
+        guard let dto = barHoursCache[id]?[dayEnum] else { return "Hours unavailable" }
+        return dto.displayHours
+    }
+
+
 
     // MARK: – Static list of bars
     /// Type Bars is a typealias of [Bar]
@@ -348,18 +373,26 @@ final class MapViewModel {
         }
 
         /// Pulls hours for every bar and stores them back into `bars[index].hours`
-        private func loadBarHours() async throws {
-            for index in bars.indices {
-                guard let id = bars[index].id else { continue }
+    // MapViewModel.swift
+    private func loadBarHours() async {
+        for bar in bars {
+            guard let id = bar.id else { continue }
 
-                do {
-                    let dto = try await BarNetworkManager.shared.fetchBarHours(barID: id)
-                    bars[index].hours = dto.toDictionary()
-                } catch {
-                    print("⚠️  Hours error for \(bars[index].name):", error)
-                }
+            do {
+                // 1 object, not [BarHours]
+                let dto = try await BarNetworkManager.shared.fetchBarHours(barID: id)
+
+                // Cache ⇢ [id : [day : dto]]
+                if barHoursCache[id] == nil { barHoursCache[id] = [:] }
+                barHoursCache[id]![dto.day] = dto
+            } catch {
+                print("⚠️ hours error for \(bar.name):", error)
             }
         }
+    }
+
+
+
 
     func updateCameraPosition(bar: String) async {
         guard let coord = await fetchBarLocation(bar) else { return }

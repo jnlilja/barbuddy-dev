@@ -7,31 +7,48 @@
 
 import Foundation
 
-struct BarHours: Codable {
+struct BarHours: Codable, Identifiable, Hashable {
+    enum Day: String, Codable, CaseIterable {
+        case monday, tuesday, wednesday, thursday, friday, saturday, sunday
+    }
+
     var id: Int
-    var bar: Int
-    var day: String?
-    var openTime: String?
-    var closeTime: String?
-    var isClosed: Bool?
-    let monday: String?
-    let tuesday: String?
-    let wednesday: String?
-    let thursday: String?
-    let friday: String?
-    let saturday: String?
-    let sunday: String?
-}
-extension BarHours {
-    func toDictionary() -> [String:String] {
-        [
-            "Monday":    monday    ?? "Closed",
-            "Tuesday":   tuesday   ?? "Closed",
-            "Wednesday": wednesday ?? "Closed",
-            "Thursday":  thursday  ?? "Closed",
-            "Friday":    friday    ?? "Closed",
-            "Saturday":  saturday  ?? "Closed",
-            "Sunday":    sunday    ?? "Closed"
-        ]
+    let bar: Int
+    let day: Day
+    let openTime: String?
+    let closeTime: String?
+    let isClosed: Bool
+
+    private enum CodingKeys: String, CodingKey {
+        case id, bar, day
+        case openTime  = "open_time"
+        case closeTime = "close_time"
+        case isClosed  = "is_closed"
+    }
+
+    
+    var displayHours: String {
+        guard !isClosed else { return "Closed" }
+        guard let openTime, let closeTime else { return "Hours unavailable" }
+        return Self.pretty(openTime) + " – " + Self.pretty(closeTime)
+    }
+
+    
+    private static func pretty(_ backendTime: String) -> String {
+        let inFmt  = DateFormatter(); inFmt.dateFormat = "HH:mm:ss"
+        let outFmt = DateFormatter(); outFmt.dateFormat = "h:mm a"; outFmt.amSymbol = "AM"; outFmt.pmSymbol = "PM"
+        if let date = inFmt.date(from: backendTime) {
+            return outFmt.string(from: date)
+        }
+        return backendTime
     }
 }
+
+
+private extension Calendar {
+    /// Sunday = 6, Monday = 0, … – matches `Day` order
+    var weekdayIndexZeroBased: Int {
+        (component(.weekday, from: Date()) + 5) % 7
+    }
+}
+

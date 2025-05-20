@@ -30,11 +30,10 @@ struct BarDetailPopup: View {
                     Text(bar.name)
                         .font(.system(size: 40, weight: .bold))
                         .foregroundColor(Color("DarkPurple"))
-                    let todaysHours = bar.todaysHours
                     HStack {
-                        Text(todaysHours.lowercased() == "closed" ? "Closed" : "Open")
+                        Text(viewModel.todaysHours(for: bar))
                             .foregroundColor(.red)
-                        Text(todaysHours)
+                        Text(viewModel.todaysHours(for: bar))
                             .foregroundColor(Color("DarkPurple"))
                     }
                 }

@@ -31,7 +31,7 @@ struct BarCard: View {
                 Trending(barName: bar.name)
             }
             // Open Hours
-            Text(bar.todaysHours)
+            Text(viewModel.todaysHours(for: bar))
                 .foregroundColor(colorScheme == .dark ? .nude : Color("DarkPurple"))
             // Image placeholder
             Rectangle()
