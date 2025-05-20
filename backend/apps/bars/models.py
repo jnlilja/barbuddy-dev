@@ -3,6 +3,11 @@ from django.core.exceptions import ValidationError
 from django.db.models import Avg
 from django.contrib.gis.db import models as gis
 from django.db import transaction
+from django.contrib.gis.measure import D
+from django.utils import timezone
+from django.db import transaction
+from apps.users.models import User
+from datetime import timedelta
 
 from apps.users.models import User
 
@@ -13,6 +18,8 @@ class Bar(models.Model):
     average_price = models.CharField(max_length=50)
     location = gis.PointField(geography=True, srid=4326)
     users_at_bar = models.ManyToManyField(User, related_name='bars_attended', blank=True)
+    
+    
 
     def clean(self):
         super().clean()
@@ -20,9 +27,8 @@ class Bar(models.Model):
             raise ValidationError({'name': 'Bar name cannot be empty or whitespace-only.'})
 
     def save(self, *args, **kwargs):
-        self.clean()
+        self.full_clean()
         super().save(*args, **kwargs)
-        # proximity update stays as-is
         from apps.bars.services.proximity import update_users_at_bar
         update_users_at_bar(self)
 

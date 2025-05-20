@@ -261,7 +261,7 @@ class UserViewSet(viewsets.ModelViewSet):
     def list_all_users(self, request):
         """
         Lists all users that the current user hasn't swiped on yet.
-        Returns a paginated list of user IDs and usernames.
+        Returns a paginated list including their profile pictures.
         """
         swiped_users = Swipe.objects.filter(swiper=request.user).values_list('swiped_on', flat=True)
         users = User.objects.exclude(id__in=swiped_users).exclude(id=request.user.id)
@@ -269,9 +269,22 @@ class UserViewSet(viewsets.ModelViewSet):
         paginator = SmallResultsSetPagination()
         result_page = paginator.paginate_queryset(users, request)
         
-        simplified_data = [{
-            "id": user.id,
-            "username": user.username,
-        } for user in result_page]
-        
+        simplified_data = []
+        for user in result_page:
+            pics = ProfilePicture.objects.filter(user=user)
+            pics_data = ProfilePictureSerializer(pics, many=True).data
+            simplified_data.append({
+                "id": user.id,
+                "username": user.username,
+                "profile_pictures": pics_data,
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+                "date_of_birth": user.date_of_birth,
+                "favorite_drink": user.favorite_drink,
+                "location": {
+                    "latitude": user.location.y,
+                    "longitude": user.location.x
+                } if user.location else None,
+            })
+
         return paginator.get_paginated_response(simplified_data)
