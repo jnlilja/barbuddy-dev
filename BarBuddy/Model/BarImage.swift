@@ -6,9 +6,15 @@
 //
 
 import Foundation
-struct BarImage: Codable, Hashable {
+
+struct BarImage: Codable, Identifiable, Hashable {
     var id: Int?
-    var image: String
-    var caption: String?
-    var uploadedAt: String
+    let bar: Int
+    let image: String
+    let caption: String?
+    let uploadedAt: String?
+    private enum CodingKeys: String, CodingKey {
+        case id, bar, image, caption
+        case uploadedAt = "uploaded_at"
+    }
 }

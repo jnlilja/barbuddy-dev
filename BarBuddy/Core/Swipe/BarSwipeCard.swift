@@ -63,7 +63,7 @@ struct BarSwipeCard: View {
         .padding(.horizontal)
     }
 }
-
+/*
 #Preview {
     BarSwipeCard(
         profile: Bar(
@@ -92,3 +92,4 @@ struct BarSwipeCard: View {
         )
     )
 }
+*/
