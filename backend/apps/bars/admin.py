@@ -4,8 +4,11 @@ from django import forms
 from django.contrib import admin
 from django.contrib.gis.geos import Point
 from django.core.exceptions import ValidationError
+from django.contrib.gis.measure import D
+from django.contrib.gis.db.models.functions import Distance
 
 from .models import Bar, BarStatus, BarRating, BarImage, BarHours
+from apps.users.models import User
 
 # Try to pick up the GeoDjango map widget; if it isn't installed, fall back:
 try:
@@ -59,11 +62,9 @@ class BarAdminForm(forms.ModelForm):
 @admin.register(Bar)
 class BarAdmin(GeoAdminBase):
     form = BarAdminForm
-
-    list_display = ("name", "address", "average_price")
-    search_fields = ("name", "address")
+    list_display   = ("name", "address", "average_price")
+    search_fields  = ("name", "address")
     filter_horizontal = ("users_at_bar",)
-
     inlines = [
         type(
             "BarImageInline",
@@ -76,6 +77,38 @@ class BarAdmin(GeoAdminBase):
             },
         ),
     ]
+
+    def formfield_for_manytomany(self, db_field, request, **kwargs):
+        if db_field.name == 'users_at_bar':
+            # base queryset = only users with a location
+            qs = User.objects.exclude(location__isnull=True)
+            # if we’re editing an existing Bar, grab its instance so we can filter by distance
+            object_id = request.resolver_match.kwargs.get('object_id')
+            if object_id:
+                try:
+                    bar = self.model.objects.get(pk=object_id)
+                except Bar.DoesNotExist:
+                    bar = None
+                else:
+                    # only users within 50m of bar.location
+                    qs = qs.annotate(
+                        dist=Distance('location', bar.location)
+                    ).filter(dist__lte=D(m=50))
+            kwargs['queryset'] = qs
+        return super().formfield_for_manytomany(db_field, request, **kwargs)
+
+    def save_model(self, request, obj, form, change):
+        # this saves obj.location (and fires the model.save hook)
+        super().save_model(request, obj, form, change)
+        from apps.bars.services.proximity import update_users_at_bar
+        update_users_at_bar(obj)
+
+    def save_related(self, request, form, formsets, change):
+        # admin now writes the users_at_bar M2M
+        super().save_related(request, form, formsets, change)
+        from apps.bars.services.proximity import update_users_at_bar
+        update_users_at_bar(form.instance)
+
 
 @admin.register(BarStatus)
 class BarStatusAdmin(admin.ModelAdmin):
