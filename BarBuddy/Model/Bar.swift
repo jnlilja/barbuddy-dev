@@ -79,13 +79,31 @@ struct Bar: Codable, Identifiable, Hashable {
     
     // Check if the bar is closed based on the current time and the bar's hours
     private func isClosed(_ openTime: String?, _ closeTime: String?) -> Bool {
-        guard let open = openTime, let close = closeTime else { return true }
+        guard
+            let open = openTime,
+            let close = closeTime,
+            let openDate = DateFormatter.hourMinute.date(from: open),
+            let closeDate = DateFormatter.hourMinute.date(from: close)
+        else { return true }
+
+        let now = Date()
+        let calendar = Calendar.current
+        let nowComponents = calendar.dateComponents([.hour, .minute], from: now)
+        guard let nowDate = calendar.date(from: nowComponents) else { return true }
+
+        if closeDate <= openDate {
+            // Bar closes after midnight
+            return nowDate < openDate && nowDate > closeDate
+        } else {
+            return nowDate < openDate || nowDate > closeDate
+        }
+    }
+}
+
+private extension DateFormatter {
+    static let hourMinute: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateFormat = "HH:mm"
-        guard let openDate = formatter.date(from: open),
-              let closeDate = formatter.date(from: close) else { return true }
-        let now = Calendar.current.dateComponents([.hour, .minute], from: Date())
-        guard let nowDate = formatter.date(from: String(format: "%02d:%02d", now.hour ?? 0, now.minute ?? 0)) else { return true }
-        return nowDate < openDate || nowDate > closeDate
-    }
+        return formatter
+    }()
 }
