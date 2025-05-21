@@ -45,6 +45,9 @@ struct Bar: Codable, Identifiable, Hashable {
             cached.isClosed = closed
             do {
                 try await BarNetworkManager.shared.patchBarHours(id: cached.id)
+                
+                // Update the cache
+                await MainActor.run { Bar.cacheHours[cached.id] = cached }
             } catch {
                 print("Could not patch hours")
             }
@@ -58,6 +61,14 @@ struct Bar: Codable, Identifiable, Hashable {
                 let (open, close) = (hours.openTime, hours.closeTime)
                 let closed = isClosed(open, close)
                 hours.isClosed = closed
+                do {
+                    try await BarNetworkManager.shared.patchBarHours(id: hours.id)
+                    
+                    // Update the cache
+                    await MainActor.run { Bar.cacheHours[hours.id] = hours }
+                } catch {
+                    print("Could not patch hours")
+                }
                 return "\(closed ? "Closed" : "Open"): \(open ?? "N/A") - \(close ?? "N/A")"
             }
         } catch {
