@@ -13,8 +13,4 @@ struct BarImage: Codable, Identifiable, Hashable {
     let image: String
     let caption: String?
     let uploadedAt: String?
-    private enum CodingKeys: String, CodingKey {
-        case id, bar, image, caption
-        case uploadedAt = "uploaded_at"
-    }
 }

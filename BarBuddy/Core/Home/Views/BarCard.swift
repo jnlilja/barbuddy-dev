@@ -9,6 +9,7 @@ import SDWebImageSwiftUI
 
 struct BarCard: View {
     let bar: Bar
+    @State private var hours: String?
     @Environment(MapViewModel.self) var viewModel
     @Environment(\.colorScheme) var colorScheme
     @State private var showingSwipe = false
@@ -24,7 +25,7 @@ struct BarCard: View {
         VStack(alignment: .leading, spacing: 12) {
             // Bar Header
             HStack {
-                Text(bar.name)
+                Text(hours ?? "-")
                     .font(.system(size: 32, weight: .bold))
                     .foregroundColor(colorScheme == .dark ? .neonPink : Color("DarkBlue"))
                 Spacer()
@@ -32,7 +33,7 @@ struct BarCard: View {
                 Trending(barName: bar.name)
             }
             // Open Hours
-            Text(viewModel.todaysHours(for: bar))
+            Text(hours ?? "-")
                 .foregroundColor(colorScheme == .dark ? .nude : Color("DarkPurple"))
             // Image placeholder
             if let barImageURL = bar.images?.first?.image {
@@ -58,6 +59,10 @@ struct BarCard: View {
             ActionButton(text: "Meet People Here", icon: "person.2.fill") {
                 showingSwipe = true
             }
+        }
+        .task {
+            await viewModel.loadBarData()
+            hours = await bar.getHours()
         }
         .padding()
         .background(colorScheme == .dark ? Color(.secondarySystemBackground) : .white)

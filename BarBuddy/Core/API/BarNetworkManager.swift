@@ -178,8 +178,8 @@ actor BarNetworkManager {
         return try decoder.decode(BarHours.self, from: data)
     }
     
-    func fetchBarHours(barID: Int) async throws -> BarHours {
-        let endpoint = baseURL + "bar-hours/\(barID)/"
+    func fetchBarHours(for barHoursId: Int) async throws -> BarHours {
+        let endpoint = baseURL + "bar-hours/\(barHoursId)/"
         guard let url = URL(string: endpoint) else {
             throw APIError.badURL
         }
@@ -201,6 +201,31 @@ actor BarNetworkManager {
             }
         
         return try decoder.decode(BarHours.self, from: data)
+    }
+    
+    func fetchAllBarHours() async throws -> [BarHours] {
+        let endpoint = baseURL + "bar-hours/"
+        guard let url = URL(string: endpoint) else {
+            throw APIError.badURL
+        }
+        guard let token = try await SessionManager().authUser?.getIDToken() else {
+            throw APIError.noToken
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        
+        let (data, response) = try await session.data(for: request)
+        
+        guard let http = response as? HTTPURLResponse,
+              (200...299).contains(http.statusCode) else {
+            throw APIError.badRequest
+        }
+        
+        return try decoder.decode([BarHours].self, from: data)
     }
     
     func barHoursBulkUpdate(hour: BarHours) async throws {
@@ -227,7 +252,7 @@ actor BarNetworkManager {
     func patchBarHours(id: Int) async throws {
         let endpoint = baseURL + "bar-hours/\(id)/"
         guard let url = URL(string: endpoint) else {
-            throw APIError.badURL
+            throw BarHoursError.doesNotExist("Could not find bar hours with id: \(id)")
         }
         guard let token = try await SessionManager().authUser?.getIDToken() else {
             throw APIError.noToken
