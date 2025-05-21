@@ -21,6 +21,7 @@ struct Trending: View {
             if isLoading {
                 ProgressView()
                     .progressViewStyle(CircularProgressViewStyle())
+                    .tint(.darkPurple)
             } else if activeUserCount >= threshold {
                 HStack(spacing: 4) {
                     Image(systemName: "flame.fill")

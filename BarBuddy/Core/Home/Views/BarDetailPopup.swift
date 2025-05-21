@@ -11,6 +11,7 @@ struct BarDetailPopup: View {
     @Environment(\.dismiss) var dismiss
     @Environment(MapViewModel.self) var viewModel
     @State var bar: Bar
+    @State private var hours: String?
 
     @State private var waitButtonProperties = ButtonProperties(type: "wait")
     @State private var crowdButtonProperties = ButtonProperties(type: "crowd")
@@ -30,11 +31,11 @@ struct BarDetailPopup: View {
                     Text(bar.name)
                         .font(.system(size: 40, weight: .bold))
                         .foregroundColor(Color("DarkPurple"))
+    
                     HStack {
-                        Text(viewModel.todaysHours(for: bar))
+                        Text(hours ?? "-")
                             .foregroundColor(.red)
-                        Text(viewModel.todaysHours(for: bar))
-                            .foregroundColor(Color("DarkPurple"))
+                        
                     }
                 }
                 // MARK: — Quick‑info bubbles (music, crowd, price)
@@ -180,6 +181,10 @@ struct BarDetailPopup: View {
             }
             .padding()
             .navigationBarTitleDisplayMode(.inline)
+        }
+        .task {
+            await viewModel.loadBarData()
+            hours = await bar.getHours()
         }
 
         // MARK: — Remove old “Feedback” view; overlay existing vote menus

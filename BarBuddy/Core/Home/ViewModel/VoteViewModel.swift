@@ -7,7 +7,7 @@
 
 import Foundation
 
-// Handles voting averages
+// Handles vote counting
 @MainActor
 @Observable
 final class VoteViewModel {
@@ -29,7 +29,12 @@ final class VoteViewModel {
         crowdSizeVotes.removeAll()
         waitTimeVotes.removeAll()
         
-        return try await BarNetworkManager.shared.patchBarStatus(statusID: status.bar)
+        guard let statusId = status.id else {
+            throw VoteError.missingId
+        }
+        
+        status.lastUpdated = Date().formatted(date: .numeric, time: .standard)
+        return try await BarNetworkManager.shared.patchBarStatus(statusID: statusId)
     }
     
     func getMostVotedCrowdSize() -> String? {
@@ -43,4 +48,5 @@ final class VoteViewModel {
 
 enum VoteError: Error {
     case noVotes
+    case missingId
 }
