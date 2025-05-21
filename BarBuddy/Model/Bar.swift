@@ -118,3 +118,14 @@ struct Bar: Codable, Identifiable, Hashable {
         return now < openDate || now >= closeDate
     }
 }
+
+extension Bar {
+    // For testing purposes
+    static let DUMMY_DATA = Bar(
+        id: 1,
+        name: "Example Bar",
+        address: "123 Main St, Anytown, USA",
+        latitude: 37.7749,
+        longitude: -122.4194,
+    )
+}
