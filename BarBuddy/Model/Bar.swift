@@ -39,18 +39,25 @@ struct Bar: Codable, Identifiable, Hashable {
     
     // Function to fetch the bar's hours
     func getHours() async -> String? {
-        if let id = id, let cached = await Bar.cacheHours[id] {
+        if let id = id, var cached = await Bar.cacheHours[id] {
             let (open, close) = (cached.openTime, cached.closeTime)
             let closed = isClosed(open, close)
+            cached.isClosed = closed
+            do {
+                try await BarNetworkManager.shared.patchBarHours(id: cached.id)
+            } catch {
+                print("Could not patch hours")
+            }
             return "\(closed ? "Closed" : "Open"): \(open ?? "N/A") - \(close ?? "N/A")"
         }
         async let allHours = BarNetworkManager.shared.fetchAllBarHours()
         do {
-            if let hours = try await allHours.first(where: { $0.bar == id }) {
+            if var hours = try await allHours.first(where: { $0.bar == id }) {
                 // Cache the hours
                 await MainActor.run { Bar.cacheHours[hours.id] = hours }
                 let (open, close) = (hours.openTime, hours.closeTime)
                 let closed = isClosed(open, close)
+                hours.isClosed = closed
                 return "\(closed ? "Closed" : "Open"): \(open ?? "N/A") - \(close ?? "N/A")"
             }
         } catch {
