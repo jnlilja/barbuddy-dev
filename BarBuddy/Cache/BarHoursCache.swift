@@ -49,22 +49,4 @@ actor BarHoursCache {
         cache.removeAll()
         accessOrder.removeAll()
     }
-
-    // MARK: - Persistence
-
-    private var cacheURL: URL {
-        FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent("BarHoursCache.json")
-    }
-
-    func saveToDisk() async throws {
-        let data = try JSONEncoder().encode(cache)
-        try data.write(to: cacheURL)
-    }
-
-    func loadFromDisk() async throws {
-        let data = try Data(contentsOf: cacheURL)
-        cache = try JSONDecoder().decode([Int: BarHours].self, from: data)
-        accessOrder = Array(cache.keys)
-    }
 }
