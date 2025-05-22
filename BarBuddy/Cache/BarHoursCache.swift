@@ -27,7 +27,7 @@ actor BarHoursCache {
         return cache[barId]
     }
 
-    func set(_ barHours: BarHours, for barId: Int) {
+    func set(value barHours: BarHours, forKey barId: Int) {
         if cache[barId] == nil && cache.count >= maxSize {
             // Evict least recently used
             if let oldest = accessOrder.first {

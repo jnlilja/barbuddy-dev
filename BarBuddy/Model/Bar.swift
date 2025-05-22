@@ -41,16 +41,24 @@ struct Bar: Codable, Identifiable, Hashable {
             guard let open = cached.openTime,
                     let close = cached.closeTime else { return nil }
             
-            let closed = isClosed(open, close)
-            cached.isClosed = closed
+            // Get last cached status and check if it needs to be updated
+            let previousClosedStatus = cached.isClosed
+            let isCurrentlyClosed = isClosed(open, close)
+            
+            // If the status has not changed, do not update
+            guard previousClosedStatus != isCurrentlyClosed else {
+                return "\(isCurrentlyClosed ? "Closed" : "Open"): \(open) - \(close)"
+            }
+            cached.isClosed = isCurrentlyClosed
+            
             // Patch hours and update cache
             do {
                 try await BarNetworkManager.shared.patchBarHours(id: cached.id)
-                await BarHoursCache.shared.set(cached, for: cached.id)
+                await BarHoursCache.shared.set(value: cached, forKey: cached.id)
             } catch {
                 print("Could not patch hours")
             }
-            return "\(closed ? "Closed" : "Open"): \(open) - \(close)"
+            return "\(isCurrentlyClosed ? "Closed" : "Open"): \(open) - \(close)"
         }
         // Fetch all hours if not in cache
         do {
@@ -58,7 +66,7 @@ struct Bar: Codable, Identifiable, Hashable {
             guard var hours = allHours.first(where: { $0.bar == id }) else { return nil }
             // Cache all fetched hours
             for h in allHours {
-                await BarHoursCache.shared.set(h, for: h.id)
+                await BarHoursCache.shared.set(value: h, forKey: h.id)
             }
             guard let open = hours.openTime,
                     let close = hours.closeTime else { return nil }
@@ -67,7 +75,7 @@ struct Bar: Codable, Identifiable, Hashable {
             // Patch hours and update cache
             do {
                 try await BarNetworkManager.shared.patchBarHours(id: hours.id)
-                await BarHoursCache.shared.set(hours, for: hours.id)
+                await BarHoursCache.shared.set(value: hours, forKey: hours.id)
             } catch {
                 print("Could not patch hours")
             }
