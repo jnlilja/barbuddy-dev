@@ -12,7 +12,10 @@ import SwiftUI
 @MainActor
 @Observable
 
-
+/// The MapViewModel class is responsible for managing the map view's state
+/// and data. It contains properties for the camera position, bar statuses,
+/// pricing, and a static list of bars. The class also includes methods
+/// to load bar data and update the camera position based on a selected bar.
 final class MapViewModel {
     var cameraPosition: MapCameraPosition = .userLocation(
         fallback: .automatic
@@ -347,9 +350,6 @@ final class MapViewModel {
             print("Could not load statuses: \(error)")
         }
     }
-
-
-
 
     func updateCameraPosition(bar: String) async {
         guard let coord = await fetchBarLocation(bar) else { return }
