@@ -4,13 +4,14 @@ from rest_framework_nested.routers import SimpleRouter, NestedSimpleRouter
 
 from .views import (
     BarViewSet, BarStatusViewSet, BarVoteViewSet,
-    BarRatingViewSet, BarImageViewSet, BarHoursViewSet
+    BarRatingViewSet, BarImageViewSet, BarHoursViewSet, BarCrowdSizeViewSet
 )
 
 router = DefaultRouter()
 router.register(r'', BarViewSet, basename='bar')
 router.register(r'status', BarStatusViewSet, basename='bar-status')
 router.register(r'votes', BarVoteViewSet, basename='bar-vote')
+router.register(r'crowd-size', BarCrowdSizeViewSet, basename='bar-crowd-size')
 router.register(r'ratings', BarRatingViewSet, basename='bar-rating')
 router.register(r'hours', BarHoursViewSet, basename='bar-hours')
 
