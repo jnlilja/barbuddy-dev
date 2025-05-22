@@ -38,7 +38,7 @@ struct VoteWaitTimeView: View {
                 Spacer()
             }
         }
-        .onChange(of: properties.selectedOption) { _, _ in
+        .onChange(of: properties.didSubmit) { _, _ in
             withAnimation {
                 properties.showMenu = false
             }
@@ -47,5 +47,5 @@ struct VoteWaitTimeView: View {
 }
 
 #Preview {
-    VoteWaitTimeView(properties: .constant(.init(selectedOption: false, showMenu: false, type: "wait")), bar: .constant(Bar(id: 1, name: "Test Bar", address: "123 Test St", averagePrice: "10", latitude: 37.774722, longitude: -122.418233, location: nil, usersAtBar: 10, currentStatus: nil, averageRating: "4.5", images: nil, currentUserCount: nil, activityLevel: nil)))
+    VoteWaitTimeView(properties: .constant(.init(didSubmit: false, showMenu: false, type: "wait")), bar: .constant(Bar(id: 1, name: "Test Bar", address: "123 Test St", averagePrice: "10", latitude: 37.774722, longitude: -122.418233, location: nil, usersAtBar: 10, currentStatus: nil, averageRating: "4.5", images: nil, currentUserCount: nil, activityLevel: nil)))
 }

@@ -8,8 +8,7 @@
 import Foundation
 
 struct ButtonProperties {
-    var selection: String?
-    var selectedOption: Bool = false
+    var didSubmit: Bool = false
     var showMenu: Bool = false
     var offset: CGFloat = 0
     let type: String

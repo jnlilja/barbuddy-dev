@@ -25,7 +25,7 @@ struct BarCard: View {
         VStack(alignment: .leading, spacing: 12) {
             // Bar Header
             HStack {
-                Text(hours ?? "-")
+                Text(bar.name)
                     .font(.system(size: 32, weight: .bold))
                     .foregroundColor(colorScheme == .dark ? .neonPink : Color("DarkBlue"))
                 Spacer()
@@ -33,7 +33,7 @@ struct BarCard: View {
                 Trending(barName: bar.name)
             }
             // Open Hours
-            Text(hours ?? "-")
+            Text(hours ?? "Hours not available")
                 .foregroundColor(colorScheme == .dark ? .nude : Color("DarkPurple"))
             // Image placeholder
             if let barImageURL = bar.images?.first?.image {
@@ -49,15 +49,36 @@ struct BarCard: View {
                     .cornerRadius(10)
             }
             // Dynamic Quick‑Info Bubbles
-            HStack(spacing: 12) {
-                InfoTag(icon: "record.circle",        text: waitTime)
-                InfoTag(icon: "person.3.fill",     text: crowdSize)
-                InfoTag(icon: "dollarsign.circle", text: bar.averagePrice ?? "-")
-            }
-            .frame(maxWidth: .infinity)
+//            HStack(spacing: 12) {
+//                InfoTag(icon: "record.circle", text: "Current wait time: \(waitTime)")
+//                InfoTag(icon: "person.3.fill",     text: crowdSize)
+//                InfoTag(icon: "dollarsign.circle", text: bar.averagePrice ?? "-")
+//            }
+//            .frame(maxWidth: .infinity)
             // Single “Meet People Here” button
-            ActionButton(text: "Meet People Here", icon: "person.2.fill") {
-                showingSwipe = true
+//            ActionButton(text: "Meet People Here", icon: "person.2.fill") {
+//                showingSwipe = true
+//            }
+            ZStack(alignment: .leading) {
+                RoundedRectangle(cornerRadius: 10)
+                    .fill(Color("DarkPurple"))
+                    .frame(height: 50)
+                
+                HStack(alignment: .center) {
+                    Image(systemName: "clock.fill")
+                        .foregroundColor(.white)
+                        .font(.system(size: 20))
+                    
+                    Text("Current wait time: ")
+                        .foregroundColor(.white)
+                        .font(.system(size: 18))
+                    
+                    Text("20 - 30 min")
+                        .foregroundColor(.white)
+                        .font(.system(size: 18, weight: .bold))
+                        .padding(.trailing)
+                }
+                .padding(.leading)
             }
         }
         .task {
