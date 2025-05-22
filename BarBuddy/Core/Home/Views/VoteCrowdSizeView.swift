@@ -39,7 +39,7 @@ struct VoteCrowdSizeView: View {
                 Spacer()
             }
         }
-        .onChange(of: buttonProperties.selectedOption) { _, _ in
+        .onChange(of: buttonProperties.didSubmit) { _, _ in
             withAnimation {
                 buttonProperties.showMenu = false
             }
@@ -48,5 +48,5 @@ struct VoteCrowdSizeView: View {
 }
 
 #Preview {
-    VoteCrowdSizeView(buttonProperties: .constant(.init(selectedOption: false, showMenu: false, offset: 0, type: "crowd")), bar: .constant(Bar(name: "", address: "", latitude: 3, longitude: 3)))
+    VoteCrowdSizeView(buttonProperties: .constant(.init(didSubmit: false, showMenu: false, offset: 0, type: "crowd")), bar: .constant(Bar(name: "", address: "", latitude: 3, longitude: 3)))
 }

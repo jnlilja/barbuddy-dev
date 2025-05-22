@@ -15,7 +15,7 @@ struct VoteButtonView: View {
 
     var body: some View {
         Button {
-            properties.selection = text
+           
             Task {
                 do {
                     if let id = bar.id {
@@ -52,12 +52,12 @@ struct VoteButtonView: View {
                 }
             }
             withAnimation {
-                properties.selectedOption = true
+                properties.didSubmit = true
             }
 
             DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
                 withAnimation {
-                    properties.selectedOption = false
+                    properties.didSubmit = false
                 }
             }
         } label: {
@@ -130,7 +130,7 @@ struct VoteButtonView: View {
         opacity: 0.5,
         properties: .constant(
             .init(
-                selectedOption: false,
+                didSubmit: false,
                 showMenu: false,
                 offset: 0,
                 type: "wait"

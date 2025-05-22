@@ -18,7 +18,7 @@ struct BarBuddyApp: App {
         let appearance = UITabBarAppearance()
         FirebaseApp.configure()
         appearance.configureWithTransparentBackground()
-        appearance.backgroundColor = UIColor.white.withAlphaComponent(0.95)
+        appearance.backgroundColor = UIColor.darkBlue.withAlphaComponent(0.95)
         UITabBar.appearance().standardAppearance = appearance
         UITabBar.appearance().scrollEdgeAppearance = appearance
         

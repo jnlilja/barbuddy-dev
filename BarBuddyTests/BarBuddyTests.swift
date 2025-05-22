@@ -62,7 +62,7 @@ struct BarBuddyTests {
     
     @Test("Open at 8 AM",
         arguments: [
-            ("8:00 AM", "1:00 AM"),  
+            ("8:00 AM", "1:00 AM"),
             ("1:00 PM", "2:00 AM"),
             ("10:00 AM", "3:00 AM"),
             ("12:30 PM", "12:30 AM"),
