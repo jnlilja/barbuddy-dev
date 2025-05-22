@@ -5,10 +5,10 @@ from django.utils import timezone
 from datetime import timedelta
 
 from django.contrib.auth import get_user_model
-from .models import Bar, BarStatus, BarRating, BarVote, BarImage, BarHours
+from .models import Bar, BarStatus, BarRating, BarVote, BarImage, BarHours, BarCrowdSize
 from .serializers import (
     BarSerializer, BarStatusSerializer, BarRatingSerializer,
-    BarVoteSerializer, BarImageSerializer, BarHoursSerializer
+    BarVoteSerializer, BarImageSerializer, BarHoursSerializer, BarCrowdSizeSerializer
 )
 from apps.bars.services.voting import aggregate_bar_votes
 from barbuddy_api.authentication import FirebaseAuthentication
@@ -103,7 +103,7 @@ class BarRatingViewSet(viewsets.ModelViewSet):
 
 class BarVoteViewSet(viewsets.ModelViewSet):
     """
-    ViewSet for submitting votes on crowd size & wait time.
+    ViewSet for submitting votes on wait time.
     Enforces one vote per user per 24h window.
     """
     serializer_class = BarVoteSerializer
@@ -124,7 +124,6 @@ class BarVoteViewSet(viewsets.ModelViewSet):
         summary = aggregate_bar_votes(bar_id)
         return Response({
             "bar": bar_id,
-            "aggregated_crowd_size": summary["crowd_size"],
             "aggregated_wait_time": summary["wait_time"],
         })
 
@@ -138,10 +137,49 @@ class BarVoteViewSet(viewsets.ModelViewSet):
         ).first()
         if recent:
             raise serializers.ValidationError(
-                "You can only vote once every 24 hours for this bar."
+                "You can only vote once every 24 hours for this bar's wait time."
             )
         serializer.save(user=self.request.user)
 
+class BarCrowdSizeViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for submitting votes on crowd size.
+    Enforces one vote per user per 24h window.
+    """
+    serializer_class = BarCrowdSizeSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        qs = BarCrowdSize.objects.all()
+        bar_id = self.request.query_params.get('bar')
+        if bar_id:
+            qs = qs.filter(bar__id=bar_id)
+        return qs
+
+    @action(detail=False, methods=['get'], url_path='summary')
+    def vote_summary(self, request):
+        bar_id = request.query_params.get("bar")
+        if not bar_id:
+            return Response({"error": "Bar ID is required."}, status=400)
+        summary = aggregate_bar_votes(bar_id)
+        return Response({
+            "bar": bar_id,
+            "aggregated_crowd_size": summary["crowd_size"],
+        })
+
+    def perform_create(self, serializer):
+        # prevent re-vote within 24h
+        cutoff = timezone.now() - timedelta(hours=24)
+        recent = BarCrowdSize.objects.filter(
+            bar=serializer.validated_data['bar'],
+            user=self.request.user,
+            timestamp__gte=cutoff
+        ).first()
+        if recent:
+            raise serializers.ValidationError(
+                "You can only vote once every 24 hours for this bar's crowd size."
+            )
+        serializer.save(user=self.request.user)
 
 class BarImageViewSet(viewsets.ModelViewSet):
     """

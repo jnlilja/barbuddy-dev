@@ -142,18 +142,46 @@ class BarRating(models.Model):
 
 
 class BarVote(models.Model):
-    CROWD_CHOICES = BarStatus.CROWD_CHOICES
     WAIT_TIME_CHOICES = BarStatus.WAIT_TIME_CHOICES
 
-    bar = models.ForeignKey(Bar, on_delete=models.CASCADE, related_name='votes')
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='bar_votes')
-    crowd_size= models.CharField(max_length=50, choices=CROWD_CHOICES)
+    bar = models.ForeignKey(Bar, on_delete=models.CASCADE, related_name='wait_time_votes')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='wait_time_votes')
     wait_time = models.CharField(max_length=50, choices=WAIT_TIME_CHOICES)
     timestamp = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         constraints = [
-            models.UniqueConstraint(fields=['bar', 'user'], name='unique_vote_per_bar_user')
+            models.UniqueConstraint(fields=['bar', 'user'], name='unique_wait_time_vote_per_bar_user')
+        ]
+        indexes = [
+            models.Index(fields=['bar']),
+            models.Index(fields=['user']),
+            models.Index(fields=['timestamp']),
+        ]
+
+    def clean(self):
+        super().clean()
+        if self.wait_time not in dict(self.WAIT_TIME_CHOICES):
+            raise ValidationError({'wait_time': 'Invalid wait time.'})
+
+    def save(self, *args, **kwargs):
+        self.clean()
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.user.username}'s vote for {self.bar.name} — {self.wait_time}"
+
+class BarCrowdSize(models.Model):
+    CROWD_CHOICES = BarStatus.CROWD_CHOICES
+
+    bar = models.ForeignKey(Bar, on_delete=models.CASCADE, related_name='crowd_size_votes')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='crowd_size_votes')
+    crowd_size = models.CharField(max_length=50, choices=CROWD_CHOICES)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['bar', 'user'], name='unique_crowd_size_vote_per_bar_user')
         ]
         indexes = [
             models.Index(fields=['bar']),
@@ -165,16 +193,13 @@ class BarVote(models.Model):
         super().clean()
         if self.crowd_size not in dict(self.CROWD_CHOICES):
             raise ValidationError({'crowd_size': 'Invalid crowd size.'})
-        if self.wait_time  not in dict(self.WAIT_TIME_CHOICES):
-            raise ValidationError({'wait_time':  'Invalid wait time.'})
 
     def save(self, *args, **kwargs):
         self.clean()
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.user.username}'s vote for {self.bar.name} — {self.crowd_size}, {self.wait_time}"
-
+        return f"{self.user.username}'s vote for {self.bar.name} — {self.crowd_size}"
 
 class BarImage(models.Model):
     bar = models.ForeignKey(Bar, on_delete=models.CASCADE, related_name='images')
