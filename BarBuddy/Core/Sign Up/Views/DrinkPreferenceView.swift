@@ -59,7 +59,7 @@ struct DrinkPreferenceView: View {
 
                     Button(action: {
                         viewModel.favoriteDrink = favoriteDrink
-                        path.append(SignUpNavigation.photoPrompt)
+                        //path.append(SignUpNavigation.photoPrompt)
                     }) {
                         Text("Continue")
                             .font(.headline)

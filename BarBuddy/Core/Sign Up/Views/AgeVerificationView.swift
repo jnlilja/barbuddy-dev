@@ -59,7 +59,7 @@ struct AgeVerificationView: View {
                         fmt.dateFormat = "yyyy-MM-dd"
                         signUpViewModel.dateOfBirth = fmt.string(from: viewModel.dateOfBirth)
                         
-                        path.append(SignUpNavigation.nameEntry)
+                        //path.append(SignUpNavigation.nameEntry)
                     }
                 }) {
                     Text("Verify Age")

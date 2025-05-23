@@ -74,9 +74,10 @@ struct SignUpView: View {
 
                 // ───────── Sign‑up button
                 Button {
-                    guard viewModel.runClientValidation() else { return
-                    }
-                    path.append(SignUpNavigation.ageVerification)
+                    guard viewModel.runClientValidation() else { return }
+                    let user = viewModel.buildProfile()
+                    Task { await authVM.signUp(profile: user) }
+                    //path.append(SignUpNavigation.ageVerification)
                 } label: {
                     Text("Sign Up")
                         .foregroundColor(.white)

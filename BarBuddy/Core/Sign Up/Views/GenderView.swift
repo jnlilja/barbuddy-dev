@@ -60,7 +60,7 @@ struct GenderView: View {
 
                     Button {
                         proceedToNextPage = true
-                        path.append(SignUpNavigation.hometown)
+                        //path.append(SignUpNavigation.hometown)
                     } label: {
                         Text("Continue")
                             .font(.headline)

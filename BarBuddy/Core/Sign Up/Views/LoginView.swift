@@ -97,15 +97,15 @@ struct LoginView: View {
             .navigationDestination(for: SignUpNavigation.self) { view in
                 switch view {
                 case .createAccount: SignUpView(path: $path)
-                case .ageVerification: AgeVerificationView(path: $path)
-                case .nameEntry: NameEntryView(path: $path)
-                case .location: LocationView(path: $path)
-                case .gender: GenderView(path: $path)
-                case .hometown: HometownView(path: $path)
-                case .school: SchoolView(path: $path)
-                case .drink: DrinkPreferenceView(path: $path)
-                case .photoPrompt: PhotoPromptView(path: $path)
-                case .photoUpload: PhotoUploadView()
+//                case .ageVerification: AgeVerificationView(path: $path)
+//                case .nameEntry: NameEntryView(path: $path)
+//                case .location: LocationView(path: $path)
+//                case .gender: GenderView(path: $path)
+//                case .hometown: HometownView(path: $path)
+//                case .school: SchoolView(path: $path)
+//                case .drink: DrinkPreferenceView(path: $path)
+//                case .photoPrompt: PhotoPromptView(path: $path)
+//                case .photoUpload: PhotoUploadView()
                 }
             }
             .alert("Login Error",

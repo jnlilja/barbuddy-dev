@@ -62,7 +62,7 @@ struct SchoolView: View {
                     Button(action: {
                         // Write back into shared view‑model
                         viewModel.jobOrUniversity = school
-                        path.append(SignUpNavigation.drink)
+                        //path.append(SignUpNavigation.drink)
                     }) {
                         Text("Continue")
                             .font(.headline)

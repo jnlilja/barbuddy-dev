@@ -40,7 +40,7 @@ struct NameEntryView: View {
                         // Navigate to the next step
                         viewModel.firstName = firstName
                         viewModel.lastName = lastName
-                        path.append(SignUpNavigation.location)
+                        //path.append(SignUpNavigation.location)
                     }) {
                         Text("Continue")
                             .font(.headline)

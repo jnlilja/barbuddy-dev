@@ -51,7 +51,7 @@ struct HometownView: View {
                         proceedToNextPage = true
                         // write back into your ObservableObject directly—drop the `$`
                         viewModel.hometown = hometown
-                        path.append(SignUpNavigation.school)
+                        //path.append(SignUpNavigation.school)
                     }) {
                         Text("Continue")
                             .font(.headline)
