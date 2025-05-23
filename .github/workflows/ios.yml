@@ -55,7 +55,7 @@ jobs:
             device=$(xcrun simctl list devices available | grep "iPhone" | grep -v "iPad" | head -1 | sed -E 's/^[[:space:]]*([^(]+).*/\1/' | xargs)
           fi
           if [ -z "$device" ]; then
-            device="iPhone 16"  # Final fallback
+            device="iPhone 15"  # Final fallback
           fi
           
           echo "file_to_build=${file_to_build}" >> $GITHUB_OUTPUT
