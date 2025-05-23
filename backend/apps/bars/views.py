@@ -104,7 +104,6 @@ class BarRatingViewSet(viewsets.ModelViewSet):
 class BarVoteViewSet(viewsets.ModelViewSet):
     """
     ViewSet for submitting votes on wait time.
-    Enforces one vote per user per 24h window.
     """
     serializer_class = BarVoteSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -128,18 +127,10 @@ class BarVoteViewSet(viewsets.ModelViewSet):
         })
 
     def perform_create(self, serializer):
-        # prevent re-vote within 24h
-        cutoff = timezone.now() - timedelta(hours=24)
-        recent = BarVote.objects.filter(
-            bar=serializer.validated_data['bar'],
-            user=self.request.user,
-            timestamp__gte=cutoff
-        ).first()
-        if recent:
-            raise serializers.ValidationError(
-                "You can only vote once every 24 hours for this bar's wait time."
-            )
+        # Remove the code that checks for recent votes
+        # Simply save with the current user
         serializer.save(user=self.request.user)
+
 
 class BarCrowdSizeViewSet(viewsets.ModelViewSet):
     """
@@ -181,6 +172,7 @@ class BarCrowdSizeViewSet(viewsets.ModelViewSet):
             )
         serializer.save(user=self.request.user)
 
+
 class BarImageViewSet(viewsets.ModelViewSet):
     """
     ViewSet for uploading, listing & deleting images for a bar.
@@ -198,6 +190,7 @@ class BarImageViewSet(viewsets.ModelViewSet):
         bar_pk = self.kwargs.get('bar_pk')
         bar = Bar.objects.get(pk=bar_pk)
         serializer.save(bar=bar)
+
 
 class BarHoursViewSet(viewsets.ModelViewSet):
     authentication_classes = [FirebaseAuthentication]
