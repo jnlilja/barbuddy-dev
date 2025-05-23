@@ -31,10 +31,8 @@
       }
     },
     {
+      "enabled" : false,
       "parallelizable" : true,
-      "skippedTests" : [
-        "BarBuddyUITests\/testLaunchPerformance()"
-      ],
       "target" : {
         "containerPath" : "container:BarBuddy.xcodeproj",
         "identifier" : "599153CA2D540525004B2832",

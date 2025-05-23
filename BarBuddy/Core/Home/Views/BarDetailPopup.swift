@@ -11,7 +11,6 @@ struct BarDetailPopup: View {
     @Environment(\.dismiss) var dismiss
     @Environment(MapViewModel.self) var viewModel
     @State var bar: Bar
-    @State private var hours: String?
 
     @State private var waitButtonProperties = ButtonProperties(type: "wait")
     @State private var crowdButtonProperties = ButtonProperties(type: "crowd")
@@ -34,15 +33,13 @@ struct BarDetailPopup: View {
                     Spacer()
                     // MARK: — Header
                     VStack(spacing: 8) {
+                        // Make the bar name adapt to the screen size
                         Text(bar.name)
                             .font(.system(size: 40, weight: .bold))
                             .foregroundColor(Color("DarkPurple"))
-                        
-                        HStack {
-                            Text(hours ?? "Hours not available")
-                                .foregroundColor(.neonPink)
-                                .font(.headline)
-                        }
+                            .multilineTextAlignment(.leading)
+                            .lineLimit(2)
+                            .minimumScaleFactor(0.5)
                     }
                     // MARK: — Quick‑info bubbles (music, crowd, price)
                     /// Coming in a future update
@@ -62,22 +59,21 @@ struct BarDetailPopup: View {
                                     Text("Wait Time")
                                 }
                                 .foregroundColor(Color("DarkPurple"))
-                                .font(.title3)
+                                .font(.title2)
+                                .bold()
                                 
                                 ZStack {
                                     RoundedRectangle(cornerRadius: 15)
                                         .stroke(style: StrokeStyle(lineWidth: 2))
                                         .foregroundStyle(.neonPink.opacity(0.5))
-                                        .frame(width: 131, height: 50)
+                                        .frame(width: 180, height: 130)
                                         .background(.salmon.opacity(0.2))
                                         .cornerRadius(15)
                                         .shadow(radius: 10)
                                     
-                                    if hours?.contains("Closed") != nil {
-                                        Text("Closed")
-                                    } else {
-                                        Text(waitTime)
-                                    }
+                                    Text("10 - 20 min")
+                                        .font(.title)
+                                    
                                 }
                                 .foregroundColor(Color("DarkPurple"))
                                 .bold()
@@ -93,22 +89,23 @@ struct BarDetailPopup: View {
                                 } label: {
                                     ZStack {
                                         RoundedRectangle(cornerRadius: 15)
-                                            .foregroundStyle(Gradient(colors: [
-                                                .neonPink, .salmon
-                                            ]))
-                                            .frame(width: 190, height: 50)
-                                            .opacity(0.5)
+                                            .foregroundStyle(.darkPurple)
+                                            .frame(width: 180, height: 120)
                                             .cornerRadius(15)
                                             .shadow(radius: 20)
                                         
-                                        HStack {
-                                            Text("Vote wait time!")
+                                        VStack {
+                                            Text("Vote Wait Time!")
+                                                .frame(width: 130)
+                                                .font(.title)
                                                 .bold()
-                                                .foregroundColor(Color("DarkPurple"))
-                                            Image(systemName: "person.3.sequence.fill")
-                                                .foregroundColor(Color("DarkPurple"))
-                                                .font(.system(size: 20))
+                                            
+                                            Image(systemName: "arrow.right")
+                                                //.font(.title)
+                                                .foregroundStyle(.white)
+                                                
                                         }
+                                        .foregroundStyle(.white)
                                     }
                                 }
                                 // Disable button if menu is open or no wait time available
@@ -177,6 +174,19 @@ struct BarDetailPopup: View {
                     //}
                     Spacer()
                     
+                    VStack {
+                        Text("Enjoying BarBuddy?")
+                            .font(.title3)
+                            .foregroundColor(Color("DarkPurple"))
+                        Group {
+                            Text("Follow us on IG for events and updates!")
+                            Text("@barbuddy.pb")
+                        }
+                        .foregroundStyle(.darkBlue)
+                        .font(.callout)
+                        .bold()
+                    }
+                    
                     // MARK: — Swipe Navigation
                     NavigationLink(destination: SwipeView()) {
                         HStack {
@@ -195,7 +205,6 @@ struct BarDetailPopup: View {
             }
             .task {
                 await viewModel.loadBarData()
-                hours = await bar.getHours()
             }
             .transition(.blurReplace)
         }
