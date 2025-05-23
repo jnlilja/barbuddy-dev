@@ -1,0 +1,93 @@
+name: BarBuddy iOS Build and Test
+
+on:
+  push:
+    paths-ignore:
+      - 'README.md'
+      - 'backend/**'
+      - 'frontend/**'
+      - '.gitignore'
+      - 'docs/**'
+    branches: [ "main", "develop" ]
+  pull_request:
+    branches: [ "main", "develop" ]
+
+jobs:
+  build-and-test:
+    name: iOS Build and Test
+    runs-on: macos-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        
+      - name: Setup Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: '16.2'
+          
+      - name: Verify Xcode Version
+        run: xcodebuild -version
+        
+      - name: Determine Build Configuration
+        id: config
+        run: |
+          # Find project/workspace file
+          if [ -n "$(find . -name "*.xcworkspace" -maxdepth 1)" ]; then
+            file_to_build=$(find . -name "*.xcworkspace" -maxdepth 1 | head -1)
+            filetype_parameter="workspace"
+          elif [ -n "$(find . -name "*.xcodeproj" -maxdepth 1)" ]; then
+            file_to_build=$(find . -name "*.xcodeproj" -maxdepth 1 | head -1)
+            filetype_parameter="project"
+          else
+            echo "Error: No .xcworkspace or .xcodeproj found"
+            exit 1
+          fi
+          
+          # Get default scheme
+          scheme_list=$(xcodebuild -list -json -${filetype_parameter} "${file_to_build}" | tr -d "\n")
+          default_scheme=$(echo $scheme_list | ruby -e "require 'json'; puts JSON.parse(STDIN.gets)['project']['targets'][0]")
+          
+          # Find available simulator
+          device=$(xcrun simctl list devices available | grep -E "iPhone (15|16)" | head -1 | sed -E 's/.*iPhone ([0-9]+).*/iPhone \1/')
+          if [ -z "$device" ]; then
+            device="iPhone 15"  # Fallback
+          fi
+          
+          echo "file_to_build=${file_to_build}" >> $GITHUB_OUTPUT
+          echo "filetype_parameter=${filetype_parameter}" >> $GITHUB_OUTPUT
+          echo "scheme=${default_scheme}" >> $GITHUB_OUTPUT
+          echo "device=${device}" >> $GITHUB_OUTPUT
+          
+          echo "Using:"
+          echo "  File: ${file_to_build}"
+          echo "  Type: ${filetype_parameter}"
+          echo "  Scheme: ${default_scheme}"
+          echo "  Device: ${device}"
+          
+      - name: Build for Testing
+        run: |
+          xcodebuild build-for-testing \
+            -scheme "${{ steps.config.outputs.scheme }}" \
+            -${{ steps.config.outputs.filetype_parameter }} "${{ steps.config.outputs.file_to_build }}" \
+            -destination "platform=iOS Simulator,name=${{ steps.config.outputs.device }}" \
+            -configuration Debug \
+            CODE_SIGNING_ALLOWED=NO
+            
+      - name: Run Tests
+        run: |
+          xcodebuild test-without-building \
+            -scheme "${{ steps.config.outputs.scheme }}" \
+            -${{ steps.config.outputs.filetype_parameter }} "${{ steps.config.outputs.file_to_build }}" \
+            -destination "platform=iOS Simulator,name=${{ steps.config.outputs.device }}" \
+            -configuration Debug \
+            CODE_SIGNING_ALLOWED=NO
+            
+      - name: Upload Test Results
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: test-results
+          path: |
+            ~/Library/Logs/DiagnosticReports/
+            DerivedData/Logs/Test/
