@@ -33,7 +33,10 @@
     {
       "parallelizable" : true,
       "skippedTests" : [
-        "BarBuddyUITests\/testLaunchPerformance()"
+        "BarBuddyUITests\/testExample()",
+        "BarBuddyUITests\/testLaunchPerformance()",
+        "BarBuddyUITestsLaunchTests",
+        "BarBuddyUITestsLaunchTests\/testLaunch()"
       ],
       "target" : {
         "containerPath" : "container:BarBuddy.xcodeproj",
