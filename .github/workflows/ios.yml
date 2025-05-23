@@ -16,30 +16,59 @@ jobs:
   build-and-test:
     name: iOS Build and Test
     runs-on: macos-latest
-
+    
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Cache SwiftPM
-        uses: actions/cache@v4
-        with:
-          path: .build
-          key: ${{ runner.os }}-spm-${{ hashFiles('**/Package.resolved') }}
-          restore-keys: |
-            ${{ runner.os }}-spm-
-
+        
       - name: Setup Xcode
         uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: '16.2'
-
+          xcode-version: '16.2' # As per original, assuming this version supports iPhone 16
+          
       - name: Verify Xcode Version
         run: xcodebuild -version
+
+      # Cache DerivedData
+      # This is the primary cache for Xcode builds, including Swift Package Manager (SPM)
+      # build artifacts and package sources (checkouts). The key includes Package.resolved
+      # to invalidate the cache when SPM dependencies change.
+      - name: Cache DerivedData
+        uses: actions/cache@v4
+        id: deriveddata-cache
+        with:
+          path: DerivedData # This directory will be cached
+          key: ${{ runner.os }}-xcode-${{ hashFiles('**/Package.resolved', '**/Podfile.lock', '**/Cartfile.resolved') }}-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-xcode-${{ hashFiles('**/Package.resolved', '**/Podfile.lock', '**/Cartfile.resolved') }}-
+            ${{ runner.os }}-xcode-
+
+      # Swift Package Manager (SPM) Caching Information:
+      #
+      # 1. Package Build Artifacts & Sources:
+      #    The 'Cache DerivedData' step above is crucial for SPM. It caches:
+      #    a) Compiled package artifacts (e.g., .swiftmodule, .a, .framework).
+      #    b) Downloaded package source code (checkouts), as Xcode typically stores these
+      #       within a subdirectory of DerivedData (e.g., DerivedData/YourProjectName/SourcePackages/checkouts).
+      #    The cache key for DerivedData includes `hashFiles('**/Package.resolved')`, ensuring that
+      #    changes to your resolved package versions correctly invalidate and recreate this cache.
+      #
+      # 2. Optional: Explicitly Resolve SPM Dependencies
+      #    Usually, xcodebuild handles package resolution during the build. If you need to
+      #    resolve them explicitly beforehand (e.g., to populate a separate source cache or debug resolution),
+      #    you can use a step like the one commented out below.
+      #
+      - name: Resolve SPM Dependencies (Optional)
+        run: |
+          echo "Resolving SPM dependencies for scheme: ${{ steps.config.outputs.scheme }}"
+          xcodebuild -resolvePackageDependencies \
+            -scheme "${{ steps.config.outputs.scheme }}" \
+            -${{ steps.config.outputs.filetype_parameter }} "${{ steps.config.outputs.file_to_build }}"
 
       - name: Determine Build Configuration
         id: config
         run: |
+          # Find project/workspace file
           if [ -n "$(find . -name "*.xcworkspace" -maxdepth 1)" ]; then
             file_to_build=$(find . -name "*.xcworkspace" -maxdepth 1 | head -1)
             filetype_parameter="workspace"
@@ -50,61 +79,68 @@ jobs:
             echo "Error: No .xcworkspace or .xcodeproj found"
             exit 1
           fi
+          
+          # Get default scheme
           scheme_list_json=$(xcodebuild -list -json -${filetype_parameter} "${file_to_build}" | tr -d "\n" || echo "{}")
           default_scheme=$(echo "$scheme_list_json" | ruby -e "require 'json'; parsed = JSON.parse(STDIN.gets); puts parsed['project']['targets'][0] rescue puts parsed['workspace']['schemes'][0] rescue ''")
+
           if [ -z "$default_scheme" ]; then
-            default_scheme=$(xcodebuild -list -${filetype_parameter} "${file_to_build}" | grep -A1 "Schemes:" | tail -n +2 | head -1 | xargs || '')
-            if [ -z "$default_scheme" ]; then
-              echo "Error: Could not determine default scheme."
-              exit 1
+            echo "Error: Could not determine default scheme via JSON."
+            echo "Attempting to extract first scheme from non-JSON list..."
+            default_scheme_line=$(xcodebuild -list -${filetype_parameter} "${file_to_build}" | awk '/Schemes:/{flag=1; next}/Build Configurations:/{flag=0}flag' | head -1 | xargs)
+            if [ -n "$default_scheme_line" ]; then
+                default_scheme="$default_scheme_line"
+                echo "Fallback: Using first listed scheme: $default_scheme"
+            else
+                echo "Error: Still could not determine default scheme. Please check project configuration and ensure schemes are shared if necessary."
+                xcodebuild -list -${filetype_parameter} "${file_to_build}" # Print full list for debugging
+                exit 1
             fi
           fi
+          
+          # Determine the target iPhone 16 device
           available_iphone_16_line=$(xcrun simctl list devices available | grep "iPhone 16" | grep -v "iPad" | head -1)
+          
           if [ -n "$available_iphone_16_line" ]; then
             device=$(echo "$available_iphone_16_line" | sed -E 's/^[[:space:]]*([^(]+).*/\1/' | xargs)
+            echo "Found available iPhone 16 series simulator: $device"
           else
+            echo "No iPhone 16 series simulator found in 'available' list. Defaulting to target 'iPhone 16'."
             device="iPhone 16"
           fi
+
+          if [ -z "$device" ]; then
+            echo "Warning: Device variable was unexpectedly empty after checks. Forcing to 'iPhone 16'."
+            device="iPhone 16"
+          fi
+          
           echo "file_to_build=${file_to_build}" >> $GITHUB_OUTPUT
           echo "filetype_parameter=${filetype_parameter}" >> $GITHUB_OUTPUT
           echo "scheme=${default_scheme}" >> $GITHUB_OUTPUT
           echo "device=${device}" >> $GITHUB_OUTPUT
-
-      - name: Boot Simulator Early
-        run: |
-          UDID=$(xcrun simctl list devices available | grep "${{ steps.config.outputs.device }}" | grep -oE '[A-F0-9\-]{36}' | head -1)
-          if [ -n "$UDID" ]; then
-            xcrun simctl boot "$UDID" || true
-            echo "Booted simulator with UDID: $UDID"
-          else
-            echo "Simulator not found, will let xcodebuild handle it."
-          fi
-          xcrun simctl list | grep Booted
-
+          
+          echo "Using:"
+          echo "  File: ${file_to_build}"
+          echo "  Type: ${filetype_parameter}"
+          echo "  Scheme: ${default_scheme}"
+          echo "  Device: ${device}"
+          
       - name: Build for Testing
         run: |
           xcodebuild build-for-testing \
             -scheme "${{ steps.config.outputs.scheme }}" \
             -${{ steps.config.outputs.filetype_parameter }} "${{ steps.config.outputs.file_to_build }}" \
             -destination "platform=iOS Simulator,name=${{ steps.config.outputs.device }}" \
+            -derivedDataPath DerivedData \
             -configuration Debug \
             CODE_SIGNING_ALLOWED=NO
-
-      - name: Run Tests (Parallel)
+            
+      - name: Run Tests
         run: |
           xcodebuild test-without-building \
             -scheme "${{ steps.config.outputs.scheme }}" \
             -${{ steps.config.outputs.filetype_parameter }} "${{ steps.config.outputs.file_to_build }}" \
             -destination "platform=iOS Simulator,name=${{ steps.config.outputs.device }}" \
+            -derivedDataPath DerivedData \
             -configuration Debug \
-            -parallel-testing-enabled YES \
             CODE_SIGNING_ALLOWED=NO
-
-      - name: Upload Test Results
-        uses: actions/upload-artifact@v4
-        if: failure()
-        with:
-          name: test-results
-          path: |
-            ~/Library/Logs/DiagnosticReports/
-            DerivedData/Logs/Test/
