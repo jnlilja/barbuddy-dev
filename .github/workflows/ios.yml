@@ -24,7 +24,7 @@ jobs:
       - name: Setup Xcode
         uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: '16.2'
+          xcode-version: '16.2' # As per original, assuming this version supports iPhone 16
           
       - name: Verify Xcode Version
         run: xcodebuild -version
@@ -45,17 +45,48 @@ jobs:
           fi
           
           # Get default scheme
-          scheme_list=$(xcodebuild -list -json -${filetype_parameter} "${file_to_build}" | tr -d "\n")
-          default_scheme=$(echo $scheme_list | ruby -e "require 'json'; puts JSON.parse(STDIN.gets)['project']['targets'][0]")
-          
-          # Find available iPhone simulator (excluding iPads)
-          device=$(xcrun simctl list devices available | grep -E "iPhone (15|16)" | grep -v "iPad" | head -1 | sed -E 's/^[[:space:]]*([^(]+).*/\1/' | xargs)
-          if [ -z "$device" ]; then
-            # Fallback to any available iPhone
-            device=$(xcrun simctl list devices available | grep "iPhone" | grep -v "iPad" | head -1 | sed -E 's/^[[:space:]]*([^(]+).*/\1/' | xargs)
+          # Note: Using ruby to parse JSON. Ensure ruby is available or use another JSON parser like jq.
+          # GitHub macOS runners typically have Ruby.
+          scheme_list_json=$(xcodebuild -list -json -${filetype_parameter} "${file_to_build}" | tr -d "\n" || echo "{}")
+          default_scheme=$(echo "$scheme_list_json" | ruby -e "require 'json'; parsed = JSON.parse(STDIN.gets); puts parsed['project']['targets'][0] rescue puts parsed['workspace']['schemes'][0] rescue ''")
+
+          if [ -z "$default_scheme" ]; then
+            echo "Error: Could not determine default scheme."
+            # Attempt to list schemes directly if the above failed
+            echo "Available schemes:"
+            xcodebuild -list -${filetype_parameter} "${file_to_build}"
+            # Fallback: Try to extract the first scheme from the non-JSON list output
+            default_scheme=$(xcodebuild -list -${filetype_parameter} "${file_to_build}" | grep -A1 "Schemes:" | tail -n +2 | head -1 | xargs || '')
+            if [ -z "$default_scheme" ]; then
+                echo "Error: Still could not determine default scheme. Please check project configuration."
+                exit 1
+            else
+                echo "Fallback: Using first listed scheme: $default_scheme"
+            fi
           fi
+          
+          # Determine the target iPhone 16 device
+          # Look for any device name starting with "iPhone 16" that is listed as available.
+          # This will match "iPhone 16", "iPhone 16 Pro", "iPhone 16 Pro Max", etc.
+          # Exclude iPads, though "iPhone 16" shouldn't match iPad anyway.
+          available_iphone_16_line=$(xcrun simctl list devices available | grep "iPhone 16" | grep -v "iPad" | head -1)
+          
+          if [ -n "$available_iphone_16_line" ]; then
+            # Extract the full name of the available iPhone 16 simulator (e.g., "iPhone 16 Pro")
+            device=$(echo "$available_iphone_16_line" | sed -E 's/^[[:space:]]*([^(]+).*/\1/' | xargs)
+            echo "Found available iPhone 16 series simulator: $device"
+          else
+            # If no iPhone 16 series simulator is listed as 'available',
+            # we will default to the name "iPhone 16".
+            # xcodebuild will attempt to use/create a simulator with this name.
+            echo "No iPhone 16 series simulator found in 'available' list. Defaulting to target 'iPhone 16'."
+            device="iPhone 16"
+          fi
+
+          # Final check to ensure device is set (should be redundant with the logic above)
           if [ -z "$device" ]; then
-            device="iPhone 15"  # Final fallback
+            echo "Warning: Device variable was unexpectedly empty after checks. Forcing to 'iPhone 16'."
+            device="iPhone 16"
           fi
           
           echo "file_to_build=${file_to_build}" >> $GITHUB_OUTPUT
