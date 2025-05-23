@@ -111,14 +111,6 @@ jobs:
 
           echo "simulator_udid=${SIMULATOR_UDID}" >> $GITHUB_OUTPUT
 
-      - name: Verify Test Targets
-        run: |
-          echo "Checking for test targets in scheme..."
-          xcodebuild -showBuildSettings \
-            -scheme "${{ steps.config.outputs.scheme }}" \
-            -${{ steps.config.outputs.filetype_parameter }} "${{ steps.config.outputs.file_to_build }}" \
-            | grep -i "test" || echo "No test settings found - this might be normal"
-
       - name: Build for Testing
         timeout-minutes: 10
         run: |
