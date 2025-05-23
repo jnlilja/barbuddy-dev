@@ -134,7 +134,7 @@ class BarCrowdSizeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = BarCrowdSize
-        fields = ['id', 'bar', 'user', 'crowd_size', 'last_updated']
+        fields = ['id', 'bar', 'user', 'crowd_size' ]
 
     def validate(self, data):
         if data.get('bar') is None:
