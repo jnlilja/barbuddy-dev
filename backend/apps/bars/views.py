@@ -203,15 +203,48 @@ class BarVoteViewSet(viewsets.ModelViewSet):
         })
 
     def perform_create(self, serializer):
+        # Remove the code that checks for recent votes
+        # Simply save with the current user
+        serializer.save(user=self.request.user)
+
+
+class BarCrowdSizeViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for submitting votes on crowd size.
+    Enforces one vote per user per 24h window.
+    """
+    serializer_class = BarCrowdSizeSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        qs = BarCrowdSize.objects.all()
+        bar_id = self.request.query_params.get('bar')
+        if bar_id:
+            qs = qs.filter(bar__id=bar_id)
+        return qs
+
+    @action(detail=False, methods=['get'], url_path='summary')
+    def vote_summary(self, request):
+        bar_id = request.query_params.get("bar")
+        if not bar_id:
+            return Response({"error": "Bar ID is required."}, status=400)
+        summary = aggregate_bar_votes(bar_id)
+        return Response({
+            "bar": bar_id,
+            "aggregated_crowd_size": summary["crowd_size"],
+        })
+
+    def perform_create(self, serializer):
         # prevent re-vote within 24h
         cutoff = timezone.now() - timedelta(hours=24)
-        recent = BarVote.objects.filter(
+        recent = BarCrowdSize.objects.filter(
             bar=serializer.validated_data['bar'],
             user=self.request.user,
             timestamp__gte=cutoff
         ).first()
         if recent:
             raise serializers.ValidationError(
+                "You can only vote once every 24 hours for this bar's crowd size."
                 "You can only vote once every 24 hours for this bar's wait time."
             )
         serializer.save(user=self.request.user)
@@ -273,6 +306,7 @@ class BarImageViewSet(viewsets.ModelViewSet):
         bar_pk = self.kwargs.get('bar_pk')
         bar = Bar.objects.get(pk=bar_pk)
         serializer.save(bar=bar)
+
 
 class BarHoursViewSet(viewsets.ModelViewSet):
     authentication_classes = [FirebaseAuthentication]

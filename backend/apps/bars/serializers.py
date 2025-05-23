@@ -105,7 +105,6 @@ class BarStatusSerializer(serializers.ModelSerializer):
         model = BarStatus
         fields = ['id', 'bar', 'crowd_size', 'wait_time', 'last_updated']
 
-
 class BarRatingSerializer(serializers.ModelSerializer):
     class Meta:
         model = BarRating
@@ -129,6 +128,7 @@ class BarVoteSerializer(serializers.ModelSerializer):
         if data.get('bar') is None:
             raise serializers.ValidationError("A bar must be specified.")
         return data
+
 
 class BarCrowdSizeSerializer(serializers.ModelSerializer):
     user = serializers.HiddenField(default=serializers.CurrentUserDefault())

@@ -16,111 +16,101 @@ jobs:
   build-and-test:
     name: iOS Build and Test
     runs-on: macos-latest
-    timeout-minutes: 30  # Overall job timeout
-    
+    timeout-minutes: 30
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        
+
       - name: Setup Xcode
         uses: maxim-lobanov/setup-xcode@v1
         with:
           xcode-version: '16.2'
-          
+
       - name: Verify Xcode Version
         run: xcodebuild -version
-        
+
       - name: List Available Simulators
         run: |
           echo "Available iOS simulators:"
           xcrun simctl list devices available | grep iOS
-        
+
       - name: Determine Build Configuration
         id: config
         run: |
-          # Find project/workspace file
-          if [ -n "$(find . -name "*.xcworkspace" -maxdepth 1)" ]; then
-            file_to_build=$(find . -name "*.xcworkspace" -maxdepth 1 | head -1)
+          # Find project/workspace file (search recursively)
+          if [ -n "$(find . -name "*.xcworkspace")" ]; then
+            file_to_build=$(find . -name "*.xcworkspace" | head -1)
             filetype_parameter="workspace"
-          elif [ -n "$(find . -name "*.xcodeproj" -maxdepth 1)" ]; then
-            file_to_build=$(find . -name "*.xcodeproj" -maxdepth 1 | head -1)
+          elif [ -n "$(find . -name "*.xcodeproj")" ]; then
+            file_to_build=$(find . -name "*.xcodeproj" | head -1)
             filetype_parameter="project"
           else
             echo "Error: No .xcworkspace or .xcodeproj found"
             exit 1
           fi
-          
-          # Get scheme - simplified approach
+
+          # Get scheme - robust approach
           scheme_list=$(xcodebuild -list -${filetype_parameter} "${file_to_build}")
           echo "Available schemes and targets:"
           echo "$scheme_list"
-          
+
           # Try to get the first scheme
-          default_scheme=$(echo "$scheme_list" | grep -A 20 "Schemes:" | grep -v "Schemes:" | head -1 | xargs || '')
-          
+          default_scheme=$(echo "$scheme_list" | awk '/Schemes:/,0' | tail -n +2 | head -1 | xargs)
           if [ -z "$default_scheme" ]; then
             echo "Error: Could not determine default scheme"
             exit 1
           fi
-          
-          # Target only iPhone 16 devices
+
+          # Find any available iPhone simulator
           available_simulators=$(xcrun simctl list devices available)
-          
-          # Find iPhone 16 series device
-          device=$(echo "$available_simulators" | grep "iPhone 16" | head -1 | sed -E 's/^[[:space:]]*([^(]+).*/\1/' | xargs || '')
-          
-          # Error if no iPhone 16 device found
+          device=$(echo "$available_simulators" | grep -E "iPhone" | grep -v unavailable | grep -v "unavailable" | head -1 | sed -E 's/^[[:space:]]*([^(]+).*/\1/' | xargs)
+
           if [ -z "$device" ]; then
-            echo "Error: No iPhone 16 series simulator found in available devices"
+            echo "Error: No iPhone simulator found in available devices"
             echo "Available devices:"
             echo "$available_simulators"
             exit 1
           fi
-          
+
           echo "file_to_build=${file_to_build}" >> $GITHUB_OUTPUT
           echo "filetype_parameter=${filetype_parameter}" >> $GITHUB_OUTPUT
           echo "scheme=${default_scheme}" >> $GITHUB_OUTPUT
           echo "device=${device}" >> $GITHUB_OUTPUT
-          
+
           echo "Configuration:"
           echo "  File: ${file_to_build}"
           echo "  Type: ${filetype_parameter}"
           echo "  Scheme: ${default_scheme}"
           echo "  Device: ${device}"
-          
+
       - name: Prepare Simulator
         run: |
-          echo "Preparing iPhone 16 simulator: ${{ steps.config.outputs.device }}"
-          
-          # Create iPhone 16 simulator if it doesn't exist
-          xcrun simctl create "Test-iPhone16" com.apple.CoreSimulator.SimDeviceType.iPhone-16 com.apple.CoreSimulator.SimRuntime.iOS-18-0 || true
-          
-          # Use the created simulator or find existing iPhone 16
-          SIMULATOR_UDID=$(xcrun simctl list devices | grep "Test-iPhone16\|iPhone 16" | grep -v "unavailable" | head -1 | grep -oE '\([A-F0-9-]+\)' | tr -d '()' || '')
-          
+          echo "Preparing simulator: ${{ steps.config.outputs.device }}"
+
+          # Use the selected device name to find or create a simulator UDID
+          SIMULATOR_UDID=$(xcrun simctl list devices available | grep "${{ steps.config.outputs.device }}" | grep -v unavailable | head -1 | grep -oE '\([A-F0-9-]+\)' | tr -d '()' || '')
+
           if [ -z "$SIMULATOR_UDID" ]; then
-            echo "Could not find or create iPhone 16 simulator"
+            echo "Could not find a suitable simulator for ${{ steps.config.outputs.device }}"
             echo "Available simulators:"
             xcrun simctl list devices available
             exit 1
           fi
-            echo "Using simulator UDID: $SIMULATOR_UDID"
-            
-            # Boot the simulator
-            xcrun simctl boot "$SIMULATOR_UDID" || echo "Simulator may already be booted"
-            
-            # Wait for boot to complete
-            xcrun simctl bootstatus "$SIMULATOR_UDID" -b
-            
-            # Additional wait for stability
-            sleep 5
-            
-            echo "simulator_udid=${SIMULATOR_UDID}" >> $GITHUB_OUTPUT
-          else
-            echo "Could not find or create a suitable iPhone 16 simulator"
-            exit 1
-          fi
-          
+
+          echo "Using simulator UDID: $SIMULATOR_UDID"
+
+          # Boot the simulator
+          xcrun simctl boot "$SIMULATOR_UDID" || echo "Simulator may already be booted"
+
+          # Wait for boot to complete
+          xcrun simctl bootstatus "$SIMULATOR_UDID" -b
+
+          # Additional wait for stability
+          sleep 5
+
+          echo "simulator_udid=${SIMULATOR_UDID}" >> $GITHUB_OUTPUT
+
       - name: Verify Test Targets
         run: |
           echo "Checking for test targets in scheme..."
@@ -128,7 +118,7 @@ jobs:
             -scheme "${{ steps.config.outputs.scheme }}" \
             -${{ steps.config.outputs.filetype_parameter }} "${{ steps.config.outputs.file_to_build }}" \
             | grep -i "test" || echo "No test settings found - this might be normal"
-            
+
       - name: Build for Testing
         timeout-minutes: 10
         run: |
@@ -141,12 +131,12 @@ jobs:
             -derivedDataPath DerivedData \
             CODE_SIGNING_ALLOWED=NO \
             | xcpretty || true
-            
+
       - name: Run Tests
         timeout-minutes: 10
         run: |
           set -o pipefail
-          
+
           # Check if there are actually any tests to run
           if xcodebuild test-without-building \
             -scheme "${{ steps.config.outputs.scheme }}" \
@@ -169,10 +159,10 @@ jobs:
               exit 1  # Fail if tests exist but failed to run
             fi
           fi
-          
+
       - name: Upload Test Results
         uses: actions/upload-artifact@v4
-        if: always()  # Upload results whether tests pass or fail
+        if: always()
         with:
           name: test-results
           path: |
