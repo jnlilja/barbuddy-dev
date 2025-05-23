@@ -55,8 +55,17 @@ struct Bar: Codable, Identifiable, Hashable {
             do {
                 try await BarNetworkManager.shared.patchBarHours(id: cached.id)
                 await BarHoursCache.shared.set(value: cached, forKey: cached.id)
+            } catch BarHoursError.doesNotExist(error: let error) {
+                print("patchHours error: \(error)")
+                return nil
+            } catch APIError.noToken {
+                print("patchHours error: No token. Please log in.")
+                return nil
+            } catch APIError.badRequest {
+                print("patchHours error: Bad request")
+                return nil
             } catch {
-                print("Could not patch hours")
+                print("Pathing hours failed with error - \(error.localizedDescription)")
             }
             return "\(isCurrentlyClosed ? "Closed" : "Open"): \(open) - \(close)"
         }
@@ -76,12 +85,27 @@ struct Bar: Codable, Identifiable, Hashable {
             do {
                 try await BarNetworkManager.shared.patchBarHours(id: hours.id)
                 await BarHoursCache.shared.set(value: hours, forKey: hours.id)
+            } catch BarHoursError.doesNotExist(error: let error) {
+                print("patchHours error: \(error)")
+                return nil
+            } catch APIError.noToken {
+                print("patchHours error: No token. Please log in.")
+                return nil
+            } catch APIError.badRequest {
+                print("patchHours error: Bad request")
+                return nil
             } catch {
-                print("Could not patch hours")
+                print("Pathing hours failed with error - \(error.localizedDescription)")
             }
             return "\(closed ? "Closed" : "Open"): \(open) - \(close)"
-        } catch {
+        } catch APIError.badRequest {
             print("Could not fetch hours")
+        } catch APIError.noToken {
+            print("Could not fetch hours. No token.")
+        } catch APIError.badURL {
+            print("Could not fetch hours. URL is not valid.")
+        } catch {
+            print("Could not fetch hours - \(error.localizedDescription)")
         }
         return nil
     }
