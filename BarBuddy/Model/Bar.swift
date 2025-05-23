@@ -39,7 +39,7 @@ struct Bar: Codable, Identifiable, Hashable {
         // Try to get from cache
         if var cached = await BarHoursCache.shared.get(for: id) {
             guard let open = cached.openTime,
-                    let close = cached.closeTime else { return nil }
+                  let close = cached.closeTime else { return nil }
             
             // Get last cached status and check if it needs to be updated
             let previousClosedStatus = cached.isClosed
@@ -55,49 +55,59 @@ struct Bar: Codable, Identifiable, Hashable {
             do {
                 try await BarNetworkManager.shared.patchBarHours(id: cached.id)
                 await BarHoursCache.shared.set(value: cached, forKey: cached.id)
-            } catch BarHoursError.doesNotExist(error: let error) {
-                print("patchHours error: \(error)")
-                return nil
-            } catch APIError.noToken {
-                print("patchHours error: No token. Please log in.")
-                return nil
-            } catch APIError.badRequest {
-                print("patchHours error: Bad request")
-                return nil
             } catch {
-                print("Pathing hours failed with error - \(error.localizedDescription)")
+                switch error {
+                case BarHoursError.doesNotExist(error: let error):
+                    print("patchHours error: \(error)")
+                case APIError.noToken:
+                    print("patchHours error: No token. Please log in.")
+                case APIError.badRequest:
+                    print("patchHours error: Bad request")
+                case APIError.badURL:
+                    print("patchHours error: URL is not valid.")
+                default:
+                    print("Pathing hours failed with error - \(error.localizedDescription)")
+                    return nil
+                }
+                return "\(isCurrentlyClosed ? "Closed" : "Open"): \(open) - \(close)"
             }
-            return "\(isCurrentlyClosed ? "Closed" : "Open"): \(open) - \(close)"
         }
         // Fetch all hours if not in cache
         do {
             let allHours = try await BarNetworkManager.shared.fetchAllBarHours()
             guard var hours = allHours.first(where: { $0.bar == id }) else { return nil }
+            
             // Cache all fetched hours
             for h in allHours {
                 await BarHoursCache.shared.set(value: h, forKey: h.id)
             }
+            
             guard let open = hours.openTime,
                     let close = hours.closeTime else { return nil }
             let closed = isClosed(open, close)
             hours.isClosed = closed
+            
             // Patch hours and update cache
             do {
                 try await BarNetworkManager.shared.patchBarHours(id: hours.id)
                 await BarHoursCache.shared.set(value: hours, forKey: hours.id)
-            } catch BarHoursError.doesNotExist(error: let error) {
-                print("patchHours error: \(error)")
-                return nil
-            } catch APIError.noToken {
-                print("patchHours error: No token. Please log in.")
-                return nil
-            } catch APIError.badRequest {
-                print("patchHours error: Bad request")
-                return nil
             } catch {
-                print("Pathing hours failed with error - \(error.localizedDescription)")
+                switch error {
+                case BarHoursError.doesNotExist(error: let error):
+                    print("patchHours error: \(error)")
+                case APIError.noToken:
+                    print("patchHours error: No token. Please log in.")
+                case APIError.badRequest:
+                    print("patchHours error: Bad request")
+                case APIError.badURL:
+                    print("patchHours error: URL is not valid.")
+                default:
+                    print("Pathing hours failed with error - \(error.localizedDescription)")
+                }
+                return nil
             }
             return "\(closed ? "Closed" : "Open"): \(open) - \(close)"
+            
         } catch APIError.badRequest {
             print("Could not fetch hours")
         } catch APIError.noToken {

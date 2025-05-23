@@ -14,12 +14,12 @@ struct BarCard: View {
     @Environment(\.colorScheme) var colorScheme
     @State private var showingSwipe = false
     
-    private var waitTime: String {
-        viewModel.statuses.first(where: { $0.bar == bar.id })?.waitTime ?? "-"
+    private var waitTime: String? {
+        viewModel.statuses.first(where: { $0.bar == bar.id })?.waitTime
     }
-    private var crowdSize: String {
-        viewModel.statuses.first(where: { $0.bar == bar.id })?.crowdSize ?? "-"
-    }
+//    private var crowdSize: String {
+//        viewModel.statuses.first(where: { $0.bar == bar.id })?.crowdSize ?? "-"
+//    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -33,7 +33,7 @@ struct BarCard: View {
                 Trending(barName: bar.name)
             }
             // Open Hours
-            Text(hours ?? "Hours not available")
+            Text(hours ?? "Hours unavailable")
                 .foregroundColor(colorScheme == .dark ? .nude : Color("DarkPurple"))
             // Image placeholder
             if let barImageURL = bar.images?.first?.image {
@@ -69,14 +69,32 @@ struct BarCard: View {
                         .foregroundColor(.white)
                         .font(.system(size: 20))
                     
-                    Text("Current wait time: ")
-                        .foregroundColor(.white)
-                        .font(.system(size: 18))
-                    
-                    Text("20 - 30 min")
-                        .foregroundColor(.white)
-                        .font(.system(size: 18, weight: .bold))
-                        .padding(.trailing)
+                    // Current wait time
+                    if let waitTime = waitTime {
+                        Text("Current wait time: ")
+                            .foregroundColor(.white)
+                            .font(.system(size: 18))
+                        
+                        Text(waitTime)
+                            .foregroundColor(.white)
+                            .font(.system(size: 18, weight: .bold))
+                            .padding(.trailing)
+                    }
+                    // Display "Closed" if bar is closed
+                    else if (hours?.contains("Closed") ?? false) {
+                        Text("Closed")
+                            .foregroundColor(.white)
+                            .font(.system(size: 18).bold())
+                            .padding(.trailing)
+                    }
+                    // Display "Wait time unavailable" if no wait time is available
+                    // Most likely API error if this happens
+                    else {
+                        Text("Wait time unavailable")
+                            .foregroundColor(.white)
+                            .font(.system(size: 18).bold())
+                            .padding(.trailing)
+                    }
                 }
                 .padding(.leading)
             }

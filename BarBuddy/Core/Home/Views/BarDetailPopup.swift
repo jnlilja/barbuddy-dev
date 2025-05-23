@@ -25,11 +25,11 @@ struct BarDetailPopup: View {
     }
     var body: some View {
         if waitButtonProperties.showMenu && !waitButtonProperties.didSubmit {
-            VoteBoxView(properties: $waitButtonProperties, bar: $bar)
+            VoteSelectionView(properties: $waitButtonProperties, bar: $bar)
                 .transition(.scale)
             
         } else {
-            NavigationView {
+            NavigationStack {
                 VStack(spacing: 25) {
                     Spacer()
                     // MARK: — Header
@@ -53,7 +53,7 @@ struct BarDetailPopup: View {
                     //                    InfoBubble(icon: "dollarsign.circle", text: bar.averagePrice ?? "-")
                     //                }
                     // MARK: — Wait time & crowd voting
-                    HStack(spacing: 30) {
+                    //HStack(spacing: 30) {
                         // Wait‑time section
                         VStack(spacing: 10) {
                             if !waitButtonProperties.didSubmit {
@@ -73,7 +73,7 @@ struct BarDetailPopup: View {
                                         .cornerRadius(15)
                                         .shadow(radius: 10)
                                     
-                                    if (hours?.contains("Closed")) != nil {
+                                    if hours?.contains("Closed") != nil {
                                         Text("Closed")
                                     } else {
                                         Text(waitTime)
@@ -100,7 +100,6 @@ struct BarDetailPopup: View {
                                             .opacity(0.5)
                                             .cornerRadius(15)
                                             .shadow(radius: 20)
-                                        
                                         
                                         HStack {
                                             Text("Vote wait time!")
@@ -175,7 +174,7 @@ struct BarDetailPopup: View {
                         //                        }
                         //                        .transition(.scale)
                         //                    }
-                    }
+                    //}
                     Spacer()
                     
                     // MARK: — Swipe Navigation

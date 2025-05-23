@@ -31,7 +31,7 @@ struct VoteBoxButtonView: View {
                     .font(.headline)
                     .fontDesign(.rounded)
                     .fontWeight(.semibold)
-                    .foregroundColor(.darkBlue)
+                    .foregroundColor(selectedOption == text ? .darkPurple : .darkBlue)
             }
             .padding(.vertical, 5)
         }

@@ -42,13 +42,3 @@ struct VoteConfirmedView: View {
 #Preview {
     VoteConfirmedView()
 }
-
-// The Minimum Viable TextRenderer
-
-struct AppearanceEffectRenderer: TextRenderer {
-    func draw(layout: Text.Layout, in context: inout GraphicsContext) {
-        for line in layout {
-            context.draw(line)
-        }
-    }
-}
