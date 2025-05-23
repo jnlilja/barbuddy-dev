@@ -37,7 +37,7 @@ struct BarDetailPopup: View {
                         Text(bar.name)
                             .font(.system(size: 40, weight: .bold))
                             .foregroundColor(Color("DarkPurple"))
-                            .multilineTextAlignment(.center)
+                            .multilineTextAlignment(.leading)
                             .lineLimit(2)
                             .minimumScaleFactor(0.5)
                     }
