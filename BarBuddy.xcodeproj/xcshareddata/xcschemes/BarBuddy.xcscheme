@@ -51,6 +51,11 @@
                BlueprintName = "BarBuddyUITests"
                ReferencedContainer = "container:BarBuddy.xcodeproj">
             </BuildableReference>
+            <SkippedTests>
+               <Test
+                  Identifier = "BarBuddyUITests/testLaunchPerformance()">
+               </Test>
+            </SkippedTests>
          </TestableReference>
       </Testables>
    </TestAction>

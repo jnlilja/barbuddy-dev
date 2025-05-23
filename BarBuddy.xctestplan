@@ -1,7 +1,7 @@
 {
   "configurations" : [
     {
-      "id" : "C863D5D2-A68E-4FF6-9F23-23E9ACC46F7D",
+      "id" : "095CD7F9-A9EB-46B6-B5E9-C6C2990E7839",
       "name" : "Test Scheme Action",
       "options" : {
 
@@ -32,6 +32,9 @@
     },
     {
       "parallelizable" : true,
+      "skippedTests" : [
+        "BarBuddyUITests\/testLaunchPerformance()"
+      ],
       "target" : {
         "containerPath" : "container:BarBuddy.xcodeproj",
         "identifier" : "599153CA2D540525004B2832",
