@@ -167,8 +167,8 @@ class BarVote(models.Model):
 
     def clean(self):
         super().clean()
-        if self.wait_time  not in dict(self.WAIT_TIME_CHOICES):
-            raise ValidationError({'wait_time':  'Invalid wait time.'})
+        if self.wait_time not in dict(self.WAIT_TIME_CHOICES):
+            raise ValidationError({'wait_time': 'Invalid wait time.'})
 
     def save(self, *args, **kwargs):
         self.clean()
@@ -182,7 +182,7 @@ class BarCrowdSize(models.Model):
 
     bar = models.ForeignKey(Bar, on_delete=models.CASCADE, related_name='crowd_size_votes')
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='crowd_size_votes')
-    crowd_size= models.CharField(max_length=50, choices=CROWD_CHOICES)
+    crowd_size = models.CharField(max_length=50, choices=CROWD_CHOICES)
     timestamp = models.DateTimeField(auto_now_add=True)
 
     class Meta:
