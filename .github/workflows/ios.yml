@@ -64,7 +64,7 @@ jobs:
 
           # Find any available iPhone simulator
           available_simulators=$(xcrun simctl list devices available)
-          device=$(echo "$available_simulators" | grep -E "iPhone" | grep -v unavailable | grep -v "unavailable" | head -1 | sed -E 's/^[[:space:]]*([^(]+).*/\1/' | xargs)
+          device=$(echo "$available_simulators" | grep -E "^    iPhone 16 " | grep -v unavailable | head -1 | sed -E 's/^[[:space:]]*([^(]+).*/\1/' | xargs)
 
           if [ -z "$device" ]; then
             echo "Error: No iPhone simulator found in available devices"
