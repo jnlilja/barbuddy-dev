@@ -48,10 +48,14 @@ jobs:
           scheme_list=$(xcodebuild -list -json -${filetype_parameter} "${file_to_build}" | tr -d "\n")
           default_scheme=$(echo $scheme_list | ruby -e "require 'json'; puts JSON.parse(STDIN.gets)['project']['targets'][0]")
           
-          # Find available simulator
-          device=$(xcrun simctl list devices available | grep -E "iPhone (15|16)" | head -1 | sed -E 's/.*iPhone ([0-9]+).*/iPhone \1/')
+          # Find available iPhone simulator (excluding iPads)
+          device=$(xcrun simctl list devices available | grep -E "iPhone (15|16)" | grep -v "iPad" | head -1 | sed -E 's/^[[:space:]]*([^(]+).*/\1/' | xargs)
           if [ -z "$device" ]; then
-            device="iPhone 15"  # Fallback
+            # Fallback to any available iPhone
+            device=$(xcrun simctl list devices available | grep "iPhone" | grep -v "iPad" | head -1 | sed -E 's/^[[:space:]]*([^(]+).*/\1/' | xargs)
+          fi
+          if [ -z "$device" ]; then
+            device="iPhone 16"  # Final fallback
           fi
           
           echo "file_to_build=${file_to_build}" >> $GITHUB_OUTPUT
