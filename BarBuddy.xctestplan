@@ -29,15 +29,6 @@
         "identifier" : "599153C02D540525004B2832",
         "name" : "BarBuddyTests"
       }
-    },
-    {
-      "enabled" : false,
-      "parallelizable" : true,
-      "target" : {
-        "containerPath" : "container:BarBuddy.xcodeproj",
-        "identifier" : "599153CA2D540525004B2832",
-        "name" : "BarBuddyUITests"
-      }
     }
   ],
   "version" : 1
