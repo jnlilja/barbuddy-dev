@@ -1,0 +1,128 @@
+name: BarBuddy iOS Build and Test
+
+on:
+  push:
+    paths-ignore:
+      - 'README.md'
+      - 'backend/**'
+      - 'frontend/**'
+      - '.gitignore'
+      - 'docs/**'
+    branches: [ "main", "develop" ]
+  pull_request:
+    branches: [ "main", "develop" ]
+
+jobs:
+  build-and-test:
+    name: iOS Build and Test
+    runs-on: macos-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        
+      - name: Setup Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: '16.2' # As per original, assuming this version supports iPhone 16
+          
+      - name: Verify Xcode Version
+        run: xcodebuild -version
+        
+      - name: Determine Build Configuration
+        id: config
+        run: |
+          # Find project/workspace file
+          if [ -n "$(find . -name "*.xcworkspace" -maxdepth 1)" ]; then
+            file_to_build=$(find . -name "*.xcworkspace" -maxdepth 1 | head -1)
+            filetype_parameter="workspace"
+          elif [ -n "$(find . -name "*.xcodeproj" -maxdepth 1)" ]; then
+            file_to_build=$(find . -name "*.xcodeproj" -maxdepth 1 | head -1)
+            filetype_parameter="project"
+          else
+            echo "Error: No .xcworkspace or .xcodeproj found"
+            exit 1
+          fi
+          
+          # Get default scheme
+          # Note: Using ruby to parse JSON. Ensure ruby is available or use another JSON parser like jq.
+          # GitHub macOS runners typically have Ruby.
+          scheme_list_json=$(xcodebuild -list -json -${filetype_parameter} "${file_to_build}" | tr -d "\n" || echo "{}")
+          default_scheme=$(echo "$scheme_list_json" | ruby -e "require 'json'; parsed = JSON.parse(STDIN.gets); puts parsed['project']['targets'][0] rescue puts parsed['workspace']['schemes'][0] rescue ''")
+
+          if [ -z "$default_scheme" ]; then
+            echo "Error: Could not determine default scheme."
+            # Attempt to list schemes directly if the above failed
+            echo "Available schemes:"
+            xcodebuild -list -${filetype_parameter} "${file_to_build}"
+            # Fallback: Try to extract the first scheme from the non-JSON list output
+            default_scheme=$(xcodebuild -list -${filetype_parameter} "${file_to_build}" | grep -A1 "Schemes:" | tail -n +2 | head -1 | xargs || '')
+            if [ -z "$default_scheme" ]; then
+                echo "Error: Still could not determine default scheme. Please check project configuration."
+                exit 1
+            else
+                echo "Fallback: Using first listed scheme: $default_scheme"
+            fi
+          fi
+          
+          # Determine the target iPhone 16 device
+          # Look for any device name starting with "iPhone 16" that is listed as available.
+          # This will match "iPhone 16", "iPhone 16 Pro", "iPhone 16 Pro Max", etc.
+          # Exclude iPads, though "iPhone 16" shouldn't match iPad anyway.
+          available_iphone_16_line=$(xcrun simctl list devices available | grep "iPhone 16" | grep -v "iPad" | head -1)
+          
+          if [ -n "$available_iphone_16_line" ]; then
+            # Extract the full name of the available iPhone 16 simulator (e.g., "iPhone 16 Pro")
+            device=$(echo "$available_iphone_16_line" | sed -E 's/^[[:space:]]*([^(]+).*/\1/' | xargs)
+            echo "Found available iPhone 16 series simulator: $device"
+          else
+            # If no iPhone 16 series simulator is listed as 'available',
+            # we will default to the name "iPhone 16".
+            # xcodebuild will attempt to use/create a simulator with this name.
+            echo "No iPhone 16 series simulator found in 'available' list. Defaulting to target 'iPhone 16'."
+            device="iPhone 16"
+          fi
+
+          # Final check to ensure device is set (should be redundant with the logic above)
+          if [ -z "$device" ]; then
+            echo "Warning: Device variable was unexpectedly empty after checks. Forcing to 'iPhone 16'."
+            device="iPhone 16"
+          fi
+          
+          echo "file_to_build=${file_to_build}" >> $GITHUB_OUTPUT
+          echo "filetype_parameter=${filetype_parameter}" >> $GITHUB_OUTPUT
+          echo "scheme=${default_scheme}" >> $GITHUB_OUTPUT
+          echo "device=${device}" >> $GITHUB_OUTPUT
+          
+          echo "Using:"
+          echo "  File: ${file_to_build}"
+          echo "  Type: ${filetype_parameter}"
+          echo "  Scheme: ${default_scheme}"
+          echo "  Device: ${device}"
+          
+      - name: Build for Testing
+        run: |
+          xcodebuild build-for-testing \
+            -scheme "${{ steps.config.outputs.scheme }}" \
+            -${{ steps.config.outputs.filetype_parameter }} "${{ steps.config.outputs.file_to_build }}" \
+            -destination "platform=iOS Simulator,name=${{ steps.config.outputs.device }}" \
+            -configuration Debug \
+            CODE_SIGNING_ALLOWED=NO
+            
+      - name: Run Tests
+        run: |
+          xcodebuild test-without-building \
+            -scheme "${{ steps.config.outputs.scheme }}" \
+            -${{ steps.config.outputs.filetype_parameter }} "${{ steps.config.outputs.file_to_build }}" \
+            -destination "platform=iOS Simulator,name=${{ steps.config.outputs.device }}" \
+            -configuration Debug \
+            CODE_SIGNING_ALLOWED=NO
+            
+      - name: Upload Test Results
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: test-results
+          path: |
+            ~/Library/Logs/DiagnosticReports/
+            DerivedData/Logs/Test/
