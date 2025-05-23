@@ -167,7 +167,15 @@ extension Bar {
         id: 1,
         name: "Example Bar",
         address: "123 Main St, Anytown, USA",
+        averagePrice: nil,
         latitude: 37.7749,
         longitude: -122.4194,
+        location: nil,
+        usersAtBar: nil,
+        currentStatus: nil,
+        averageRating: nil,
+        images: nil,
+        currentUserCount: nil,
+        activityLevel: nil
     )
 }
