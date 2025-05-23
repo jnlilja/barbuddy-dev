@@ -10,54 +10,49 @@
 import SwiftUI
 
 struct HomeView: View {
-    @State private var selectedTab = 2
-    @StateObject private var viewModel = MapViewModel()
+    @State private var selectedTab = 0
 
     var body: some View {
         TabView(selection: $selectedTab) {
-            SwipeView()
-                .tabItem {
-                    Image(systemName: "person.2.fill")
-                    Text("Swipe")
-                }
-                .tag(0)
+            // Coming in a future update
+//            SwipeView()
+//                .tabItem {
+//                    Image(systemName: "person.2.fill")
+//                    Text("Swipe")
+//                }
+//                .tag(0)
+//
+//            MessagesView()
+//                .tabItem {
+//                    Image(systemName: "message.fill")
+//                    Text("Messages")
+//                }
+//                .tag(1)
 
-            MessagesView()
-                .tabItem {
-                    Image(systemName: "message.fill")
-                    Text("Messages")
-                }
-                .tag(1)
-
-            MainFeedView()
-                .tabItem {
-                    Image(systemName: "map.fill")
-                    Text("Map")
-                }
-                .tag(2)
-                .environmentObject(viewModel)
-
-            ProfileView()
-                .tabItem {
-                    Image(systemName: "person.circle")
-                    Text("Profile")
-                }
-                .tag(4)
+            Group {
+                MainFeedView()
+                    .tabItem {
+                        Image(systemName: "map.fill")
+                        Text("Map")
+                    }
+                    .tag(0)
+                
+                ProfileView()
+                    .tabItem {
+                        Image(systemName: "person.circle")
+                        Text("Profile")
+                    }
+                    .tag(1)
+            }
+            .toolbar(.visible, for: .tabBar)
+            .toolbarBackground(.darkBlue, for: .tabBar)
         }
         .accentColor(Color("Salmon"))
-        .onAppear {
-            // Set tab bar appearance to white with slight transparency
-            let appearance = UITabBarAppearance()
-            appearance.configureWithTransparentBackground()
-            appearance.backgroundColor = UIColor.white.withAlphaComponent(0.95)
-            UITabBar.appearance().standardAppearance = appearance
-            UITabBar.appearance().scrollEdgeAppearance = appearance
-        }
     }
 }
 
-#Preview("Home Tab Bar") {
+#Preview("Home View") {
     HomeView()
         .environmentObject(SessionManager())
-        .environmentObject(MapViewModel())
+        .environment(MapViewModel())
 }

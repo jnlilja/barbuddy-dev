@@ -82,9 +82,84 @@ class BarViewSet(viewsets.ModelViewSet):
 class BarStatusViewSet(viewsets.ModelViewSet):
     """
     ViewSet for managing bar status updates.
+    Returns aggregated wait time and crowd size votes for each bar.
     """
     queryset = BarStatus.objects.all()
     serializer_class = BarStatusSerializer
+
+    def get_queryset(self):
+        queryset = BarStatus.objects.all()
+        bar_id = self.request.query_params.get('bar')
+        if bar_id:
+            queryset = queryset.filter(bar__id=bar_id)
+        return queryset
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        
+        # Get the aggregated data for each bar
+        response_data = []
+        for status in queryset:
+            bar = status.bar
+            wait_time_votes = bar.wait_time_votes.all()
+            crowd_size_votes = bar.crowd_size_votes.all()
+            
+            # Calculate most common wait time
+            wait_time_counts = {}
+            for vote in wait_time_votes:
+                wait_time_counts[vote.wait_time] = wait_time_counts.get(vote.wait_time, 0) + 1
+            most_common_wait_time = max(wait_time_counts.items(), key=lambda x: x[1])[0] if wait_time_counts else None
+            
+            # Calculate most common crowd size
+            crowd_size_counts = {}
+            for vote in crowd_size_votes:
+                crowd_size_counts[vote.crowd_size] = crowd_size_counts.get(vote.crowd_size, 0) + 1
+            most_common_crowd_size = max(crowd_size_counts.items(), key=lambda x: x[1])[0] if crowd_size_counts else None
+            
+            status_data = serializer.data[queryset.index(status)]
+            status_data.update({
+                'bar_id': bar.id,
+                'aggregated_wait_time': most_common_wait_time,
+                'aggregated_crowd_size': most_common_crowd_size,
+                'wait_time_vote_count': len(wait_time_votes),
+                'crowd_size_vote_count': len(crowd_size_votes)
+            })
+            response_data.append(status_data)
+        
+        return Response(response_data)
+
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        
+        # Get the aggregated data for this specific bar
+        bar = instance.bar
+        wait_time_votes = bar.wait_time_votes.all()
+        crowd_size_votes = bar.crowd_size_votes.all()
+        
+        # Calculate most common wait time
+        wait_time_counts = {}
+        for vote in wait_time_votes:
+            wait_time_counts[vote.wait_time] = wait_time_counts.get(vote.wait_time, 0) + 1
+        most_common_wait_time = max(wait_time_counts.items(), key=lambda x: x[1])[0] if wait_time_counts else None
+        
+        # Calculate most common crowd size
+        crowd_size_counts = {}
+        for vote in crowd_size_votes:
+            crowd_size_counts[vote.crowd_size] = crowd_size_counts.get(vote.crowd_size, 0) + 1
+        most_common_crowd_size = max(crowd_size_counts.items(), key=lambda x: x[1])[0] if crowd_size_counts else None
+        
+        response_data = serializer.data
+        response_data.update({
+            'bar_id': bar.id,
+            'aggregated_wait_time': most_common_wait_time,
+            'aggregated_crowd_size': most_common_crowd_size,
+            'wait_time_vote_count': len(wait_time_votes),
+            'crowd_size_vote_count': len(crowd_size_votes)
+        })
+        
+        return Response(response_data)
 
 
 class BarRatingViewSet(viewsets.ModelViewSet):
@@ -104,6 +179,7 @@ class BarRatingViewSet(viewsets.ModelViewSet):
 class BarVoteViewSet(viewsets.ModelViewSet):
     """
     ViewSet for submitting votes on wait time.
+    Enforces one vote per user per 24h window.
     """
     serializer_class = BarVoteSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -169,9 +245,49 @@ class BarCrowdSizeViewSet(viewsets.ModelViewSet):
         if recent:
             raise serializers.ValidationError(
                 "You can only vote once every 24 hours for this bar's crowd size."
+                "You can only vote once every 24 hours for this bar's wait time."
             )
         serializer.save(user=self.request.user)
 
+class BarCrowdSizeViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for submitting votes on crowd size.
+    Enforces one vote per user per 24h window.
+    """
+    serializer_class = BarCrowdSizeSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        qs = BarCrowdSize.objects.all()
+        bar_id = self.request.query_params.get('bar')
+        if bar_id:
+            qs = qs.filter(bar__id=bar_id)
+        return qs
+
+    @action(detail=False, methods=['get'], url_path='summary')
+    def vote_summary(self, request):
+        bar_id = request.query_params.get("bar")
+        if not bar_id:
+            return Response({"error": "Bar ID is required."}, status=400)
+        summary = aggregate_bar_votes(bar_id)
+        return Response({
+            "bar": bar_id,
+            "aggregated_crowd_size": summary["crowd_size"],
+        })
+
+    def perform_create(self, serializer):
+        # prevent re-vote within 24h
+        cutoff = timezone.now() - timedelta(hours=24)
+        recent = BarCrowdSize.objects.filter(
+            bar=serializer.validated_data['bar'],
+            user=self.request.user,
+            timestamp__gte=cutoff
+        ).first()
+        if recent:
+            raise serializers.ValidationError(
+                "You can only vote once every 24 hours for this bar's crowd size."
+            )
+        serializer.save(user=self.request.user)
 
 class BarImageViewSet(viewsets.ModelViewSet):
     """

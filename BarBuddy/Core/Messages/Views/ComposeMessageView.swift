@@ -3,7 +3,7 @@ import FirebaseAuth
 
 struct ComposeMessageView: View {
     @State private var messageText: String = ""
-    @State private var numericRecipientID: String = ""
+    @State private var recipientUsername: String = ""
     @FocusState private var isInputFocused: Bool
     @StateObject private var messaging = MessagingService.shared
 
@@ -25,9 +25,10 @@ struct ComposeMessageView: View {
                             .foregroundColor(.darkBlue)
                             .font(.headline)
 
-                        TextField("User ID", text: $numericRecipientID)
+                        TextField("Username", text: $recipientUsername)
                             .frame(width: 300)
-                            .keyboardType(.numberPad)
+                            .autocorrectionDisabled()
+                            .textInputAutocapitalization(.never)
                     }
                     .padding(.horizontal)
                 }
@@ -59,7 +60,7 @@ struct ComposeMessageView: View {
 
     private func sendMessage() {
         let trimmedText = messageText.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard let rid = Int(numericRecipientID.trimmingCharacters(in: .whitespacesAndNewlines)),
+        guard let rid = Int(recipientUsername.trimmingCharacters(in: .whitespacesAndNewlines)),
               !trimmedText.isEmpty else {
             return
         }

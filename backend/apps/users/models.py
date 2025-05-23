@@ -10,7 +10,11 @@ class User(AbstractUser):
     hometown = models.CharField(max_length=255, blank=True)
     job_or_university = models.CharField(max_length=255, blank=True)
     favorite_drink = models.CharField(max_length=100, blank=True)
+
+
     location = gis.PointField(geography=True, srid=4326, null=True, blank=True)
+    location_updated_at = models.DateTimeField(null=True, blank=True)
+
     vote_weight = models.IntegerField(default=1)
     friends = models.ManyToManyField('self', symmetrical=True, blank=True)
 
@@ -51,8 +55,15 @@ class User(AbstractUser):
             if age < 18 or age > 120:
                 raise ValidationError({'date_of_birth': 'User must be between 18 and 120 years old.'})
 
-        if self.pk is None or User.objects.filter(email=self.email).exclude(pk=self.pk).exists():
-            raise ValidationError({'email': 'This email is already in use.'})
+        # Only check email uniqueness if this is a new user (no pk) 
+        # or if the email has changed for an existing user
+        if not hasattr(self, '_skip_email_validation') and self.email:
+            if self.pk is None:  # New user
+                if User.objects.filter(email=self.email).exists():
+                    raise ValidationError({'email': 'This email is already in use.'})
+            else:  # Existing user
+                if User.objects.exclude(pk=self.pk).filter(email=self.email).exists():
+                    raise ValidationError({'email': 'This email is already in use.'})
 
         if User.objects.filter(username=self.username).exclude(pk=self.pk).exists():
             raise ValidationError({'username': 'This username is already taken.'})
@@ -64,6 +75,18 @@ class User(AbstractUser):
         return today.year - self.date_of_birth.year - (
             (today.month, today.day) < (self.date_of_birth.month, self.date_of_birth.day)
         )
+    def update_location(self, latitude, longitude):
+        """Update user's current location with timestamps"""
+        from django.contrib.gis.geos import Point
+        from django.utils import timezone
+        
+        self.location = Point(longitude, latitude, srid=4326)
+        self.location_updated_at = timezone.now()
+        self.save(update_fields=['location', 'location_updated_at'])
+        # now update bar memberships:
+        from apps.bars.services.proximity import update_bars_for_user
+        update_bars_for_user(self)
+
 
     class Meta:
         indexes = [
@@ -72,7 +95,17 @@ class User(AbstractUser):
         ]
 
     def save(self, *args, **kwargs):
-        # Remove self.clean() to avoid re-validation during every save
+        # Extract and remove skip_validation from kwargs if present
+        skip_validation = kwargs.pop('skip_validation', False)
+        
+        # Skip validation when only updating specific fields (like last_login)
+        if 'update_fields' in kwargs and kwargs['update_fields'] and all(field in ['last_login'] for field in kwargs['update_fields']):
+            skip_validation = True
+        
+        # Remove self.clean() call when skip_validation is True
+        if not skip_validation:
+            self.clean()
+            
         account_weights = {
             'regular': 1,
             'trusted': 2,
@@ -97,9 +130,9 @@ class FriendRequest(models.Model):
         return f"{self.from_user} -> {self.to_user} [{self.status}]"
 
 
-from django.contrib.auth import get_user_model
+# from django.contrib.auth import get_user_model
 
-User = get_user_model()
+# User = get_user_model()
 
 from django.db import transaction
 

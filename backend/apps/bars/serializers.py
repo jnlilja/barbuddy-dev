@@ -129,12 +129,14 @@ class BarVoteSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("A bar must be specified.")
         return data
 
+
 class BarCrowdSizeSerializer(serializers.ModelSerializer):
     user = serializers.HiddenField(default=serializers.CurrentUserDefault())
 
     class Meta:
         model = BarCrowdSize
-        fields = ['id', 'bar', 'user', 'crowd_size' ]
+        fields = ['id', 'bar', 'user', 'crowd_size', 'timestamp']
+        read_only_fields = ['timestamp']
 
     def validate(self, data):
         if data.get('bar') is None:

@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/5.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
-
+import logging
 from pathlib import Path
 import environ, os, sys, pusher, platform
 from google.oauth2 import service_account
@@ -178,6 +178,29 @@ USE_I18N = True
 
 USE_TZ = True
 
+
+
+class SensitiveDataFilter(logging.Filter):
+    def filter(self, record):
+        # Check if the message contains 'Authorization' header
+        if isinstance(record.msg, str) and 'Authorization' in record.msg:
+            try:
+                # Find the bearer token and replace it
+                bearer_pos = record.msg.find('Bearer ')
+                if bearer_pos >= 0:
+                    # Get everything before 'Bearer ' + 'Bearer ' + '[REDACTED]'
+                    record.msg = record.msg[:bearer_pos + 7] + '[REDACTED]'
+            except Exception:
+                # If any error occurs during redaction, just redact the whole string
+                record.msg = str(record.msg).replace('Bearer ', 'Bearer [REDACTED]')
+        
+        # Add filters for other sensitive data
+        for sensitive_term in ['password', 'secret', 'key', 'token', 'credential']:
+            if isinstance(record.msg, str) and sensitive_term in record.msg.lower():
+                record.msg = f"Contains {sensitive_term} [REDACTED]"
+        
+        return True
+    
 # Logging configuration
 LOGGING = {
     'version': 1,
@@ -188,10 +211,17 @@ LOGGING = {
             'style': '{',
         },
     },
+    'filters': {
+        'sensitive_data': {
+            '()': 'barbuddy_api.settings.SensitiveDataFilter',
+        },
+    },
     'handlers': {
         'console': {
+            'level': 'INFO',
             'class': 'logging.StreamHandler',
             'formatter': 'verbose',
+            'filters': ['sensitive_data'],
         },
     },
     'root': {
@@ -204,9 +234,19 @@ LOGGING = {
             'level': 'DEBUG',
             'propagate': False,
         },
+        'django': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'filters': ['sensitive_data'],
+        },
+        'django.request': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+            'filters': ['sensitive_data'],
+        },
     },
 }
-
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/

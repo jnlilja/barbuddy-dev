@@ -32,3 +32,9 @@ struct InfoTag: View {
         .cornerRadius(15)
     }
 }
+
+#Preview {
+    InfoTag(icon: "star", text: "Sample Text")
+        .padding()
+        
+}

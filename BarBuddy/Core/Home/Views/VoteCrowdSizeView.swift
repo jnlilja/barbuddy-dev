@@ -9,6 +9,7 @@ import SwiftUI
 
 struct VoteCrowdSizeView: View {
     @Binding var buttonProperties: ButtonProperties
+    @Binding var bar: Bar
     
     var body: some View {
         ZStack {
@@ -28,17 +29,17 @@ struct VoteCrowdSizeView: View {
                     .bold()
                     .foregroundStyle(.darkBlue)
                 
-                VoteButtonView(text: "🫥 Empty", opacity: 0.06, properties: $buttonProperties)
-                VoteButtonView(text: "🫤 Low", opacity: 0.1, properties: $buttonProperties)
-                VoteButtonView(text: "🙂 Moderate", opacity: 0.2, properties: $buttonProperties)
-                VoteButtonView(text: "✨ Busy", opacity: 0.3, properties: $buttonProperties)
-                VoteButtonView(text: "🎉 Crowded", opacity: 0.4, properties: $buttonProperties)
-                VoteButtonView(text: "🔥 Packed", opacity: 0.5, properties: $buttonProperties)
+                VoteButtonView(text: "🫥 Empty", opacity: 0.06, properties: $buttonProperties, bar: $bar)
+                VoteButtonView(text: "🫤 Low", opacity: 0.1, properties: $buttonProperties, bar: $bar)
+                VoteButtonView(text: "🙂 Moderate", opacity: 0.2, properties: $buttonProperties, bar: $bar)
+                VoteButtonView(text: "✨ Busy", opacity: 0.3, properties: $buttonProperties, bar: $bar)
+                VoteButtonView(text: "🎉 Crowded", opacity: 0.4, properties: $buttonProperties, bar: $bar)
+                VoteButtonView(text: "🔥 Packed", opacity: 0.5, properties: $buttonProperties, bar: $bar)
             
                 Spacer()
             }
         }
-        .onChange(of: buttonProperties.selectedOption) { _, _ in
+        .onChange(of: buttonProperties.didSubmit) { _, _ in
             withAnimation {
                 buttonProperties.showMenu = false
             }
@@ -47,5 +48,5 @@ struct VoteCrowdSizeView: View {
 }
 
 #Preview {
-    VoteCrowdSizeView(buttonProperties: .constant(.init(selectedOption: false, showMenu: false, offset: 0, type: "crowd")))
+    VoteCrowdSizeView(buttonProperties: .constant(.init(didSubmit: false, showMenu: false, offset: 0, type: "crowd")), bar: .constant(Bar(name: "", address: "", latitude: 3, longitude: 3)))
 }

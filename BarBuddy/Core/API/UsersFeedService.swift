@@ -7,10 +7,12 @@
 
 import Foundation
 import FirebaseAuth
-import UIKit       // only for optional image helper
+import UIKit
+import CoreLocation
 
 // MARK: - Decodable model that matches the /users JSON
-struct UserProfile: Identifiable, Codable, Hashable {
+struct UserProfile: Identifiable, Codable, Hashable, Equatable {
+    
     let id: Int
     let username: String
     let first_name: String
@@ -19,18 +21,43 @@ struct UserProfile: Identifiable, Codable, Hashable {
     var hometown: String?
     var job_or_university: String?
     var favorite_drink: String?
-    var location: String?
+    var location: Location?
     var profile_pictures: [String] = []
     var date_of_birth: String?
     var sexual_preference: String?
-    // Convenience
+    
     var displayName: String { "\(first_name) \(last_name)".trimmingCharacters(in: .whitespaces) }
+    
+    var coordinate: CLLocationCoordinate2D? {
+        guard let location = location else { return nil }
+        return CLLocationCoordinate2D(latitude: location.latitude, longitude: location.longitude)
+    }
+    
+    var ageInYears: Int {
+        let fmt = DateFormatter(); fmt.dateFormat = "yyyy-MM-dd"
+        guard let date_of_birth = date_of_birth else { return 0 }
+        guard let dob = fmt.date(from: date_of_birth) else { return 0 }
+        return Calendar.current.dateComponents([.year], from: dob, to: Date()).year ?? 0
+    }
 
-    /// Returns the URL of the **first** picture in `profile_pictures`
     var profilePicURL: URL? {
         guard let first = profile_pictures.first else { return nil }
         return URL(string: first)
     }
+    
+    static func == (lhs: UserProfile, rhs: UserProfile) -> Bool {
+        lhs.id == rhs.id
+    }
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+    }
+    
+}
+
+struct Location: Codable {
+    var latitude: Double
+    var longitude: Double
 }
 
 enum UsersAPIError: Error, LocalizedError {
@@ -46,6 +73,9 @@ enum UsersAPIError: Error, LocalizedError {
         }
     }
 }
+
+
+//bar id
 
 // MARK: - Network Service
 @MainActor

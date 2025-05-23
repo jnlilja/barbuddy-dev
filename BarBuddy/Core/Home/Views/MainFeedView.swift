@@ -6,39 +6,61 @@
 import BottomSheet
 import MapKit
 import SwiftUI
+
 struct MainFeedView: View {
-    @EnvironmentObject var viewModel: MapViewModel
-    @State private var bottomSheetPosition: BottomSheetPosition = .relative(0.86)
-    @State private var selectedItem: UUID?
-    @State private var isDetailPresented = false
+    @Environment(MapViewModel.self) var viewModel
+    @State private var bottomSheetPosition: BottomSheetPosition = .relative(
+        0.86
+    )
     @State private var searchText = ""
     @Environment(\.colorScheme) var colorScheme
     let locationViewModel = LocationManager()
+    @State private var selectedBar: Bar?
+    
+    private var filteredBars: [Bar] {
+        viewModel.bars.filter {
+            searchText.isEmpty
+                || $0.name.localizedCaseInsensitiveContains(searchText)
+        }
+    }
+
     var body: some View {
         NavigationStack {
-            ZStack {
-                mapLayer
-                sheetLayer
-            }
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbarBackgroundVisibility(.hidden, for: .navigationBar)
-            .toolbar { toolbarContent }
+            mapLayer
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbarBackgroundVisibility(.hidden, for: .navigationBar)
+                .toolbar { toolbarContent }
+                .bottomSheet(
+                    bottomSheetPosition: $bottomSheetPosition,
+                    switchablePositions: [
+                        .relativeBottom(0.21), .relative(0.86), .relativeTop(1),
+                    ],
+                    headerContent: { headerView }
+                ) {
+                    contentList
+                }
+                .customBackground(.darkBlue.opacity(0.9))
+                .dragIndicatorColor(
+                    bottomSheetPosition == .relativeTop(1) ? .clear : .white
+                )
+                .enableAppleScrollBehavior()
+                .customAnimation(.snappy)
+                .ignoresSafeArea(.keyboard)
         }
-        .environmentObject(viewModel)
+        .environment(viewModel)
         .task { await viewModel.loadBarData() }
     }
     // MARK: — Map Layer
     private var mapLayer: some View {
-        Map(position: $viewModel.cameraPosition, selection: $selectedItem) {
+        @Bindable var mapVM = viewModel
+        return Map(position: $mapVM.cameraPosition, selection: $selectedBar) {
             ForEach(viewModel.bars) { bar in
-                Annotation(bar.name, coordinate: bar.location) {
+                Annotation(bar.name, coordinate: bar.coordinate) {
                     annotationView(for: bar)
                 }
+                .tag(bar)
             }
             UserAnnotation()
-        }
-        .onChange(of: selectedItem) { _, new in
-            isDetailPresented = new != nil
         }
         .mapControls {
             MapUserLocationButton()
@@ -47,12 +69,10 @@ struct MainFeedView: View {
         }
         .ignoresSafeArea(.keyboard)
         .onAppear { locationViewModel.startLocationServices() }
-        .sheet(isPresented: $isDetailPresented) {
-            if let bar = selectedBar {
-                BarDetailPopup(bar: bar)
-                    .environmentObject(viewModel)
-            }
-        }
+        .sheet(
+            item: $selectedBar,
+            content: { BarDetailPopup(bar: $0) }
+        )
         .tint(.salmon)
     }
     private func annotationView(for bar: Bar) -> some View {
@@ -74,37 +94,6 @@ struct MainFeedView: View {
                 .foregroundColor(.white)
         }
     }
-    private var selectedBar: Bar? {
-        guard let id = selectedItem else { return nil }
-        return viewModel.bars.first { $0.id == id }
-    }
-    // MARK: — Bottom Sheet Layer
-    private var sheetLayer: some View {
-        Map(position: .constant(.userLocation(fallback: .automatic)), selection: .constant(nil)) { }
-            .hidden()
-            .bottomSheet(
-                bottomSheetPosition: $bottomSheetPosition,
-                switchablePositions: [.relativeBottom(0.21), .relative(0.86), .relativeTop(1)],
-                headerContent: { headerView }
-            ) {
-                ScrollView {
-                    contentList
-                        .gesture(
-                            DragGesture().onChanged { value in
-                                // Allow drag gesture to dismiss the bottom sheet
-                                if value.translation.height > 0 {
-                                    bottomSheetPosition = .relativeBottom(0.21)
-                                }
-                            }
-                        )
-                }
-            }
-            .customBackground(.darkBlue.opacity(0.9))
-            .dragIndicatorColor(bottomSheetPosition == .relativeTop(1) ? .clear : .white)
-            .enableAppleScrollBehavior()
-            .customAnimation(.snappy)
-            .ignoresSafeArea(.keyboard)
-    }
     private var headerView: some View {
         SearchBar(searchText: $searchText)
             .padding([.horizontal, .bottom])
@@ -112,9 +101,11 @@ struct MainFeedView: View {
                 bottomSheetPosition = .relativeBottom(0.21)
                 Task { await viewModel.updateCameraPosition(bar: searchText) }
             }
-            .simultaneousGesture(TapGesture().onEnded {
-                bottomSheetPosition = .relative(0.86)
-            })
+            .simultaneousGesture(
+                TapGesture().onEnded {
+                    bottomSheetPosition = .relative(0.86)
+                }
+            )
     }
     private var contentList: some View {
         VStack {
@@ -129,10 +120,12 @@ struct MainFeedView: View {
                     .font(.title3)
             } else {
                 ForEach(filteredBars) { bar in
-                    NavigationLink(destination: BarDetailPopup(bar: bar)
-                                    .environmentObject(viewModel)) {
+                    NavigationLink(
+                        destination: BarDetailPopup(bar: bar)
+                            .environment(viewModel)
+                    ) {
                         BarCard(bar: bar)
-                            .environmentObject(viewModel)
+                            .environment(viewModel)
                             .padding([.horizontal, .bottom])
                     }
                     .buttonStyle(PlainButtonStyle())
@@ -142,27 +135,21 @@ struct MainFeedView: View {
             }
         }
     }
-    private var filteredBars: [Bar] {
-        viewModel.bars.filter {
-            searchText.isEmpty || $0.name.localizedCaseInsensitiveContains(searchText)
-        }
-    }
     // MARK: — Toolbar
     private var toolbarContent: some ToolbarContent {
         ToolbarItem(placement: .principal) {
             Text("Pacific Beach")
                 .font(.title).fontDesign(.rounded).fontWeight(.heavy)
                 .foregroundStyle(
-                    (colorScheme == .dark || bottomSheetPosition == .relativeTop(1))
+                    (colorScheme == .dark
+                        || bottomSheetPosition == .relativeTop(1))
                         ? .salmon : .darkBlue
                 )
                 .animation(.easeInOut, value: bottomSheetPosition)
         }
     }
 }
-struct MainFeedView_Previews: PreviewProvider {
-    static var previews: some View {
-        MainFeedView()
-            .environmentObject(MapViewModel())
-    }
+#Preview {
+    MainFeedView()
+        .environment(MapViewModel())
 }

@@ -122,28 +122,5 @@ final class MatchingService {
     }
 }
 
-// MARK: – Convenience extensions on UserProfile
 
-extension UserProfile {
-    /// Parses `location` as “lat,lon” → coordinate, if possible.
-    var coordinate: CLLocationCoordinate2D? {
-        guard let location = location else { return nil }
-        let parts = location
-            .split(separator: ",")
-            .map { $0.trimmingCharacters(in: .whitespaces) }
-        guard parts.count == 2,
-              let lat = Double(parts[0]),
-              let lon = Double(parts[1])
-        else { return nil }
-        return CLLocationCoordinate2D(latitude: lat, longitude: lon)
-    }
-
-    /// Your age in years, used for proximity sorting.
-    var ageInYears: Int {
-        let fmt = DateFormatter(); fmt.dateFormat = "yyyy-MM-dd"
-        guard let date_of_birth = date_of_birth else { return 0 }
-        guard let dob = fmt.date(from: date_of_birth) else { return 0 }
-        return Calendar.current.dateComponents([.year], from: dob, to: Date()).year ?? 0
-    }
-}
 

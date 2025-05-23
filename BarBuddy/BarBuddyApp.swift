@@ -11,15 +11,31 @@ import Firebase
 @main
 struct BarBuddyApp: App {
     @StateObject private var sessionManager = SessionManager()
-    @StateObject private var mapViewModel = MapViewModel()
+    @State private var mapViewModel = MapViewModel()
     @StateObject private var tabManager = TabManager()
     
     init() {
         let appearance = UITabBarAppearance()
+        FirebaseApp.configure()
         appearance.configureWithTransparentBackground()
-        appearance.backgroundColor = UIColor.white.withAlphaComponent(0.95)
+        appearance.backgroundColor = UIColor.darkBlue.withAlphaComponent(0.95)
         UITabBar.appearance().standardAppearance = appearance
         UITabBar.appearance().scrollEdgeAppearance = appearance
+        
+        let searchField = UISearchBar.appearance()
+        searchField.searchTextField.backgroundColor = UIColor.white.withAlphaComponent(0.15)
+        searchField.searchTextField.textColor = UIColor.white
+        searchField.searchTextField.attributedPlaceholder = NSAttributedString(
+            string: "Search bars...",
+            attributes: [NSAttributedString.Key.foregroundColor: UIColor.white.withAlphaComponent(0.7)]
+        )
+        searchField.searchTextField.leftView?.tintColor = UIColor.white.withAlphaComponent(0.7)
+        searchField.tintColor = UIColor.white
+        
+        // Style the cancel button
+        UIBarButtonItem.appearance(whenContainedInInstancesOf: [UISearchBar.self]).setTitleTextAttributes([
+            .foregroundColor: UIColor.white
+        ], for: .normal)
     }
 
     var body: some Scene {
@@ -54,7 +70,7 @@ struct BarBuddyApp: App {
                         .tag(4)
                 }
                 .accentColor(Color("Salmon"))
-                .environmentObject(mapViewModel)
+                .environment(mapViewModel)
                 .environmentObject(sessionManager)
             case .loggedOut:
                 LoginView()

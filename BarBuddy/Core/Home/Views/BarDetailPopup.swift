@@ -9,283 +9,285 @@ import SwiftUI
 
 struct BarDetailPopup: View {
     @Environment(\.dismiss) var dismiss
-    @EnvironmentObject var viewModel: MapViewModel
-    let bar: Bar
+    @Environment(MapViewModel.self) var viewModel
+    @State var bar: Bar
+    @State private var hours: String?
+
     @State private var waitButtonProperties = ButtonProperties(type: "wait")
     @State private var crowdButtonProperties = ButtonProperties(type: "crowd")
-    // Helper to find this bar’s index in the viewModel
-    private var idx: Int {
-        viewModel.bars.firstIndex { $0.id == bar.id } ?? -1
-    }
+
     // Dynamic values from your endpoints
-    private var musicType: String {
-        viewModel.music[idx] ?? "–"
-    }
     private var crowdSize: String {
-        viewModel.statuses[idx]?.crowd_size ?? "–"
-    }
-    private var priceRange: String {
-        viewModel.pricing[idx] ?? "–"
+        viewModel.statuses.first(where: { $0.bar == bar.id })?.crowdSize ?? "–"
     }
     private var waitTime: String {
-        viewModel.statuses[idx]?.wait_time ?? "–"
+        viewModel.statuses.first(where: { $0.bar == bar.id })?.waitTime ?? "-"
     }
     var body: some View {
-        NavigationView {
-            VStack(spacing: 25) {
-                // MARK: — Header
-                VStack(spacing: 8) {
-                    Text(bar.name)
-                        .font(.system(size: 40, weight: .bold))
-                        .foregroundColor(Color("DarkPurple"))
-                    HStack {
-                        Text("Open")
-                            .foregroundColor(.red)
-                        Text("11am – 2am")
+        if waitButtonProperties.showMenu && !waitButtonProperties.didSubmit {
+            VoteSelectionView(properties: $waitButtonProperties, bar: $bar)
+                .transition(.scale)
+            
+        } else {
+            NavigationStack {
+                VStack(spacing: 25) {
+                    Spacer()
+                    // MARK: — Header
+                    VStack(spacing: 8) {
+                        Text(bar.name)
+                            .font(.system(size: 40, weight: .bold))
                             .foregroundColor(Color("DarkPurple"))
-                    }
-                }
-                // MARK: — Quick‑info bubbles (music, crowd, price)
-                HStack(spacing: 15) {
-                    InfoBubble(icon: "music.note", text: musicType)
-                    InfoBubble(icon: "flame.fill", text: crowdSize)
-                    InfoBubble(icon: "dollarsign.circle", text: priceRange)
-                }
-                // MARK: — Wait time & crowd voting
-                HStack(spacing: 30) {
-                    // Wait‑time section
-                    VStack(spacing: 10) {
-                        if !waitButtonProperties.selectedOption {
-                            Text("Est. Wait Time:")
+                        
+                        HStack {
+                            Text(hours ?? "Hours not available")
+                                .foregroundColor(.neonPink)
                                 .font(.headline)
-                                .foregroundColor(Color("DarkPurple"))
-                            ZStack {
-                                RoundedRectangle(cornerRadius: 15)
-                                    .foregroundStyle(.salmon.opacity(0.2))
-                                    .frame(width: 131, height: 50)
-                                Text(waitTime)
-                                    .foregroundColor(Color("DarkPurple"))
-                                    .bold()
-                            }
-
-                            Button {
-                                // send vote with current values
-                                Task {
-                                    try? await BarStatusService.shared
-                                        .submitVote(
-                                            barId: idx,
-                                            crowdSize: crowdSize,
-                                            waitTime: waitTime
-                                        )
-                                    await viewModel.loadBarData()
-                                }
-                                withAnimation(
-                                    .spring(duration: 0.5, bounce: 0.3)
-                                ) {
-                                    waitButtonProperties.showMenu = true
-                                    crowdButtonProperties.showMenu = false
-                                }
-
-                            } label: {
-                                Text("Vote wait time!")
-                                    .bold()
-                                    .underline()
-                                    .foregroundColor(Color("DarkPurple"))
-                            }
-                            .disabled(waitButtonProperties.showMenu)
-                        } else {
-                            ZStack {
-                                RoundedRectangle(cornerRadius: 15)
-                                    .foregroundStyle(
-                                        Gradient(colors: [
-                                            .neonPink, .darkBlue,
-                                        ]).opacity(0.7)
-                                    )
-                                    .frame(width: 131, height: 110)
-
-                                Text("Voted! 👍")
-                                    .foregroundStyle(.darkBlue)
-                                    .padding()
-                                    .cornerRadius(15)
-                                    .bold()
-                            }
-                            .transition(.scale)
                         }
                     }
-                    // Crowd‑size section
-                    if !crowdButtonProperties.selectedOption {
+                    // MARK: — Quick‑info bubbles (music, crowd, price)
+                    /// Coming in a future update
+                    
+                    //                HStack(spacing: 15) {
+                    //                    InfoBubble(icon: "record.circle", text: waitTime)
+                    //                    InfoBubble(icon: "flame.fill", text: crowdSize)
+                    //                    InfoBubble(icon: "dollarsign.circle", text: bar.averagePrice ?? "-")
+                    //                }
+                    // MARK: — Wait time & crowd voting
+                    //HStack(spacing: 30) {
+                        // Wait‑time section
                         VStack(spacing: 10) {
-
-                            Text("Crowd Size is:")
-                                .font(.headline)
-                                .foregroundColor(Color("DarkPurple"))
-                            ZStack {
-                                RoundedRectangle(cornerRadius: 15)
-                                    .foregroundStyle(.salmon.opacity(0.2))
-                                    .frame(width: 131, height: 50)
+                            if !waitButtonProperties.didSubmit {
                                 HStack {
-                                    Image(systemName: "flame.fill")
-                                    Text(crowdSize)
+                                    Image(systemName: "clock.fill")
+                                    Text("Wait Time")
+                                }
+                                .foregroundColor(Color("DarkPurple"))
+                                .font(.title3)
+                                
+                                ZStack {
+                                    RoundedRectangle(cornerRadius: 15)
+                                        .stroke(style: StrokeStyle(lineWidth: 2))
+                                        .foregroundStyle(.neonPink.opacity(0.5))
+                                        .frame(width: 131, height: 50)
+                                        .background(.salmon.opacity(0.2))
+                                        .cornerRadius(15)
+                                        .shadow(radius: 10)
+                                    
+                                    if hours?.contains("Closed") != nil {
+                                        Text("Closed")
+                                    } else {
+                                        Text(waitTime)
+                                    }
                                 }
                                 .foregroundColor(Color("DarkPurple"))
                                 .bold()
-                            }
-                            Button {
-                                // send vote with current values
-                                Task {
-                                    try? await BarStatusService.shared
-                                        .submitVote(
-                                            barId: idx,
-                                            crowdSize: crowdSize,
-                                            waitTime: waitTime
-                                        )
-                                    await viewModel.loadBarData()
+                                
+                                Button {
+                                    withAnimation(
+                                        .spring(duration: 0.5, bounce: 0.3)
+                                    ) {
+                                        waitButtonProperties.showMenu = true
+                                        //crowdButtonProperties.showMenu = false
+                                    }
+                                
+                                } label: {
+                                    ZStack {
+                                        RoundedRectangle(cornerRadius: 15)
+                                            .foregroundStyle(Gradient(colors: [
+                                                .neonPink, .salmon
+                                            ]))
+                                            .frame(width: 190, height: 50)
+                                            .opacity(0.5)
+                                            .cornerRadius(15)
+                                            .shadow(radius: 20)
+                                        
+                                        HStack {
+                                            Text("Vote wait time!")
+                                                .bold()
+                                                .foregroundColor(Color("DarkPurple"))
+                                            Image(systemName: "person.3.sequence.fill")
+                                                .foregroundColor(Color("DarkPurple"))
+                                                .font(.system(size: 20))
+                                        }
+                                    }
                                 }
-                                withAnimation(
-                                    .spring(duration: 0.5, bounce: 0.3)
-                                ) {
-                                    crowdButtonProperties.showMenu = true
-                                    waitButtonProperties.showMenu = false
-                                }
-                            } label: {
-                                Text("Vote crowd size!")
-                                    .bold()
-                                    .underline()
-                                    .foregroundColor(Color("DarkPurple"))
+                                // Disable button if menu is open or no wait time available
+//                                .disabled(waitButtonProperties.showMenu || waitTime == "-")
+//                                .opacity(waitTime == "-" ? 0.5 : 1)
+                                .padding(.top)
+                                
+                            } else {
+                               VoteConfirmedView()
+                                    .transition(.blurReplace)
                             }
-                            .disabled(crowdButtonProperties.showMenu)
                         }
-                    } else {
-                        ZStack {
-                            RoundedRectangle(cornerRadius: 15)
-                                .foregroundStyle(
-                                    Gradient(colors: [.neonPink, .darkBlue])
-                                        .opacity(0.7)
-                                )
-                                .frame(width: 131, height: 110)
-
-                            Text("Voted! 👍")
-                                .foregroundStyle(.darkBlue)
-                                .padding()
-                                .cornerRadius(15)
-                                .bold()
+                        // MARK: — Crowd size section
+                        /// Coming in a future update
+                        
+                        // Crowd‑size section
+                        //                    if !crowdButtonProperties.selectedOption {
+                        //                        VStack(spacing: 10) {
+                        //
+                        //                            Text("Crowd Size is:")
+                        //                                .font(.headline)
+                        //                                .foregroundColor(Color("DarkPurple"))
+                        //                            ZStack {
+                        //                                RoundedRectangle(cornerRadius: 15)
+                        //                                    .foregroundStyle(.salmon.opacity(0.2))
+                        //                                    .frame(width: 131, height: 50)
+                        //                                HStack {
+                        //                                    Image(systemName: "flame.fill")
+                        //                                    Text(crowdSize)
+                        //                                }
+                        //                                .foregroundColor(Color("DarkPurple"))
+                        //                                .bold()
+                        //                            }
+                        //                            Button {
+                        //                                withAnimation(
+                        //                                    .spring(duration: 0.5, bounce: 0.3)
+                        //                                ) {
+                        //                                    crowdButtonProperties.showMenu = true
+                        //                                    waitButtonProperties.showMenu = false
+                        //                                }
+                        //                            } label: {
+                        //                                Text("Vote crowd size!")
+                        //                                    .bold()
+                        //                                    .underline()
+                        //                                    .foregroundColor(Color("DarkPurple"))
+                        //                            }
+                        //                            .disabled(crowdButtonProperties.showMenu)
+                        //                        }
+                        //                    } else {
+                        //                        ZStack {
+                        //                            RoundedRectangle(cornerRadius: 15)
+                        //                                .foregroundStyle(
+                        //                                    Gradient(colors: [.neonPink, .darkBlue])
+                        //                                        .opacity(0.7)
+                        //                                )
+                        //                                .frame(width: 131, height: 110)
+                        //
+                        //                            Text("Voted! 👍")
+                        //                                .foregroundStyle(.darkBlue)
+                        //                                .padding()
+                        //                                .cornerRadius(15)
+                        //                                .bold()
+                        //                        }
+                        //                        .transition(.scale)
+                        //                    }
+                    //}
+                    Spacer()
+                    
+                    // MARK: — Swipe Navigation
+                    NavigationLink(destination: SwipeView()) {
+                        HStack {
+                            Text("Swipe")
+                            Image(systemName: "person.2.fill")
                         }
-                        .transition(.scale)
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color("Salmon").opacity(0.2))
+                        .foregroundColor(Color("DarkPurple"))
+                        .cornerRadius(15)
                     }
                 }
-                WebImage(
-                    url: URL(
-                        string:
-                            "https://media.istockphoto.com/id/1040303026/photo/draught-beer-in-glasses.jpg?s=612x612&w=0&k=20&c=MvDv_YtiG4l1bh9vNJv5Hyb-l8ZSCsMDbxutWnCh-78="
-                    )
-                )
-                .resizable()
-                .frame(width: 350, height: 250)
-                .clipShape(RoundedRectangle(cornerRadius: 20))
-
-                // MARK: — Swipe Navigation
-                NavigationLink(destination: SwipeView()) {
-                    HStack {
-                        Text("Swipe")
-                        Image(systemName: "person.2.fill")
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(Color("Salmon").opacity(0.2))
-                    .foregroundColor(Color("DarkPurple"))
-                    .cornerRadius(15)
-                }
+                .padding()
+                .navigationBarTitleDisplayMode(.inline)
             }
-            .padding()
-            .navigationBarTitleDisplayMode(.inline)
+            .task {
+                await viewModel.loadBarData()
+                hours = await bar.getHours()
+            }
+            .transition(.blurReplace)
         }
-        //        .presentationDetents([.large])
-        //        .presentationDragIndicator(.visible)
+
         // MARK: — Remove old “Feedback” view; overlay existing vote menus
-        .overlay {
-            // Wait‑time menu
-            if waitButtonProperties.showMenu {
-                HStack {
-                    VoteWaitTimeView(properties: $waitButtonProperties)
-                        .offset(x: waitButtonProperties.offset)
-                        .padding(.leading)
-                        .gesture(
-                            DragGesture(
-                                minimumDistance: 0,
-                                coordinateSpace: .local
-                            )
-                            .onChanged { value in
-                                if value.translation.width <= 0 {
-                                    withAnimation(.linear(duration: 0.1)) {
-                                        waitButtonProperties.offset =
-                                            value.translation.width
-                                    }
-                                }
-                            }
-                            .onEnded { _ in
-                                if waitButtonProperties.offset < -100 {
-                                    withAnimation(.snappy) {
-                                        waitButtonProperties.showMenu = false
-                                    }
-                                }
-                                withAnimation {
-                                    waitButtonProperties.offset = 0
-                                }
-                            }
-                        )
-                    Spacer()
-                }
-                .transition(.move(edge: .leading))
-            }
-            // Crowd‑size menu
-            if crowdButtonProperties.showMenu {
-                HStack {
-                    Spacer()
-                    VoteCrowdSizeView(buttonProperties: $crowdButtonProperties)
-                        .offset(x: crowdButtonProperties.offset)
-                        .padding(.trailing)
-                        .gesture(
-                            DragGesture(
-                                minimumDistance: 0,
-                                coordinateSpace: .local
-                            )
-                            .onChanged { value in
-                                if value.translation.width > 0 {
-                                    withAnimation(.linear(duration: 0.1)) {
-                                        crowdButtonProperties.offset =
-                                            value.translation.width
-                                    }
-                                }
-                            }
-                            .onEnded { _ in
-                                if crowdButtonProperties.offset > 100 {
-                                    withAnimation(.snappy) {
-                                        crowdButtonProperties.showMenu = false
-                                    }
-                                }
-                                withAnimation {
-                                    crowdButtonProperties.offset = 0
-                                }
-                            }
-                        )
-                }
-                .transition(.move(edge: .trailing))
-            }
-        }
+//        .overlay {
+//            // Wait‑time menu
+//            if waitButtonProperties.showMenu {
+//                HStack {
+//                    VoteWaitTimeView(properties: $waitButtonProperties, bar: $bar)
+//                        .offset(x: waitButtonProperties.offset)
+//                        .padding(.leading)
+//                        .gesture(
+//                            DragGesture(
+//                                minimumDistance: 0,
+//                                coordinateSpace: .local
+//                            )
+//                            .onChanged { value in
+//                                if value.translation.width <= 0 {
+//                                    withAnimation(.linear(duration: 0.1)) {
+//                                        waitButtonProperties.offset =
+//                                            value.translation.width
+//                                    }
+//                                }
+//                            }
+//                            .onEnded { _ in
+//                                if waitButtonProperties.offset < -100 {
+//                                    withAnimation(.snappy) {
+//                                        waitButtonProperties.showMenu = false
+//                                    }
+//                                }
+//                                withAnimation {
+//                                    waitButtonProperties.offset = 0
+//                                }
+//                            }
+//                        )
+//                    Spacer()
+//                }
+//                .transition(.move(edge: .leading))
+//            }
+//            // Crowd‑size menu
+//            if crowdButtonProperties.showMenu {
+//                HStack {
+//                    Spacer()
+//                    VoteCrowdSizeView(buttonProperties: $crowdButtonProperties, bar: $bar)
+//                        .offset(x: crowdButtonProperties.offset)
+//                        .padding(.trailing)
+//                        .gesture(
+//                            DragGesture(
+//                                minimumDistance: 0,
+//                                coordinateSpace: .local
+//                            )
+//                            .onChanged { value in
+//                                if value.translation.width > 0 {
+//                                    withAnimation(.linear(duration: 0.1)) {
+//                                        crowdButtonProperties.offset =
+//                                            value.translation.width
+//                                    }
+//                                }
+//                            }
+//                            .onEnded { _ in
+//                                if crowdButtonProperties.offset > 100 {
+//                                    withAnimation(.snappy) {
+//                                        crowdButtonProperties.showMenu = false
+//                                    }
+//                                }
+//                                withAnimation {
+//                                    crowdButtonProperties.offset = 0
+//                                }
+//                            }
+//                        )
+//                }
+//                .transition(.move(edge: .trailing))
+//            }
+//        }
     }
 }
-struct BarDetailPopup_Previews: PreviewProvider {
-    static var previews: some View {
-        BarDetailPopup(
-            bar: Bar(
-                name: "Hideaway",
-                location: CLLocationCoordinate2D(
-                    latitude: 32.7961859,
-                    longitude: -117.2558475
-                )
-            )
+#Preview(traits: .sizeThatFitsLayout) {
+    BarDetailPopup(
+        bar: Bar(
+            name: "Hideaway",
+            address: "4474 Mission Blvd, San Diego, CA 92109",
+            averagePrice: "$$",
+            latitude: 32.7961859,
+            longitude: -117.2558475,
+            location: "",
+            usersAtBar: 10,
+            currentStatus: "",
+            averageRating: "",
+            currentUserCount: "",
+            activityLevel: "Packed"
         )
-        .environmentObject(MapViewModel())
-        .previewLayout(.sizeThatFits)
-    }
+    )
+    .environment(MapViewModel())
 }

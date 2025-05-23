@@ -10,7 +10,7 @@ import FirebaseAuth
 struct MessagesView: View {
     @StateObject private var vm = UsersViewModel()
     @State private var currentUserID: Int? = nil
-    @State private var isLoadingUserID = true
+    @State private var isLoadingUserID = false
     @EnvironmentObject private var authVM: SessionManager
 
     var body: some View {
@@ -67,7 +67,6 @@ struct MessagesView: View {
                         ToolbarItem(placement: .topBarTrailing) {
                             NavigationLink {
                                 ComposeMessageView()
-                                    .navigationBarBackButtonHidden()
                             } label: {
                                 Image(systemName: "plus.message.fill")
                                     .foregroundStyle(.salmon)
@@ -84,6 +83,7 @@ struct MessagesView: View {
                 fetchCurrentUserID()
             }
         }
+        .tint(.salmon)
     }
 
     /// Fetch backend user list, match on Firebase UID, store numeric ID
@@ -97,4 +97,5 @@ struct MessagesView: View {
 // Preview with dummy environment
 #Preview {
     MessagesView()
+        .environmentObject(SessionManager())
 }
