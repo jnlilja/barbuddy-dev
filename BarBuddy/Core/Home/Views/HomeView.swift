@@ -11,6 +11,7 @@ import SwiftUI
 
 struct HomeView: View {
     @State private var selectedTab = 0
+    @State private var voteViewModel = VoteViewModel()
 
     var body: some View {
         TabView(selection: $selectedTab) {
@@ -35,6 +36,7 @@ struct HomeView: View {
                         Image(systemName: "map.fill")
                         Text("Map")
                     }
+                    .environment(voteViewModel)
                     .tag(0)
                 
                 ProfileView()
@@ -55,4 +57,5 @@ struct HomeView: View {
     HomeView()
         .environmentObject(SessionManager())
         .environment(MapViewModel())
+        .environment(VoteViewModel())
 }

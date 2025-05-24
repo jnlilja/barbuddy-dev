@@ -382,7 +382,7 @@ actor BarNetworkManager {
         }
     }
     
-    func patchBarStatus(statusID: Int) async throws -> BarStatus {
+    func patchBarStatus(statusID: Int) async throws {
         let endpoint = baseURL + "bar-status/\(statusID)/"
         guard let url = URL(string: endpoint) else {
             throw APIError.badURL
@@ -400,8 +400,6 @@ actor BarNetworkManager {
         guard let response = response as? HTTPURLResponse, (200...299).contains(response.statusCode) else {
             throw APIError.badRequest
         }
-        
-        return try decoder.decode(BarStatus.self, from: data)
     }
     
     func deleteBarStatus(statusID: Int) async throws {

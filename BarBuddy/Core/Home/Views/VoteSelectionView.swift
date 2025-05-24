@@ -11,6 +11,7 @@ struct VoteSelectionView: View {
     @Binding var properties: ButtonProperties
     @Binding var bar: Bar
     @State private var selectedOption: String?
+    @Environment(VoteViewModel.self) var voteViewModel
     
     var body: some View {
         VStack {
@@ -75,14 +76,11 @@ struct VoteSelectionView: View {
                                         try await BarNetworkManager.shared.submitVote(
                                             vote: BarVote(
                                                 bar: id,
-                                                crowdSize: "",
                                                 waitTime: vote,
-                                                timeStamp: Date().formatted(
-                                                    date: .numeric,
-                                                    time: .standard
-                                                )
+                                                timeStamp: DateFormatter.formatTimeStamp(Date())
                                             )
                                         )
+                                        print("Vote submitted successfully for bar \(id) with wait time: \(vote)")
                                     }
                                 } catch {
                                     print("Failed to submit vote: \(error)")
@@ -114,4 +112,5 @@ struct VoteSelectionView: View {
 
 #Preview {
     VoteSelectionView(properties: .constant(.init(didSubmit: false, showMenu: false, type: "wait")), bar: .constant(Bar(id: 1, name: "Test Bar", address: "123 Test St", averagePrice: "10", latitude: 37.774722, longitude: -122.418233, location: nil, usersAtBar: 10, currentStatus: nil, averageRating: "4.5", images: nil, currentUserCount: nil, activityLevel: nil)))
+        .environment(VoteViewModel())
 }

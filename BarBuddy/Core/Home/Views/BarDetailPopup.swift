@@ -10,17 +10,18 @@ import SwiftUI
 struct BarDetailPopup: View {
     @Environment(\.dismiss) var dismiss
     @Environment(MapViewModel.self) var viewModel
+    @Environment(VoteViewModel.self) var voteViewModel
     @State var bar: Bar
-
+    @State private var loadingState: HoursLoadingState = .loading
     @State private var waitButtonProperties = ButtonProperties(type: "wait")
     @State private var crowdButtonProperties = ButtonProperties(type: "crowd")
 
     // Dynamic values from your endpoints
     private var crowdSize: String {
-        viewModel.statuses.first(where: { $0.bar == bar.id })?.crowdSize ?? "–"
+        viewModel.statuses.first(where: { $0.bar == bar.id })?.crowdSize ?? ""
     }
     private var waitTime: String {
-        viewModel.statuses.first(where: { $0.bar == bar.id })?.waitTime ?? "-"
+        viewModel.statuses.first(where: { $0.bar == bar.id })?.waitTime ?? ""
     }
     var body: some View {
         if waitButtonProperties.showMenu && !waitButtonProperties.didSubmit {
@@ -71,11 +72,21 @@ struct BarDetailPopup: View {
                                         .cornerRadius(15)
                                         .shadow(radius: 10)
                                     
-                                    Text("10 - 20 min")
-                                        .font(.title)
-                                    
+                                    // MARK: — Loading state
+                                    switch loadingState {
+                                    case .loading:
+                                        ProgressView()
+                                            .tint(.darkPurple)
+                                            .scaleEffect(1.5)
+                                    case .success:
+                                        Text(waitTime)
+                                            
+                                    case .failure:
+                                        Text("Unavailable")
+                                    }
                                 }
-                                .foregroundColor(Color("DarkPurple"))
+                                .font(.title)
+                                .foregroundColor(.darkPurple)
                                 .bold()
                                 
                                 Button {
@@ -109,8 +120,8 @@ struct BarDetailPopup: View {
                                     }
                                 }
                                 // Disable button if menu is open or no wait time available
-//                                .disabled(waitButtonProperties.showMenu || waitTime == "-")
-//                                .opacity(waitTime == "-" ? 0.5 : 1)
+                                .disabled(waitTime.isEmpty)
+                                .opacity(waitTime.isEmpty ? 0.5 : 1)
                                 .padding(.top)
                                 
                             } else {
@@ -154,22 +165,6 @@ struct BarDetailPopup: View {
                         //                            }
                         //                            .disabled(crowdButtonProperties.showMenu)
                         //                        }
-                        //                    } else {
-                        //                        ZStack {
-                        //                            RoundedRectangle(cornerRadius: 15)
-                        //                                .foregroundStyle(
-                        //                                    Gradient(colors: [.neonPink, .darkBlue])
-                        //                                        .opacity(0.7)
-                        //                                )
-                        //                                .frame(width: 131, height: 110)
-                        //
-                        //                            Text("Voted! 👍")
-                        //                                .foregroundStyle(.darkBlue)
-                        //                                .padding()
-                        //                                .cornerRadius(15)
-                        //                                .bold()
-                        //                        }
-                        //                        .transition(.scale)
                         //                    }
                     //}
                     Spacer()
@@ -205,6 +200,16 @@ struct BarDetailPopup: View {
             }
             .task {
                 await viewModel.loadBarData()
+                do {
+                    if let id = bar.id {
+                        try await voteViewModel.calculateVotes(for: id)
+                    }
+                } catch {
+                    print("Error calculating votes: \(error)")
+                }
+                
+                // Check if the bar data is available
+                loadingState = waitTime.isEmpty ? .failure : .success
             }
             .transition(.blurReplace)
         }
@@ -299,4 +304,5 @@ struct BarDetailPopup: View {
         )
     )
     .environment(MapViewModel())
+    .environment(VoteViewModel())
 }

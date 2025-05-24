@@ -95,7 +95,7 @@ final class SignUpViewModel: ObservableObject {
 
     // MARK: - Sign‑up flow
     private func signUp(profile: PostUser) async {
-        do {
+//        do {
             // 1) Create Firebase Auth account
 //            _ = try await Auth.auth().createUser(withEmail: profile.email,
 //                                                 password: profile.password)
@@ -120,9 +120,9 @@ final class SignUpViewModel: ObservableObject {
 //
 //            alertMessage = "Account created successfully!"
 //            showingAlert = true
-        } catch {
-            fire(error.localizedDescription)
-        }
+//        } catch {
+//            fire(error.localizedDescription)
+//        }
     }
 
     // MARK: - Helpers
