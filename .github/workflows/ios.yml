@@ -156,18 +156,29 @@ jobs:
               rm -rf **/SourcePackages
             fi
             
-            # Resolve SPM dependencies
-            echo "Resolving Swift Package dependencies..."
-            xcodebuild -resolvePackageDependencies \
-              -scheme "${{ steps.config.outputs.scheme }}" \
-              -${{ steps.config.outputs.filetype_parameter }} "${{ steps.config.outputs.file_to_build }}" || {
-              echo "Failed to resolve SPM dependencies, clearing cache and retrying..."
-              rm -rf ~/Library/Caches/org.swift.swiftpm
-              rm -rf DerivedData/**/SourcePackages
+            # Only resolve SPM dependencies if we have the config variables
+            if [ -n "${{ steps.config.outputs.scheme }}" ] && [ -n "${{ steps.config.outputs.file_to_build }}" ] && [ -n "${{ steps.config.outputs.filetype_parameter }}" ]; then
+              echo "Resolving Swift Package dependencies..."
+              echo "Using scheme: ${{ steps.config.outputs.scheme }}"
+              echo "Using file: ${{ steps.config.outputs.file_to_build }}"
+              echo "Using type: ${{ steps.config.outputs.filetype_parameter }}"
+              
               xcodebuild -resolvePackageDependencies \
                 -scheme "${{ steps.config.outputs.scheme }}" \
-                -${{ steps.config.outputs.filetype_parameter }} "${{ steps.config.outputs.file_to_build }}"
-            }
+                -${{ steps.config.outputs.filetype_parameter }} "${{ steps.config.outputs.file_to_build }}" || {
+                echo "Failed to resolve SPM dependencies, clearing cache and retrying..."
+                rm -rf ~/Library/Caches/org.swift.swiftpm
+                rm -rf DerivedData/**/SourcePackages
+                xcodebuild -resolvePackageDependencies \
+                  -scheme "${{ steps.config.outputs.scheme }}" \
+                  -${{ steps.config.outputs.filetype_parameter }} "${{ steps.config.outputs.file_to_build }}"
+              }
+            else
+              echo "Skipping SPM resolution - missing required configuration variables"
+              echo "Scheme: '${{ steps.config.outputs.scheme }}'"
+              echo "File: '${{ steps.config.outputs.file_to_build }}'"
+              echo "Type: '${{ steps.config.outputs.filetype_parameter }}'"
+            fi
           fi
           
           # Handle Carthage dependencies
