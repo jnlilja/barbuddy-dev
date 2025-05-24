@@ -17,6 +17,11 @@ jobs:
     name: iOS Build and Test
     runs-on: macos-latest
     timeout-minutes: 30
+    strategy:
+      matrix:
+        # Uncomment and modify to test multiple iOS versions
+        # ios-version: ['16.4', '17.2', '17.4']
+        ios-version: ['17.2']  # Default single version
 
     steps:
       - name: Checkout
@@ -29,6 +34,19 @@ jobs:
 
       - name: Verify Xcode Version
         run: xcodebuild -version
+
+      # Cache iOS Simulator Runtimes
+      - name: Cache iOS Simulator Runtimes
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/Library/Caches/com.apple.dt.Xcode/Downloads
+            ~/Library/Developer/CoreSimulator/Profiles/Runtimes
+            /Library/Developer/CoreSimulator/Profiles/Runtimes
+          key: ${{ runner.os }}-simulator-runtimes-${{ matrix.ios-version || '17.2' }}-xcode-16.2
+          restore-keys: |
+            ${{ runner.os }}-simulator-runtimes-${{ matrix.ios-version || '17.2' }}-
+            ${{ runner.os }}-simulator-runtimes-
 
       # Cache CocoaPods dependencies
       - name: Cache CocoaPods
@@ -50,43 +68,151 @@ jobs:
             ~/Library/Caches/org.swift.swiftpm
             ~/Library/Developer/Xcode/DerivedData/**/SourcePackages
             .build
-          key: ${{ runner.os }}-spm-${{ hashFiles('**/Package.resolved') }}
+            **/SourcePackages
+          key: ${{ runner.os }}-spm-${{ hashFiles('**/Package.resolved', '**/Package.swift', '**/*.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
           restore-keys: |
+            ${{ runner.os }}-spm-${{ hashFiles('**/Package.resolved') }}-
             ${{ runner.os }}-spm-
 
-      # Cache DerivedData for faster incremental builds
+      # Cache Carthage dependencies (if using Carthage)
+      - name: Cache Carthage
+        uses: actions/cache@v4
+        if: hashFiles('**/Cartfile.resolved') != ''
+        with:
+          path: |
+            Carthage
+            ~/Library/Caches/org.carthage.CarthageKit
+          key: ${{ runner.os }}-carthage-${{ hashFiles('**/Cartfile.resolved') }}
+          restore-keys: |
+            ${{ runner.os }}-carthage-
+
+      # More conservative DerivedData cache - exclude SourcePackages to avoid conflicts
       - name: Cache DerivedData
         uses: actions/cache@v4
         with:
           path: |
-            DerivedData
-            ~/Library/Developer/Xcode/DerivedData
-          key: ${{ runner.os }}-deriveddata-${{ github.sha }}
+            DerivedData/Build/Intermediates.noindex
+            DerivedData/Build/Products
+            DerivedData/ModuleCache.noindex
+            DerivedData/info.plist
+          key: ${{ runner.os }}-deriveddata-${{ hashFiles('**/Podfile.lock', '**/Package.resolved', '**/*.xcodeproj/project.pbxproj') }}
           restore-keys: |
             ${{ runner.os }}-deriveddata-${{ github.ref_name }}-
             ${{ runner.os }}-deriveddata-
 
-      # Install CocoaPods if Podfile exists
-      - name: Install CocoaPods Dependencies
-        if: hashFiles('**/Podfile') != ''
+      # Verify and install dependencies with proper error handling
+      - name: Install Dependencies
         run: |
+          echo "=== Checking for dependency managers ==="
+          
+          # Check what dependency managers are being used
           if [ -f "Podfile" ]; then
-            pod install --repo-update
+            echo "Found Podfile - installing CocoaPods dependencies"
+            
+            # Verify Podfile.lock exists
+            if [ -f "Podfile.lock" ]; then
+              echo "Podfile.lock found, checking cache consistency..."
+              
+              # Check if Pods directory exists and is consistent
+              if [ -d "Pods" ]; then
+                echo "Pods directory exists, verifying integrity..."
+                
+                # Quick integrity check - verify SDWebImage specifically
+                if [ -d "Pods/SDWebImage" ]; then
+                  echo "✓ SDWebImage pod found in cache"
+                else
+                  echo "⚠️  SDWebImage pod missing, will reinstall"
+                  rm -rf Pods
+                fi
+              fi
+              
+              # Install/update pods
+              pod install --repo-update
+              
+              # Verify installation
+              if [ -d "Pods/SDWebImage" ]; then
+                echo "✓ SDWebImage successfully installed"
+              else
+                echo "❌ SDWebImage installation failed"
+                echo "Available pods:"
+                ls -la Pods/ || echo "No Pods directory"
+                exit 1
+              fi
+            else
+              echo "❌ Podfile.lock not found"
+              exit 1
+            fi
           fi
-
-      # Install Carthage dependencies if Cartfile exists
-      - name: Install Carthage Dependencies
-        if: hashFiles('**/Cartfile') != ''
-        run: |
+          
+          # Handle SPM dependencies
+          if find . -name "Package.swift" -o -path "*/xcshareddata/swiftpm/Package.resolved" | grep -q .; then
+            echo "Found Swift Package Manager dependencies"
+            
+            # Clear problematic SPM cache if needed
+            if [ -n "${{ github.event_name == 'push' && contains(github.event.head_commit.message, '[clear-spm-cache]') }}" ]; then
+              echo "Clearing SPM cache due to commit message flag"
+              rm -rf ~/Library/Caches/org.swift.swiftpm
+              rm -rf .build
+              rm -rf **/SourcePackages
+            fi
+            
+            # Resolve SPM dependencies
+            echo "Resolving Swift Package dependencies..."
+            xcodebuild -resolvePackageDependencies \
+              -scheme "${{ steps.config.outputs.scheme }}" \
+              -${{ steps.config.outputs.filetype_parameter }} "${{ steps.config.outputs.file_to_build }}" || {
+              echo "Failed to resolve SPM dependencies, clearing cache and retrying..."
+              rm -rf ~/Library/Caches/org.swift.swiftpm
+              rm -rf DerivedData/**/SourcePackages
+              xcodebuild -resolvePackageDependencies \
+                -scheme "${{ steps.config.outputs.scheme }}" \
+                -${{ steps.config.outputs.filetype_parameter }} "${{ steps.config.outputs.file_to_build }}"
+            }
+          fi
+          
+          # Handle Carthage dependencies
           if [ -f "Cartfile" ]; then
+            echo "Found Cartfile - installing Carthage dependencies"
             brew install carthage
             carthage bootstrap --platform iOS --cache-builds
           fi
+          
+          echo "=== Dependency installation completed ==="
 
       - name: List Available Simulators
         run: |
           echo "Available iOS simulators:"
           xcrun simctl list devices available | grep iOS
+
+      # Install specific iOS runtime if needed
+      - name: Install iOS Runtime (if needed)
+        run: |
+          # Check if we need a specific iOS version
+          REQUIRED_IOS_VERSION="${{ matrix.ios-version || '17.2' }}"
+          
+          echo "Checking for iOS $REQUIRED_IOS_VERSION runtime..."
+          
+          # Check if runtime is already available
+          if xcrun simctl list runtimes | grep -q "iOS $REQUIRED_IOS_VERSION"; then
+            echo "iOS $REQUIRED_IOS_VERSION runtime already available"
+          else
+            echo "Installing iOS $REQUIRED_IOS_VERSION runtime..."
+            
+            # List available runtimes to download
+            echo "Available runtimes:"
+            xcrun simctl list runtimes available
+            
+            # Install the runtime (this will use cache if available)
+            xcrun simctl runtime install "iOS $REQUIRED_IOS_VERSION" || {
+              echo "Failed to install iOS $REQUIRED_IOS_VERSION runtime"
+              echo "Available runtimes:"
+              xcrun simctl list runtimes available
+              echo "Continuing with default runtime..."
+            }
+          fi
+          
+          echo "Final available runtimes:"
+          xcrun simctl list runtimes
 
       - name: Determine Build Configuration
         id: config
