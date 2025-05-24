@@ -30,6 +30,59 @@ jobs:
       - name: Verify Xcode Version
         run: xcodebuild -version
 
+      # Cache CocoaPods dependencies
+      - name: Cache CocoaPods
+        uses: actions/cache@v4
+        if: hashFiles('**/Podfile.lock') != ''
+        with:
+          path: |
+            Pods
+            ~/.cocoapods
+          key: ${{ runner.os }}-pods-${{ hashFiles('**/Podfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pods-
+
+      # Cache Swift Package Manager dependencies
+      - name: Cache SPM Dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/Library/Caches/org.swift.swiftpm
+            ~/Library/Developer/Xcode/DerivedData/**/SourcePackages
+            .build
+          key: ${{ runner.os }}-spm-${{ hashFiles('**/Package.resolved') }}
+          restore-keys: |
+            ${{ runner.os }}-spm-
+
+      # Cache DerivedData for faster incremental builds
+      - name: Cache DerivedData
+        uses: actions/cache@v4
+        with:
+          path: |
+            DerivedData
+            ~/Library/Developer/Xcode/DerivedData
+          key: ${{ runner.os }}-deriveddata-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-deriveddata-${{ github.ref_name }}-
+            ${{ runner.os }}-deriveddata-
+
+      # Install CocoaPods if Podfile exists
+      - name: Install CocoaPods Dependencies
+        if: hashFiles('**/Podfile') != ''
+        run: |
+          if [ -f "Podfile" ]; then
+            pod install --repo-update
+          fi
+
+      # Install Carthage dependencies if Cartfile exists
+      - name: Install Carthage Dependencies
+        if: hashFiles('**/Cartfile') != ''
+        run: |
+          if [ -f "Cartfile" ]; then
+            brew install carthage
+            carthage bootstrap --platform iOS --cache-builds
+          fi
+
       - name: List Available Simulators
         run: |
           echo "Available iOS simulators:"
