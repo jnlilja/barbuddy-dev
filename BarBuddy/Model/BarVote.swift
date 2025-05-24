@@ -9,7 +9,6 @@ import Foundation
 struct BarVote: Codable {
     var id: Int?
     var bar: Int
-    var crowdSize: String
     var waitTime: String
     var timeStamp: String
 }

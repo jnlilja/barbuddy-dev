@@ -24,7 +24,6 @@ struct VoteButtonView: View {
                             try await BarNetworkManager.shared.submitVote(
                                 vote: BarVote(
                                     bar: id,
-                                    crowdSize: "",
                                     waitTime: text,
                                     timeStamp: Date().formatted(
                                         date: .numeric,
@@ -37,7 +36,6 @@ struct VoteButtonView: View {
                             try await BarNetworkManager.shared.submitVote(
                                 vote: BarVote(
                                     bar: id,
-                                    crowdSize: text,
                                     waitTime: "",
                                     timeStamp: Date().formatted(
                                         date: .numeric,

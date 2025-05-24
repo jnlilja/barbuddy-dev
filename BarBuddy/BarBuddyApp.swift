@@ -43,31 +43,36 @@ struct BarBuddyApp: App {
             switch sessionManager.sessionState {
             case .loggedIn:
                 TabView(selection: $tabManager.selectedTab) {
-                    SwipeView()
-                        .tabItem {
-                            Image(systemName: "person.2.fill")
-                            Text("Swipe")
-                        }
-                        .tag(0)
-                    MessagesView()
-                        .tabItem {
-                            Image(systemName: "message.fill")
-                            Text("Messages")
-                        }
-                        .tag(1)
+//                    SwipeView()
+//                        .tabItem {
+//                            Image(systemName: "person.2.fill")
+//                            Text("Swipe")
+//                        }
+//                        .tag(0)
+//                    MessagesView()
+//                        .tabItem {
+//                            Image(systemName: "message.fill")
+//                            Text("Messages")
+//                        }
+//                        .tag(1)
 
-                    MainFeedView()
-                        .tabItem {
-                            Image(systemName: "map.fill")
-                            Text("Map")
-                        }
-                        .tag(2)
-                    ProfileView()
-                        .tabItem {
-                            Image(systemName: "person.circle")
-                            Text("Profile")
-                        }
-                        .tag(4)
+                    Group {
+                        MainFeedView()
+                            .tabItem {
+                                Image(systemName: "map.fill")
+                                Text("Map")
+                            }
+                            .tag(0)
+                        
+                        ProfileView()
+                            .tabItem {
+                                Image(systemName: "person.circle")
+                                Text("Profile")
+                            }
+                            .tag(1)
+                    }
+                    .toolbar(.visible, for: .tabBar)
+                    .toolbarBackground(.darkBlue, for: .tabBar)
                 }
                 .accentColor(Color("Salmon"))
                 .environment(mapViewModel)

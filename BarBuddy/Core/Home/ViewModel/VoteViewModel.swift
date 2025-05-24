@@ -11,37 +11,38 @@ import Foundation
 @MainActor
 @Observable
 final class VoteViewModel {
-    private var crowdSizeVotes: [String : Int] = [:]
+    // Holds the occurence count of each wait time vote
     private var waitTimeVotes: [String : Int] = [:]
     
-    func calculateVotes(for barId: Int) async throws -> BarStatus {
-        let barVotes = try await BarNetworkManager.shared.fetchVoteSummaries().filter { $0.bar == barId }
-        
-        for vote in barVotes {
-            crowdSizeVotes[vote.crowdSize, default: 0] += 1
-            waitTimeVotes[vote.waitTime, default: 0] += 1
+    // After vote has been submitted, this function will be called to calculate the votes
+    func calculateVotes(for barId: Int) async throws {
+        var barVotes = try await BarNetworkManager.shared.fetchVoteSummaries()
+            .filter { $0.bar == barId }
+            
+        // Reset wait time votes
+        waitTimeVotes.removeAll()
+
+        // Count votes for wait time
+        barVotes.forEach {
+            waitTimeVotes[$0.waitTime, default: 0] += 1
         }
         
-        var status = try await BarNetworkManager.shared.fetchBarStatus(statusID: barId)
-        status.crowdSize = getMostVotedCrowdSize()
+        // Ensure there are votes to process
+        guard var status = try await BarNetworkManager.shared.fetchStatuses().first(where: { $0.bar == barId }) else {
+            throw VoteError.noStatus
+        }
         status.waitTime = getMostVotedWaitTime()
-        
-        crowdSizeVotes.removeAll()
-        waitTimeVotes.removeAll()
         
         guard let statusId = status.id else {
             throw VoteError.missingId
         }
         
-        status.lastUpdated = Date().formatted(date: .numeric, time: .standard)
-        return try await BarNetworkManager.shared.patchBarStatus(statusID: statusId)
+        status.lastUpdated = DateFormatter.formatTimeStamp(Date())
+        
+        try await BarNetworkManager.shared.patchBarStatus(statusID: statusId)
     }
     
-    func getMostVotedCrowdSize() -> String? {
-        return crowdSizeVotes.max(by: { $0.value < $1.value })?.key
-    }
-    
-    func getMostVotedWaitTime() -> String? {
+    private func getMostVotedWaitTime() -> String? {
         return waitTimeVotes.max(by: { $0.value < $1.value })?.key
     }
 }
@@ -49,4 +50,5 @@ final class VoteViewModel {
 enum VoteError: Error {
     case noVotes
     case missingId
+    case noStatus
 }

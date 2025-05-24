@@ -13,6 +13,7 @@ struct BarCard: View {
     @Environment(MapViewModel.self) var viewModel
     @Environment(\.colorScheme) var colorScheme
     @State private var showingSwipe = false
+    @Environment(VoteViewModel.self) var voteViewModel
     
     private var waitTime: String? {
         viewModel.statuses.first(where: { $0.bar == bar.id })?.waitTime
@@ -128,6 +129,7 @@ struct BarCard: View {
         activityLevel: ""
     ))
     .environment(MapViewModel())
+    .environment(VoteViewModel())
     .padding()
 }
 
