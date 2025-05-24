@@ -48,18 +48,6 @@ jobs:
             ${{ runner.os }}-simulator-runtimes-${{ matrix.ios-version || '17.2' }}-
             ${{ runner.os }}-simulator-runtimes-
 
-      # Cache CocoaPods dependencies
-      - name: Cache CocoaPods
-        uses: actions/cache@v4
-        if: hashFiles('**/Podfile.lock') != ''
-        with:
-          path: |
-            Pods
-            ~/.cocoapods
-          key: ${{ runner.os }}-pods-${{ hashFiles('**/Podfile.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-pods-
-
       # Cache Swift Package Manager dependencies
       - name: Cache SPM Dependencies
         uses: actions/cache@v4
@@ -73,18 +61,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-spm-${{ hashFiles('**/Package.resolved') }}-
             ${{ runner.os }}-spm-
-
-      # Cache Carthage dependencies (if using Carthage)
-      - name: Cache Carthage
-        uses: actions/cache@v4
-        if: hashFiles('**/Cartfile.resolved') != ''
-        with:
-          path: |
-            Carthage
-            ~/Library/Caches/org.carthage.CarthageKit
-          key: ${{ runner.os }}-carthage-${{ hashFiles('**/Cartfile.resolved') }}
-          restore-keys: |
-            ${{ runner.os }}-carthage-
 
       # More conservative DerivedData cache - exclude SourcePackages to avoid conflicts
       - name: Cache DerivedData
