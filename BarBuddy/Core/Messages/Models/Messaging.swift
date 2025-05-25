@@ -103,7 +103,7 @@ final class MessagingService: ObservableObject {
                 "channel": "private-messages-\(message.recipient)",
                 "event": "new-message",
                 "data": [
-                    "id": message.id,
+                    "id": message.id as Any,
                     "sender": message.sender,
                     "recipient": message.recipient,
                     "content": message.content,

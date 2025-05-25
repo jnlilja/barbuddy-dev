@@ -20,7 +20,7 @@ struct FriendProfile: View {
             VStack(spacing: 0) {
                 // Photo Gallery
                 TabView {
-                    ForEach(user.profile_pictures.sorted() ?? [], id: \.self) { imageName in
+                    ForEach(user.profile_pictures.sorted(), id: \.self) { imageName in
                         Image(imageName)
                             .resizable()
                             .scaledToFill()

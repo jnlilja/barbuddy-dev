@@ -102,7 +102,7 @@ struct RequestsView: View {
                 switch result {
                 case .success(let success):
                     allUsers = success
-                case .failure(let failure):
+                case .failure(_):
                     print("failed to get users")
                 }
             }

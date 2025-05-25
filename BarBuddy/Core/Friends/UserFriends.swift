@@ -20,7 +20,7 @@ class UserFriends: ObservableObject {
         switch result {
         case .success(let all):
             friends = all
-        case .failure(let failure):
+        case .failure(_):
             print("error loading friends")
         }
 //        let all = (try? await GetUserAPIService.shared.fetchUsers()) ?? []

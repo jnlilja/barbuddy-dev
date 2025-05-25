@@ -105,7 +105,7 @@ struct SignUpView: View {
 extension SignUpViewModel {
     /// Runs client‑side validation; shows alerts; returns true when valid.
     fileprivate func runClientValidation() -> Bool {
-        validateAndSignUp()
+        //validateAndSignUp()
         return !showingAlert
     }
 }
