@@ -152,4 +152,5 @@ struct MainFeedView: View {
 #Preview {
     MainFeedView()
         .environment(MapViewModel())
+        .environment(VoteViewModel())
 }

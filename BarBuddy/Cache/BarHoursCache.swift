@@ -1,5 +1,5 @@
 //
-//  BarVoteCache.swift
+//  BarHoursCache.swift
 //  BarBuddy
 //
 //  Created by Andrew Betancourt on 5/24/25.
@@ -11,7 +11,7 @@ actor BarHoursCache {
     
     static let shared = BarHoursCache(maxSize: 100) // Set your max cache size
 
-    /// Dictionary storing cached `BarVote` objects, keyed by bar ID.
+    /// Dictionary storing cached `BarHours` objects, keyed by bar ID.
     private var cache: [Int: BarHours] = [:]
     /// Array tracking the access order of bar IDs for LRU eviction.
     private var accessOrder: [Int] = []
@@ -24,9 +24,9 @@ actor BarHoursCache {
         self.maxSize = maxSize
     }
 
-    /// Retrieves a `BarVote` object for a given bar ID, updating its position as most recently used.
+    /// Retrieves a `BarHours` object for a given bar ID, updating its position as most recently used.
     /// - Parameter barId: The unique identifier for the bar.
-    /// - Returns: The cached `BarVote` object, or `nil` if not found.
+    /// - Returns: The cached `BarHours` object, or `nil` if not found.
     func get(for barId: Int) -> BarHours? {
         if let _ = cache[barId] {
             // Move accessed ID to the end (most recently used)
@@ -36,12 +36,12 @@ actor BarHoursCache {
         return cache[barId]
     }
 
-    /// Inserts or updates a `BarVote` object in the cache for a given bar ID.
+    /// Inserts or updates a `BarHours` object in the cache for a given bar ID.
     /// If the cache exceeds its maximum size, the least recently used item is evicted.
     /// - Parameters:
-    ///   - BarVote: The `BarVote` object to cache.
+    ///   - BarHours: The `BarHours` object to cache.
     ///   - barId: The unique identifier for the bar.
-    func set(value BarVote: BarHours, forKey barId: Int) {
+    func set(value BarHours: BarHours, forKey barId: Int) {
         if cache[barId] == nil && cache.count >= maxSize {
             // Evict least recently used
             if let oldest = accessOrder.first {
@@ -49,12 +49,12 @@ actor BarHoursCache {
                 accessOrder.removeFirst()
             }
         }
-        cache[barId] = BarVote
+        cache[barId] = BarHours
         accessOrder.removeAll { $0 == barId }
         accessOrder.append(barId)
     }
 
-    /// Removes a cached `BarVote` object for a given bar ID.
+    /// Removes a cached `BarHours` object for a given bar ID.
     /// - Parameter barId: The unique identifier for the bar.
     func remove(for barId: Int) {
         cache.removeValue(forKey: barId)

@@ -23,6 +23,7 @@ struct BarDetailPopup: View {
     private var waitTime: String {
         viewModel.statuses.first(where: { $0.bar == bar.id })?.waitTime ?? ""
     }
+    
     var body: some View {
         if waitButtonProperties.showMenu && !waitButtonProperties.didSubmit {
             VoteSelectionView(properties: $waitButtonProperties, bar: $bar)
@@ -33,12 +34,12 @@ struct BarDetailPopup: View {
                 VStack(spacing: 25) {
                     Spacer()
                     // MARK: — Header
-                    VStack(spacing: 8) {
+                    VStack {
                         // Make the bar name adapt to the screen size
                         Text(bar.name)
                             .font(.system(size: 40, weight: .bold))
                             .foregroundColor(Color("DarkPurple"))
-                            .multilineTextAlignment(.leading)
+                            .multilineTextAlignment(.center)
                             .lineLimit(2)
                             .minimumScaleFactor(0.5)
                     }
@@ -82,7 +83,7 @@ struct BarDetailPopup: View {
                                         Text(waitTime)
                                             
                                     case .failure:
-                                        Text("Unavailable")
+                                        Text("No wait")
                                     }
                                 }
                                 .font(.title)
@@ -120,8 +121,8 @@ struct BarDetailPopup: View {
                                     }
                                 }
                                 // Disable button if menu is open or no wait time available
-                                .disabled(waitTime.isEmpty)
-                                .opacity(waitTime.isEmpty ? 0.5 : 1)
+//                                .disabled(waitTime.isEmpty)
+//                                .opacity(waitTime.isEmpty ? 0.5 : 1)
                                 .padding(.top)
                                 
                             } else {
@@ -183,17 +184,17 @@ struct BarDetailPopup: View {
                     }
                     
                     // MARK: — Swipe Navigation
-                    NavigationLink(destination: SwipeView()) {
-                        HStack {
-                            Text("Swipe")
-                            Image(systemName: "person.2.fill")
-                        }
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color("Salmon").opacity(0.2))
-                        .foregroundColor(Color("DarkPurple"))
-                        .cornerRadius(15)
-                    }
+//                    NavigationLink(destination: SwipeView()) {
+//                        HStack {
+//                            Text("Swipe")
+//                            Image(systemName: "person.2.fill")
+//                        }
+//                        .frame(maxWidth: .infinity)
+//                        .padding()
+//                        .background(Color("Salmon").opacity(0.2))
+//                        .foregroundColor(Color("DarkPurple"))
+//                        .cornerRadius(15)
+//                    }
                 }
                 .padding()
                 .navigationBarTitleDisplayMode(.inline)
