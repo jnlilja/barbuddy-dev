@@ -67,10 +67,10 @@ struct Bar: Codable, Identifiable, Hashable {
                     print("patchHours error: URL is not valid.")
                 default:
                     print("Pathing hours failed with error - \(error.localizedDescription)")
-                    return nil
                 }
-                return "\(isCurrentlyClosed ? "Closed" : "Open"): \(open) - \(close)"
+                return nil
             }
+            return "\(isCurrentlyClosed ? "Closed" : "Open"): \(open) - \(close)"
         }
         // Fetch all hours if not in cache
         do {

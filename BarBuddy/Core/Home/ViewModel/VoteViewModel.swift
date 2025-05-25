@@ -16,7 +16,7 @@ final class VoteViewModel {
     
     // After vote has been submitted, this function will be called to calculate the votes
     func calculateVotes(for barId: Int) async throws {
-        var barVotes = try await BarNetworkManager.shared.fetchVoteSummaries()
+        let barVotes = try await BarNetworkManager.shared.fetchVoteSummaries()
             .filter { $0.bar == barId }
             
         // Reset wait time votes
