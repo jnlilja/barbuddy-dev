@@ -134,10 +134,10 @@ jobs:
             }
           fi
 
-      # Resolve SPM dependencies
+      # Resolve SPM dependencies with dependency graph handling
       - name: Resolve Swift Package Dependencies
         run: |
-          echo "Resolving Swift Package Manager dependencies..."
+          echo "=== Resolving Swift Package Manager dependencies ==="
           
           # Clear cache if commit message contains flag
           if echo "${{ github.event.head_commit.message || '' }}" | grep -q '\[clear-spm-cache\]'; then
@@ -145,21 +145,105 @@ jobs:
             rm -rf ~/Library/Caches/org.swift.swiftpm
             rm -rf .build
             rm -rf **/SourcePackages
+            rm -rf DerivedData
           fi
           
-          # Resolve dependencies
-          xcodebuild -resolvePackageDependencies \
-            -scheme "${{ steps.config.outputs.scheme }}" \
-            -${{ steps.config.outputs.filetype_parameter }} "${{ steps.config.outputs.file_to_build }}" \
-            -derivedDataPath DerivedData || {
-              echo "Failed to resolve dependencies, clearing cache and retrying..."
+          # Show current Package.swift and Package.resolved if they exist
+          echo "=== Package Configuration ==="
+          if [ -f "Package.swift" ]; then
+            echo "Found Package.swift:"
+            cat Package.swift
+          fi
+          
+          if [ -f "Package.resolved" ]; then
+            echo "Found Package.resolved:"
+            cat Package.resolved
+          fi
+          
+          # Look for Package.swift in project directory or Xcode project
+          if find . -name "Package.swift" -o -path "*/*.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved" | grep -q .; then
+            echo "Swift Package Manager configuration detected"
+            
+            # Multiple resolution attempts with different strategies
+            echo "=== Strategy 1: Standard resolution ==="
+            if xcodebuild -resolvePackageDependencies \
+              -scheme "${{ steps.config.outputs.scheme }}" \
+              -${{ steps.config.outputs.filetype_parameter }} "${{ steps.config.outputs.file_to_build }}" \
+              -derivedDataPath DerivedData; then
+              echo "✓ Dependencies resolved successfully"
+            else
+              echo "❌ Standard resolution failed, trying clean approach..."
+              
+              echo "=== Strategy 2: Clean resolution ==="
               rm -rf ~/Library/Caches/org.swift.swiftpm
-              rm -rf DerivedData/**/SourcePackages
-              xcodebuild -resolvePackageDependencies \
+              rm -rf DerivedData
+              
+              if xcodebuild -resolvePackageDependencies \
                 -scheme "${{ steps.config.outputs.scheme }}" \
                 -${{ steps.config.outputs.filetype_parameter }} "${{ steps.config.outputs.file_to_build }}" \
-                -derivedDataPath DerivedData
-            }
+                -derivedDataPath DerivedData; then
+                echo "✓ Clean resolution successful"
+              else
+                echo "❌ Clean resolution failed, trying workspace approach..."
+                
+                echo "=== Strategy 3: Workspace-first resolution ==="
+                # Sometimes we need to resolve at the workspace level first
+                if [ "${{ steps.config.outputs.filetype_parameter }}" = "workspace" ]; then
+                  xcodebuild -resolvePackageDependencies \
+                    -workspace "${{ steps.config.outputs.file_to_build }}" \
+                    -derivedDataPath DerivedData || true
+                fi
+                
+                # Final attempt with verbose logging
+                echo "=== Strategy 4: Verbose resolution ==="
+                xcodebuild -resolvePackageDependencies \
+                  -scheme "${{ steps.config.outputs.scheme }}" \
+                  -${{ steps.config.outputs.filetype_parameter }} "${{ steps.config.outputs.file_to_build }}" \
+                  -derivedDataPath DerivedData \
+                  -verbose || {
+                  echo "❌ All resolution strategies failed"
+                  echo "Available schemes:"
+                  xcodebuild -list -${{ steps.config.outputs.filetype_parameter }} "${{ steps.config.outputs.file_to_build }}"
+                  exit 1
+                }
+              fi
+            fi
+            
+            # Verify package downloads
+            echo "=== Verifying Package Downloads ==="
+            if [ -d "DerivedData/SourcePackages/checkouts" ]; then
+              echo "Downloaded packages:"
+              ls -la DerivedData/SourcePackages/checkouts/
+              
+              # Check specifically for SDWebImage packages
+              if [ -d "DerivedData/SourcePackages/checkouts/SDWebImage" ]; then
+                echo "✓ SDWebImage package found"
+              else
+                echo "❌ SDWebImage package missing"
+              fi
+              
+              if [ -d "DerivedData/SourcePackages/checkouts/SDWebImageSwiftUI" ]; then
+                echo "✓ SDWebImageSwiftUI package found"
+              else
+                echo "❌ SDWebImageSwiftUI package missing"
+              fi
+            else
+              echo "❌ No SourcePackages/checkouts directory found"
+            fi
+            
+            # Show final Package.resolved
+            if [ -f "${{ steps.config.outputs.file_to_build }}/project.xcworkspace/xcshareddata/swiftpm/Package.resolved" ]; then
+              echo "=== Final Package.resolved ==="
+              cat "${{ steps.config.outputs.file_to_build }}/project.xcworkspace/xcshareddata/swiftpm/Package.resolved"
+            fi
+            
+          else
+            echo "⚠️  No Swift Package Manager configuration found"
+            echo "Looking for Package.swift files:"
+            find . -name "Package.swift" -type f
+            echo "Looking for Package.resolved files:"
+            find . -name "Package.resolved" -type f
+          fi
 
       - name: Prepare iPhone 16 Simulator
         id: simulator
@@ -197,17 +281,54 @@ jobs:
           fi
 
       - name: Build for Testing
-        timeout-minutes: 8
+        timeout-minutes: 12
         run: |
           set -o pipefail
-          xcodebuild build-for-testing \
+          
+          echo "=== Building for Testing ==="
+          echo "Scheme: ${{ steps.config.outputs.scheme }}"
+          echo "File: ${{ steps.config.outputs.file_to_build }}"
+          echo "Device: ${{ steps.config.outputs.device }}"
+          
+          # First, let's try a clean build approach
+          echo "=== Cleaning previous builds ==="
+          xcodebuild clean \
+            -scheme "${{ steps.config.outputs.scheme }}" \
+            -${{ steps.config.outputs.filetype_parameter }} "${{ steps.config.outputs.file_to_build }}" \
+            -derivedDataPath DerivedData
+          
+          # Build with dependency resolution integrated
+          echo "=== Attempting integrated build-for-testing ==="
+          if xcodebuild build-for-testing \
             -scheme "${{ steps.config.outputs.scheme }}" \
             -${{ steps.config.outputs.filetype_parameter }} "${{ steps.config.outputs.file_to_build }}" \
             -destination "platform=iOS Simulator,name=${{ steps.config.outputs.device }}" \
             -configuration Debug \
             -derivedDataPath DerivedData \
             CODE_SIGNING_ALLOWED=NO \
-            | xcpretty --color --report junit --output build-results.xml || true
+            | xcpretty --color --report junit --output build-results.xml; then
+            echo "✓ Build successful"
+          else
+            echo "❌ Build failed, trying with fresh dependency resolution..."
+            
+            # Clear and re-resolve dependencies
+            rm -rf DerivedData/SourcePackages
+            xcodebuild -resolvePackageDependencies \
+              -scheme "${{ steps.config.outputs.scheme }}" \
+              -${{ steps.config.outputs.filetype_parameter }} "${{ steps.config.outputs.file_to_build }}" \
+              -derivedDataPath DerivedData
+            
+            echo "=== Retry build after fresh resolution ==="
+            xcodebuild build-for-testing \
+              -scheme "${{ steps.config.outputs.scheme }}" \
+              -${{ steps.config.outputs.filetype_parameter }} "${{ steps.config.outputs.file_to_build }}" \
+              -destination "platform=iOS Simulator,name=${{ steps.config.outputs.device }}" \
+              -configuration Debug \
+              -derivedDataPath DerivedData \
+              CODE_SIGNING_ALLOWED=NO \
+              -verbose \
+              | xcpretty --color --report junit --output build-results.xml
+          fi
 
       - name: Run Tests
         if: steps.check-tests.outputs.has-tests == 'true'
