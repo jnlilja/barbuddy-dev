@@ -35,21 +35,19 @@ jobs:
       - name: Verify Xcode Version
         run: xcodebuild -version
 
-      # Optimized cache for SPM only
+      # More conservative caching - avoid caching SourcePackages entirely
       - name: Cache Swift Package Manager
         uses: actions/cache@v4
         with:
           path: |
             ~/Library/Caches/org.swift.swiftpm
-            ~/Library/Developer/Xcode/DerivedData/**/SourcePackages
             .build
-            **/SourcePackages
           key: ${{ runner.os }}-spm-${{ matrix.ios-version }}-${{ hashFiles('**/Package.resolved', '**/Package.swift') }}
           restore-keys: |
             ${{ runner.os }}-spm-${{ matrix.ios-version }}-
             ${{ runner.os }}-spm-
 
-      # Lightweight DerivedData cache (excluding SourcePackages to avoid conflicts)
+      # Separate cache for build products only
       - name: Cache Build Data
         uses: actions/cache@v4
         with:
@@ -61,18 +59,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-build-${{ matrix.ios-version }}-
             ${{ runner.os }}-build-
-
-      # Cache iOS Simulator Runtimes
-      - name: Cache iOS Simulator Runtimes
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/Library/Caches/com.apple.dt.Xcode/Downloads
-            ~/Library/Developer/CoreSimulator/Profiles/Runtimes
-          key: ${{ runner.os }}-simulator-${{ matrix.ios-version }}-xcode-16.3
-          restore-keys: |
-            ${{ runner.os }}-simulator-${{ matrix.ios-version }}-
-            ${{ runner.os }}-simulator-
 
       - name: Determine Build Configuration
         id: config
@@ -134,19 +120,26 @@ jobs:
             }
           fi
 
-      # Resolve SPM dependencies with dependency graph handling
-      - name: Resolve Swift Package Dependencies
+      # Clean start for dependency resolution
+      - name: Clean Dependencies
         run: |
-          echo "=== Resolving Swift Package Manager dependencies ==="
+          echo "=== Cleaning dependency state ==="
+          
+          # Always start fresh with SourcePackages to avoid stale dependencies
+          rm -rf DerivedData/SourcePackages
           
           # Clear cache if commit message contains flag
           if echo "${{ github.event.head_commit.message || '' }}" | grep -q '\[clear-spm-cache\]'; then
             echo "Clearing SPM cache due to commit message flag"
             rm -rf ~/Library/Caches/org.swift.swiftpm
             rm -rf .build
-            rm -rf **/SourcePackages
             rm -rf DerivedData
           fi
+
+      # Resolve SPM dependencies with robust error handling
+      - name: Resolve Swift Package Dependencies
+        run: |
+          echo "=== Resolving Swift Package Manager dependencies ==="
           
           # Show current Package.swift and Package.resolved if they exist
           echo "=== Package Configuration ==="
@@ -160,89 +153,69 @@ jobs:
             cat Package.resolved
           fi
           
-          # Look for Package.swift in project directory or Xcode project
-          if find . -name "Package.swift" -o -path "*/*.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved" | grep -q .; then
-            echo "Swift Package Manager configuration detected"
+          # Look for Xcode project Package.resolved
+          XCODE_PACKAGE_RESOLVED=$(find . -path "*/*.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved" | head -1)
+          if [ -n "$XCODE_PACKAGE_RESOLVED" ]; then
+            echo "Found Xcode Package.resolved at: $XCODE_PACKAGE_RESOLVED"
+            cat "$XCODE_PACKAGE_RESOLVED"
+          fi
+          
+          # Ensure we have a clean DerivedData for dependency resolution
+          mkdir -p DerivedData
+          
+          echo "=== Primary Resolution Strategy ==="
+          if xcodebuild -resolvePackageDependencies \
+            -scheme "${{ steps.config.outputs.scheme }}" \
+            -${{ steps.config.outputs.filetype_parameter }} "${{ steps.config.outputs.file_to_build }}" \
+            -derivedDataPath DerivedData \
+            -verbose; then
+            echo "✓ Dependencies resolved successfully"
+          else
+            echo "❌ Primary resolution failed, trying alternative approaches..."
             
-            # Multiple resolution attempts with different strategies
-            echo "=== Strategy 1: Standard resolution ==="
+            # Strategy 2: Clean everything and try again
+            echo "=== Clean Resolution Strategy ==="
+            rm -rf DerivedData
+            rm -rf ~/Library/Caches/org.swift.swiftpm
+            mkdir -p DerivedData
+            
             if xcodebuild -resolvePackageDependencies \
               -scheme "${{ steps.config.outputs.scheme }}" \
               -${{ steps.config.outputs.filetype_parameter }} "${{ steps.config.outputs.file_to_build }}" \
-              -derivedDataPath DerivedData; then
-              echo "✓ Dependencies resolved successfully"
+              -derivedDataPath DerivedData \
+              -verbose; then
+              echo "✓ Clean resolution successful"
             else
-              echo "❌ Standard resolution failed, trying clean approach..."
-              
-              echo "=== Strategy 2: Clean resolution ==="
-              rm -rf ~/Library/Caches/org.swift.swiftpm
-              rm -rf DerivedData
-              
-              if xcodebuild -resolvePackageDependencies \
-                -scheme "${{ steps.config.outputs.scheme }}" \
-                -${{ steps.config.outputs.filetype_parameter }} "${{ steps.config.outputs.file_to_build }}" \
-                -derivedDataPath DerivedData; then
-                echo "✓ Clean resolution successful"
-              else
-                echo "❌ Clean resolution failed, trying workspace approach..."
-                
-                echo "=== Strategy 3: Workspace-first resolution ==="
-                # Sometimes we need to resolve at the workspace level first
-                if [ "${{ steps.config.outputs.filetype_parameter }}" = "workspace" ]; then
-                  xcodebuild -resolvePackageDependencies \
-                    -workspace "${{ steps.config.outputs.file_to_build }}" \
-                    -derivedDataPath DerivedData || true
-                fi
-                
-                # Final attempt with verbose logging
-                echo "=== Strategy 4: Verbose resolution ==="
-                xcodebuild -resolvePackageDependencies \
-                  -scheme "${{ steps.config.outputs.scheme }}" \
-                  -${{ steps.config.outputs.filetype_parameter }} "${{ steps.config.outputs.file_to_build }}" \
-                  -derivedDataPath DerivedData \
-                  -verbose || {
-                  echo "❌ All resolution strategies failed"
-                  echo "Available schemes:"
-                  xcodebuild -list -${{ steps.config.outputs.filetype_parameter }} "${{ steps.config.outputs.file_to_build }}"
-                  exit 1
-                }
-              fi
+              echo "❌ All resolution strategies failed"
+              echo "=== Debug Information ==="
+              echo "Available schemes:"
+              xcodebuild -list -${{ steps.config.outputs.filetype_parameter }} "${{ steps.config.outputs.file_to_build }}"
+              echo "File exists: ${{ steps.config.outputs.file_to_build }}"
+              ls -la "${{ steps.config.outputs.file_to_build }}"
+              exit 1
             fi
+          fi
+          
+          # Verify package downloads
+          echo "=== Verifying Package Downloads ==="
+          if [ -d "DerivedData/SourcePackages/checkouts" ]; then
+            echo "Downloaded packages:"
+            ls -la DerivedData/SourcePackages/checkouts/
             
-            # Verify package downloads
-            echo "=== Verifying Package Downloads ==="
-            if [ -d "DerivedData/SourcePackages/checkouts" ]; then
-              echo "Downloaded packages:"
-              ls -la DerivedData/SourcePackages/checkouts/
-              
-              # Check specifically for SDWebImage packages
-              if [ -d "DerivedData/SourcePackages/checkouts/SDWebImage" ]; then
-                echo "✓ SDWebImage package found"
+            # Check specifically for common packages that might be missing
+            for package in SDWebImage SDWebImageSwiftUI; do
+              if [ -d "DerivedData/SourcePackages/checkouts/$package" ]; then
+                echo "✓ $package package found"
+                # Show package structure
+                echo "  Structure:"
+                find "DerivedData/SourcePackages/checkouts/$package" -name "*.swift" -type f | head -5
               else
-                echo "❌ SDWebImage package missing"
+                echo "❌ $package package missing"
               fi
-              
-              if [ -d "DerivedData/SourcePackages/checkouts/SDWebImageSwiftUI" ]; then
-                echo "✓ SDWebImageSwiftUI package found"
-              else
-                echo "❌ SDWebImageSwiftUI package missing"
-              fi
-            else
-              echo "❌ No SourcePackages/checkouts directory found"
-            fi
-            
-            # Show final Package.resolved
-            if [ -f "${{ steps.config.outputs.file_to_build }}/project.xcworkspace/xcshareddata/swiftpm/Package.resolved" ]; then
-              echo "=== Final Package.resolved ==="
-              cat "${{ steps.config.outputs.file_to_build }}/project.xcworkspace/xcshareddata/swiftpm/Package.resolved"
-            fi
-            
+            done
           else
-            echo "⚠️  No Swift Package Manager configuration found"
-            echo "Looking for Package.swift files:"
-            find . -name "Package.swift" -type f
-            echo "Looking for Package.resolved files:"
-            find . -name "Package.resolved" -type f
+            echo "❌ No SourcePackages/checkouts directory found"
+            ls -la DerivedData/ || echo "DerivedData directory doesn't exist"
           fi
 
       - name: Prepare iPhone 16 Simulator
@@ -281,7 +254,7 @@ jobs:
           fi
 
       - name: Build for Testing
-        timeout-minutes: 12
+        timeout-minutes: 15
         run: |
           set -o pipefail
           
@@ -290,45 +263,38 @@ jobs:
           echo "File: ${{ steps.config.outputs.file_to_build }}"
           echo "Device: ${{ steps.config.outputs.device }}"
           
-          # First, let's try a clean build approach
+          # Verify dependencies are still there
+          echo "=== Pre-build Dependency Check ==="
+          if [ -d "DerivedData/SourcePackages/checkouts" ]; then
+            echo "SourcePackages found:"
+            ls -la DerivedData/SourcePackages/checkouts/
+          else
+            echo "❌ SourcePackages missing - re-resolving..."
+            xcodebuild -resolvePackageDependencies \
+              -scheme "${{ steps.config.outputs.scheme }}" \
+              -${{ steps.config.outputs.filetype_parameter }} "${{ steps.config.outputs.file_to_build }}" \
+              -derivedDataPath DerivedData
+          fi
+          
+          # Clean build first
           echo "=== Cleaning previous builds ==="
           xcodebuild clean \
             -scheme "${{ steps.config.outputs.scheme }}" \
             -${{ steps.config.outputs.filetype_parameter }} "${{ steps.config.outputs.file_to_build }}" \
             -derivedDataPath DerivedData
           
-          # Build with dependency resolution integrated
-          echo "=== Attempting integrated build-for-testing ==="
-          if xcodebuild build-for-testing \
+          # Build with detailed logging
+          echo "=== Building ==="
+          xcodebuild build-for-testing \
             -scheme "${{ steps.config.outputs.scheme }}" \
             -${{ steps.config.outputs.filetype_parameter }} "${{ steps.config.outputs.file_to_build }}" \
             -destination "platform=iOS Simulator,name=${{ steps.config.outputs.device }}" \
             -configuration Debug \
             -derivedDataPath DerivedData \
+            -enableCodeCoverage YES \
             CODE_SIGNING_ALLOWED=NO \
-            | xcpretty --color --report junit --output build-results.xml; then
-            echo "✓ Build successful"
-          else
-            echo "❌ Build failed, trying with fresh dependency resolution..."
-            
-            # Clear and re-resolve dependencies
-            rm -rf DerivedData/SourcePackages
-            xcodebuild -resolvePackageDependencies \
-              -scheme "${{ steps.config.outputs.scheme }}" \
-              -${{ steps.config.outputs.filetype_parameter }} "${{ steps.config.outputs.file_to_build }}" \
-              -derivedDataPath DerivedData
-            
-            echo "=== Retry build after fresh resolution ==="
-            xcodebuild build-for-testing \
-              -scheme "${{ steps.config.outputs.scheme }}" \
-              -${{ steps.config.outputs.filetype_parameter }} "${{ steps.config.outputs.file_to_build }}" \
-              -destination "platform=iOS Simulator,name=${{ steps.config.outputs.device }}" \
-              -configuration Debug \
-              -derivedDataPath DerivedData \
-              CODE_SIGNING_ALLOWED=NO \
-              -verbose \
-              | xcpretty --color --report junit --output build-results.xml
-          fi
+            ONLY_ACTIVE_ARCH=YES \
+            | tee build.log | xcpretty --color --report junit --output build-results.xml
 
       - name: Run Tests
         if: steps.check-tests.outputs.has-tests == 'true'
@@ -355,10 +321,10 @@ jobs:
             test-results.xml
             build-results.xml
             TestResults/
-            DerivedData/Logs/
+            build.log
         continue-on-error: true
 
-      # Optional: Upload build artifacts
+      # Upload build artifacts on failure
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@v4
         if: failure()
@@ -366,4 +332,5 @@ jobs:
           name: build-logs-ios-${{ matrix.ios-version }}
           path: |
             DerivedData/Logs/
+            build.log
         continue-on-error: true
