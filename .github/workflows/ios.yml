@@ -15,13 +15,13 @@ on:
 jobs:
   build-and-test:
     name: iOS Build and Test
-    runs-on: macos-latest
-    timeout-minutes: 30
+    runs-on: macos-15
+    timeout-minutes: 25
     strategy:
       matrix:
-        # Uncomment and modify to test multiple iOS versions
-        # ios-version: ['16.4', '17.2', '17.4']
-        ios-version: ['17.2']  # Default single version
+        ios-version: ['17.2', '18.0']
+      fail-fast: false
+      max-parallel: 2
 
     steps:
       - name: Checkout
@@ -30,10 +30,37 @@ jobs:
       - name: Setup Xcode
         uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: '16.2'
+          xcode-version: '16.3'
 
       - name: Verify Xcode Version
         run: xcodebuild -version
+
+      # Optimized cache for SPM only
+      - name: Cache Swift Package Manager
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/Library/Caches/org.swift.swiftpm
+            ~/Library/Developer/Xcode/DerivedData/**/SourcePackages
+            .build
+            **/SourcePackages
+          key: ${{ runner.os }}-spm-${{ matrix.ios-version }}-${{ hashFiles('**/Package.resolved', '**/Package.swift') }}
+          restore-keys: |
+            ${{ runner.os }}-spm-${{ matrix.ios-version }}-
+            ${{ runner.os }}-spm-
+
+      # Lightweight DerivedData cache (excluding SourcePackages to avoid conflicts)
+      - name: Cache Build Data
+        uses: actions/cache@v4
+        with:
+          path: |
+            DerivedData/Build/Intermediates.noindex
+            DerivedData/Build/Products
+            DerivedData/ModuleCache.noindex
+          key: ${{ runner.os }}-build-${{ matrix.ios-version }}-${{ hashFiles('**/Package.resolved', '**/*.xcodeproj/project.pbxproj') }}
+          restore-keys: |
+            ${{ runner.os }}-build-${{ matrix.ios-version }}-
+            ${{ runner.os }}-build-
 
       # Cache iOS Simulator Runtimes
       - name: Cache iOS Simulator Runtimes
@@ -42,169 +69,15 @@ jobs:
           path: |
             ~/Library/Caches/com.apple.dt.Xcode/Downloads
             ~/Library/Developer/CoreSimulator/Profiles/Runtimes
-            /Library/Developer/CoreSimulator/Profiles/Runtimes
-          key: ${{ runner.os }}-simulator-runtimes-${{ matrix.ios-version || '17.2' }}-xcode-16.2
+          key: ${{ runner.os }}-simulator-${{ matrix.ios-version }}-xcode-16.3
           restore-keys: |
-            ${{ runner.os }}-simulator-runtimes-${{ matrix.ios-version || '17.2' }}-
-            ${{ runner.os }}-simulator-runtimes-
-
-      # Cache Swift Package Manager dependencies
-      - name: Cache SPM Dependencies
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/Library/Caches/org.swift.swiftpm
-            ~/Library/Developer/Xcode/DerivedData/**/SourcePackages
-            .build
-            **/SourcePackages
-          key: ${{ runner.os }}-spm-${{ hashFiles('**/Package.resolved', '**/Package.swift', '**/*.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
-          restore-keys: |
-            ${{ runner.os }}-spm-${{ hashFiles('**/Package.resolved') }}-
-            ${{ runner.os }}-spm-
-
-      # More conservative DerivedData cache - exclude SourcePackages to avoid conflicts
-      - name: Cache DerivedData
-        uses: actions/cache@v4
-        with:
-          path: |
-            DerivedData/Build/Intermediates.noindex
-            DerivedData/Build/Products
-            DerivedData/ModuleCache.noindex
-            DerivedData/info.plist
-          key: ${{ runner.os }}-deriveddata-${{ hashFiles('**/Podfile.lock', '**/Package.resolved', '**/*.xcodeproj/project.pbxproj') }}
-          restore-keys: |
-            ${{ runner.os }}-deriveddata-${{ github.ref_name }}-
-            ${{ runner.os }}-deriveddata-
-
-      # Verify and install dependencies with proper error handling
-      - name: Install Dependencies
-        run: |
-          echo "=== Checking for dependency managers ==="
-          
-          # Check what dependency managers are being used
-          if [ -f "Podfile" ]; then
-            echo "Found Podfile - installing CocoaPods dependencies"
-            
-            # Verify Podfile.lock exists
-            if [ -f "Podfile.lock" ]; then
-              echo "Podfile.lock found, checking cache consistency..."
-              
-              # Check if Pods directory exists and is consistent
-              if [ -d "Pods" ]; then
-                echo "Pods directory exists, verifying integrity..."
-                
-                # Quick integrity check - verify SDWebImage specifically
-                if [ -d "Pods/SDWebImage" ]; then
-                  echo "✓ SDWebImage pod found in cache"
-                else
-                  echo "⚠️  SDWebImage pod missing, will reinstall"
-                  rm -rf Pods
-                fi
-              fi
-              
-              # Install/update pods
-              pod install --repo-update
-              
-              # Verify installation
-              if [ -d "Pods/SDWebImage" ]; then
-                echo "✓ SDWebImage successfully installed"
-              else
-                echo "❌ SDWebImage installation failed"
-                echo "Available pods:"
-                ls -la Pods/ || echo "No Pods directory"
-                exit 1
-              fi
-            else
-              echo "❌ Podfile.lock not found"
-              exit 1
-            fi
-          fi
-          
-          # Handle SPM dependencies
-          if find . -name "Package.swift" -o -path "*/xcshareddata/swiftpm/Package.resolved" | grep -q .; then
-            echo "Found Swift Package Manager dependencies"
-            
-            # Clear problematic SPM cache if needed
-            if [ -n "${{ github.event_name == 'push' && contains(github.event.head_commit.message, '[clear-spm-cache]') }}" ]; then
-              echo "Clearing SPM cache due to commit message flag"
-              rm -rf ~/Library/Caches/org.swift.swiftpm
-              rm -rf .build
-              rm -rf **/SourcePackages
-            fi
-            
-            # Only resolve SPM dependencies if we have the config variables
-            if [ -n "${{ steps.config.outputs.scheme }}" ] && [ -n "${{ steps.config.outputs.file_to_build }}" ] && [ -n "${{ steps.config.outputs.filetype_parameter }}" ]; then
-              echo "Resolving Swift Package dependencies..."
-              echo "Using scheme: ${{ steps.config.outputs.scheme }}"
-              echo "Using file: ${{ steps.config.outputs.file_to_build }}"
-              echo "Using type: ${{ steps.config.outputs.filetype_parameter }}"
-              
-              xcodebuild -resolvePackageDependencies \
-                -scheme "${{ steps.config.outputs.scheme }}" \
-                -${{ steps.config.outputs.filetype_parameter }} "${{ steps.config.outputs.file_to_build }}" || {
-                echo "Failed to resolve SPM dependencies, clearing cache and retrying..."
-                rm -rf ~/Library/Caches/org.swift.swiftpm
-                rm -rf DerivedData/**/SourcePackages
-                xcodebuild -resolvePackageDependencies \
-                  -scheme "${{ steps.config.outputs.scheme }}" \
-                  -${{ steps.config.outputs.filetype_parameter }} "${{ steps.config.outputs.file_to_build }}"
-              }
-            else
-              echo "Skipping SPM resolution - missing required configuration variables"
-              echo "Scheme: '${{ steps.config.outputs.scheme }}'"
-              echo "File: '${{ steps.config.outputs.file_to_build }}'"
-              echo "Type: '${{ steps.config.outputs.filetype_parameter }}'"
-            fi
-          fi
-          
-          # Handle Carthage dependencies
-          if [ -f "Cartfile" ]; then
-            echo "Found Cartfile - installing Carthage dependencies"
-            brew install carthage
-            carthage bootstrap --platform iOS --cache-builds
-          fi
-          
-          echo "=== Dependency installation completed ==="
-
-      - name: List Available Simulators
-        run: |
-          echo "Available iOS simulators:"
-          xcrun simctl list devices available | grep iOS
-
-      # Install specific iOS runtime if needed
-      - name: Install iOS Runtime (if needed)
-        run: |
-          # Check if we need a specific iOS version
-          REQUIRED_IOS_VERSION="${{ matrix.ios-version || '17.2' }}"
-          
-          echo "Checking for iOS $REQUIRED_IOS_VERSION runtime..."
-          
-          # Check if runtime is already available
-          if xcrun simctl list runtimes | grep -q "iOS $REQUIRED_IOS_VERSION"; then
-            echo "iOS $REQUIRED_IOS_VERSION runtime already available"
-          else
-            echo "Installing iOS $REQUIRED_IOS_VERSION runtime..."
-            
-            # List available runtimes to download
-            echo "Available runtimes:"
-            xcrun simctl list runtimes available
-            
-            # Install the runtime (this will use cache if available)
-            xcrun simctl runtime install "iOS $REQUIRED_IOS_VERSION" || {
-              echo "Failed to install iOS $REQUIRED_IOS_VERSION runtime"
-              echo "Available runtimes:"
-              xcrun simctl list runtimes available
-              echo "Continuing with default runtime..."
-            }
-          fi
-          
-          echo "Final available runtimes:"
-          xcrun simctl list runtimes
+            ${{ runner.os }}-simulator-${{ matrix.ios-version }}-
+            ${{ runner.os }}-simulator-
 
       - name: Determine Build Configuration
         id: config
         run: |
-          # Find project/workspace file (search recursively)
+          # Find project/workspace file
           if [ -n "$(find . -name "*.xcworkspace")" ]; then
             file_to_build=$(find . -name "*.xcworkspace" | head -1)
             filetype_parameter="workspace"
@@ -216,26 +89,22 @@ jobs:
             exit 1
           fi
 
-          # Get scheme - robust approach
+          # Get scheme
           scheme_list=$(xcodebuild -list -${filetype_parameter} "${file_to_build}")
-          echo "Available schemes and targets:"
+          echo "Available schemes:"
           echo "$scheme_list"
 
-          # Try to get the first scheme
           default_scheme=$(echo "$scheme_list" | awk '/Schemes:/,0' | tail -n +2 | head -1 | xargs)
           if [ -z "$default_scheme" ]; then
             echo "Error: Could not determine default scheme"
             exit 1
           fi
 
-          # Find any available iPhone simulator
-          available_simulators=$(xcrun simctl list devices available)
-          device=$(echo "$available_simulators" | grep -E "^    iPhone 16 " | grep -v unavailable | head -1 | sed -E 's/^[[:space:]]*([^(]+).*/\1/' | xargs)
-
+          # Find iPhone 16 simulator specifically
+          device=$(xcrun simctl list devices available | grep -E "iPhone 16" | head -1 | sed -E 's/^[[:space:]]*([^(]+).*/\1/' | xargs)
           if [ -z "$device" ]; then
-            echo "Error: No iPhone simulator found in available devices"
-            echo "Available devices:"
-            echo "$available_simulators"
+            echo "No iPhone 16 simulators found. Available devices:"
+            xcrun simctl list devices available | grep iPhone
             exit 1
           fi
 
@@ -250,35 +119,85 @@ jobs:
           echo "  Scheme: ${default_scheme}"
           echo "  Device: ${device}"
 
-      - name: Prepare Simulator
+      # Install iOS runtime if needed
+      - name: Install iOS Runtime
         run: |
-          echo "Preparing simulator: ${{ steps.config.outputs.device }}"
+          REQUIRED_IOS_VERSION="${{ matrix.ios-version }}"
+          echo "Checking for iOS $REQUIRED_IOS_VERSION runtime..."
+          
+          if xcrun simctl list runtimes | grep -q "iOS $REQUIRED_IOS_VERSION"; then
+            echo "✓ iOS $REQUIRED_IOS_VERSION runtime available"
+          else
+            echo "Installing iOS $REQUIRED_IOS_VERSION runtime..."
+            xcrun simctl runtime install "iOS $REQUIRED_IOS_VERSION" || {
+              echo "⚠️  Could not install iOS $REQUIRED_IOS_VERSION, using available runtime"
+            }
+          fi
 
-          # Use the selected device name to find or create a simulator UDID
-          SIMULATOR_UDID=$(xcrun simctl list devices available | grep "${{ steps.config.outputs.device }}" | grep -v unavailable | head -1 | grep -oE '\([A-F0-9-]+\)' | tr -d '()' || '')
+      # Resolve SPM dependencies
+      - name: Resolve Swift Package Dependencies
+        run: |
+          echo "Resolving Swift Package Manager dependencies..."
+          
+          # Clear cache if commit message contains flag
+          if echo "${{ github.event.head_commit.message || '' }}" | grep -q '\[clear-spm-cache\]'; then
+            echo "Clearing SPM cache due to commit message flag"
+            rm -rf ~/Library/Caches/org.swift.swiftpm
+            rm -rf .build
+            rm -rf **/SourcePackages
+          fi
+          
+          # Resolve dependencies
+          xcodebuild -resolvePackageDependencies \
+            -scheme "${{ steps.config.outputs.scheme }}" \
+            -${{ steps.config.outputs.filetype_parameter }} "${{ steps.config.outputs.file_to_build }}" \
+            -derivedDataPath DerivedData || {
+              echo "Failed to resolve dependencies, clearing cache and retrying..."
+              rm -rf ~/Library/Caches/org.swift.swiftpm
+              rm -rf DerivedData/**/SourcePackages
+              xcodebuild -resolvePackageDependencies \
+                -scheme "${{ steps.config.outputs.scheme }}" \
+                -${{ steps.config.outputs.filetype_parameter }} "${{ steps.config.outputs.file_to_build }}" \
+                -derivedDataPath DerivedData
+            }
+
+      - name: Prepare iPhone 16 Simulator
+        id: simulator
+        run: |
+          echo "Preparing iPhone 16 simulator: ${{ steps.config.outputs.device }}"
+
+          # Find iPhone 16 simulator UDID
+          SIMULATOR_UDID=$(xcrun simctl list devices available | grep "${{ steps.config.outputs.device }}" | head -1 | grep -oE '\([A-F0-9-]+\)' | tr -d '()')
 
           if [ -z "$SIMULATOR_UDID" ]; then
-            echo "Could not find a suitable simulator for ${{ steps.config.outputs.device }}"
-            echo "Available simulators:"
-            xcrun simctl list devices available
+            echo "Could not find iPhone 16 simulator"
+            echo "Available iPhone simulators:"
+            xcrun simctl list devices available | grep iPhone
             exit 1
           fi
 
-          echo "Using simulator UDID: $SIMULATOR_UDID"
+          echo "Using iPhone 16 simulator: $SIMULATOR_UDID"
 
-          # Boot the simulator
+          # Boot simulator
           xcrun simctl boot "$SIMULATOR_UDID" || echo "Simulator may already be booted"
-
-          # Wait for boot to complete
           xcrun simctl bootstatus "$SIMULATOR_UDID" -b
-
-          # Additional wait for stability
-          sleep 5
 
           echo "simulator_udid=${SIMULATOR_UDID}" >> $GITHUB_OUTPUT
 
+      # Check if tests exist
+      - name: Check for Tests
+        id: check-tests
+        run: |
+          if find . -name "*Tests.swift" -o -name "*Test.swift" | grep -q .; then
+            echo "has-tests=true" >> $GITHUB_OUTPUT
+            echo "✓ Test files found"
+          else
+            echo "has-tests=false" >> $GITHUB_OUTPUT
+            echo "ℹ️  No test files found"
+          fi
+
       - name: Build for Testing
-        timeout-minutes: 10
+        timeout-minutes: 8
         run: |
           set -o pipefail
           xcodebuild build-for-testing \
@@ -288,15 +207,14 @@ jobs:
             -configuration Debug \
             -derivedDataPath DerivedData \
             CODE_SIGNING_ALLOWED=NO \
-            | xcpretty || true
+            | xcpretty --color --report junit --output build-results.xml || true
 
       - name: Run Tests
-        timeout-minutes: 10
+        if: steps.check-tests.outputs.has-tests == 'true'
+        timeout-minutes: 8
         run: |
           set -o pipefail
-
-          # Check if there are actually any tests to run
-          if xcodebuild test-without-building \
+          xcodebuild test-without-building \
             -scheme "${{ steps.config.outputs.scheme }}" \
             -${{ steps.config.outputs.filetype_parameter }} "${{ steps.config.outputs.file_to_build }}" \
             -destination "platform=iOS Simulator,name=${{ steps.config.outputs.device }}" \
@@ -305,26 +223,26 @@ jobs:
             -parallel-testing-enabled NO \
             -resultBundlePath TestResults \
             CODE_SIGNING_ALLOWED=NO \
-            | xcpretty --report junit --output test-results.xml; then
-            echo "Tests completed successfully"
-          else
-            echo "Tests failed or no tests found"
-            # Check if it's because there are no tests
-            if [ ! -d "DerivedData/Build/Products/Debug-iphonesimulator" ]; then
-              echo "No test products found - this scheme may not have test targets"
-              exit 0  # Don't fail the build if there are simply no tests
-            else
-              exit 1  # Fail if tests exist but failed to run
-            fi
-          fi
+            | xcpretty --color --report junit --output test-results.xml
 
       - name: Upload Test Results
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: test-results
+          name: test-results-ios-${{ matrix.ios-version }}
           path: |
             test-results.xml
+            build-results.xml
             TestResults/
+            DerivedData/Logs/
+        continue-on-error: true
+
+      # Optional: Upload build artifacts
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: build-logs-ios-${{ matrix.ios-version }}
+          path: |
             DerivedData/Logs/
         continue-on-error: true
