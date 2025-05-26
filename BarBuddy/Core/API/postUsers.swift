@@ -61,15 +61,16 @@ final class PostUserAPIService {
         
         do {
             let (data, response) = try await URLSession.shared.data(for: request)
+            
+            if let jsonString = String(data: data, encoding: .utf8) {
+                print("json string: \(jsonString)")
+            }
+            
             if let responseStatusCode = response as? HTTPURLResponse {
                 if responseStatusCode.statusCode >= 400 {
                     print("bad response \(responseStatusCode.statusCode)")
                     return .failure(.badURL)
                 }
-            }
-            
-            if let jsonString = String(data: data, encoding: .utf8) {
-                print("json string: \(jsonString)")
             }
             
             do {

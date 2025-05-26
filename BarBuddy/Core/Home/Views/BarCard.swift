@@ -20,36 +20,69 @@ struct BarCard: View {
                     .foregroundColor(colorScheme == .dark ? .neonPink : Color("DarkBlue"))
                 Spacer()
                 // Dynamic trending badge
-                Trending(barName: bar.name)
+                //Trending(barName: bar.name)
             }
             // Open Hours
-            Text("Open 11am – 2am")
-                .foregroundColor(colorScheme == .dark ? .nude : Color("DarkPurple"))
+//            Text("Open 11am – 2am")
+//                .foregroundColor(colorScheme == .dark ? .nude : Color("DarkPurple"))
+            Text(bar.address)
+                  .foregroundColor(colorScheme == .dark ? .nude : Color("DarkPurple"))
             // Image placeholder
-            Rectangle()
-                .fill(Color("DarkPurple").opacity(0.3))
+            
+            if let firstImage = bar.images.first, let imageURL = URL(string: firstImage.image) {
+                AsyncImage(url: imageURL) { phase in
+                    switch phase {
+                    case .success(let image):
+                        image
+                            .resizable()
+                            .scaledToFill()
+                    case .failure(_):
+                        Rectangle()
+                            .fill(Color("DarkPurple").opacity(0.3))
+                            .frame(height: 200)
+                            .cornerRadius(10)
+                    case .empty:
+                        ZStack {
+                            Rectangle()
+                                .fill(Color("DarkPurple").opacity(0.3))
+                                .frame(height: 200)
+                                .cornerRadius(10)
+                            ProgressView()
+                                .scaleEffect(0.8)
+                        }
+                    @unknown default:
+                        EmptyView()
+                    }
+                }
                 .frame(height: 200)
-                .cornerRadius(10)
+                .clipShape(RoundedRectangle(cornerRadius: 10))
+            } else {
+                Rectangle()
+                    .fill(Color("DarkPurple").opacity(0.3))
+                    .frame(height: 200)
+                    .cornerRadius(10)
+            }
             // Dynamic Quick‑Info Bubbles
             HStack(spacing: 12) {
-                InfoTag(icon: "music.note",        text: viewModel.music[index] ?? "–")
-                InfoTag(icon: "person.3.fill",     text: viewModel.statuses[index]?.crowd_size ?? "–")
-                InfoTag(icon: "dollarsign.circle", text: viewModel.pricing[index] ?? "–")
+                //InfoTag(icon: "music.note",        text: viewModel.music[index] ?? "–")
+                //InfoTag(icon: "person.3.fill",     text: viewModel.statuses[index]?.crowd_size ?? "–")
+                InfoTag(icon: "person.3.fill",     text: bar.waitTime ?? "-")
+                InfoTag(icon: "dollarsign.circle", text: bar.average_price)
             }
             .frame(maxWidth: .infinity)
             // Single “Meet People Here” button
-            ActionButton(text: "Meet People Here", icon: "person.2.fill") {
-                showingSwipe = true
-            }
+//            ActionButton(text: "Meet People Here", icon: "person.2.fill") {
+//                showingSwipe = true
+//            }
         }
         .padding()
         .background(colorScheme == .dark ? Color(.secondarySystemBackground) : .white)
         .cornerRadius(15)
         .shadow(radius: 5)
-        .sheet(isPresented: $showingSwipe) {
-            SwipeView()
-                .environmentObject(viewModel)
-        }
+//        .sheet(isPresented: $showingSwipe) {
+//            SwipeView()
+//                .environmentObject(viewModel)
+//        }
     }
     // Helper to find this bar’s index
     private var index: Int {

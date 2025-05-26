@@ -9,6 +9,7 @@ import Foundation
 import FirebaseAuth
 import UIKit
 import CoreLocation
+import FirebaseFirestore
 
 // MARK: - Decodable model that matches the /users JSON
 struct UserProfile: Identifiable, Codable, Hashable, Equatable {
@@ -49,6 +50,8 @@ struct UserProfile: Identifiable, Codable, Hashable, Equatable {
         lhs.id == rhs.id
     }
     
+    
+    
     func hash(into hasher: inout Hasher) {
         hasher.combine(id)
     }
@@ -88,7 +91,7 @@ final class UsersFeedService {
         let idToken = try await uid.getIDToken()
 
         //var request = URLRequest(url: baseURL.appendingPathComponent("users"))
-        guard let url = URL(string: "https://barbuddy-backend-148659891217.us-central1.run.app/api/users/") else {
+        guard let url = URL(string: "https://barbuddy-backend-148659891217.us-central1.run.app/api/users/list_all_users/") else {
             return []
         }
         

@@ -7,11 +7,12 @@
 
 import SwiftUI
 import Firebase
+import FirebaseCore
 
 @main
 struct BarBuddyApp: App {
     @StateObject private var sessionManager = SessionManager()
-    @StateObject private var mapViewModel = MapViewModel()
+    //@StateObject private var mapViewModel = MapViewModel()
     @StateObject private var tabManager = TabManager()
     
     init() {
@@ -42,34 +43,34 @@ struct BarBuddyApp: App {
             switch sessionManager.sessionState {
             case .loggedIn:
                 TabView(selection: $tabManager.selectedTab) {
-                    SwipeView()
-                        .tabItem {
-                            Image(systemName: "person.2.fill")
-                            Text("Swipe")
-                        }
-                        .tag(0)
-                    MessagesView()
-                        .tabItem {
-                            Image(systemName: "message.fill")
-                            Text("Messages")
-                        }
-                        .tag(1)
+//                    SwipeView()
+//                        .tabItem {
+//                            Image(systemName: "person.2.fill")
+//                            Text("Swipe")
+//                        }
+//                        .tag(0)
+//                    MessagesView()
+//                        .tabItem {
+//                            Image(systemName: "message.fill")
+//                            Text("Messages")
+//                        }
+//                        .tag(1)
 
                     MainFeedView()
                         .tabItem {
                             Image(systemName: "map.fill")
                             Text("Map")
                         }
-                        .tag(2)
-                    ProfileView()
-                        .tabItem {
-                            Image(systemName: "person.circle")
-                            Text("Profile")
-                        }
-                        .tag(4)
+                        .tag(0)
+//                    ProfileView()
+//                        .tabItem {
+//                            Image(systemName: "person.circle")
+//                            Text("Profile")
+//                        }
+//                        .tag(4)
                 }
                 .accentColor(Color("Salmon"))
-                .environmentObject(mapViewModel)
+                //.environmentObject(mapViewModel)
                 .environmentObject(sessionManager)
             case .loggedOut:
                 LoginView()

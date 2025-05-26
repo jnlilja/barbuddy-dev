@@ -11,9 +11,11 @@ struct VoteButtonView: View {
     let text: String
     let opacity: Double
     @Binding var properties: ButtonProperties
+    var action: () -> Void
     
     var body: some View {
         Button {
+            action()
             print("Tapped \(text)")
             withAnimation {
                 properties.selectedOption = true
@@ -89,5 +91,7 @@ struct VoteButtonView: View {
 }
 
 #Preview(traits: .sizeThatFitsLayout) {
-    VoteButtonView(text: "10 - 20 min", opacity: 0.5, properties: .constant(.init(selectedOption: false, showMenu: false, offset: 0, type: "wait")))
+    VoteButtonView(text: "10 - 20 min", opacity: 0.5, properties: .constant(.init(selectedOption: false, showMenu: false, offset: 0, type: "wait")), action: {
+        
+    })
 }

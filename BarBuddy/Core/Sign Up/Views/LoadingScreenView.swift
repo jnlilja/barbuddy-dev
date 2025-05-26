@@ -12,9 +12,17 @@ struct LoadingScreenView: View {
         ZStack {
             Color(.darkBlue)
                 .ignoresSafeArea()
-            Text("Welcome!")
-                .font(.system(size: 64, weight: .bold, design: .rounded))
-                .foregroundColor(.salmon)
+            VStack {
+                Text("Welcome!")
+                    .font(.system(size: 64, weight: .bold, design: .rounded))
+                    .foregroundColor(.salmon)
+                HStack {
+                    ProgressView()
+                        .tint(.white)
+                    Text("Loading...")
+                        .foregroundStyle(.white)
+                }
+            }
         }
     }
 }

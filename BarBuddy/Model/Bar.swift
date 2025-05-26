@@ -32,6 +32,7 @@ struct Bar: Codable, Identifiable {
     let average_price: String
     let location: Location
     let images: [BarImage]
+    var waitTime: String?
     
     var coordinate: CLLocationCoordinate2D {
         return CLLocationCoordinate2D(latitude: location.latitude, longitude: location.longitude)

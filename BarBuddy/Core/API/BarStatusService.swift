@@ -71,6 +71,55 @@ public actor BarStatusService {
             return nil
         }
     }
+    
+    func createBarVote(bar: Bar, waitTime: String) async -> Bool {
+        
+        guard let url = URL(string: "https://barbuddy-backend-148659891217.us-central1.run.app/api/bar-votes/") else {
+            return false
+        }
+        
+        guard let uid = Auth.auth().currentUser else { return false }
+        guard let idToken = try? await uid.getIDToken() else {
+            return false
+        }
+        
+        let barVoteBody = PostBarVote(bar: bar.id, wait_time: waitTime)
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("Bearer \(idToken)", forHTTPHeaderField: "Authorization")
+        
+        do {
+            request.httpBody = try JSONEncoder().encode(barVoteBody)
+        }
+        catch {
+            return false
+        }
+        
+        do {
+            let (data, response) = try await URLSession.shared.data(for: request)
+            
+            if let jsonString = String(data: data, encoding: .utf8) {
+                print("json string: \(jsonString)")
+            }
+            
+            if let responseStatusCode = response as? HTTPURLResponse {
+                if responseStatusCode.statusCode >= 400 {
+                    print("bad response \(responseStatusCode.statusCode)")
+                    return false
+                }
+                if responseStatusCode.statusCode == 200 || responseStatusCode.statusCode == 201 {
+                    return true
+                }
+            }
+            
+        } catch {
+            return false
+        }
+        
+        return false
+    }
 
     // GET /bar-status/
     public func fetchStatuses() async throws -> [BarStatus] {

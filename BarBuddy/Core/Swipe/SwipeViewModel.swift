@@ -9,6 +9,7 @@ import Foundation
 import SwiftUI
 import Combine
 import FirebaseAuth
+import FirebaseFirestore
 import CoreLocation
 
 @MainActor
@@ -53,6 +54,9 @@ class SwipeViewModel: ObservableObject {
     func loadSuggestions() async {
         // 1.  Grab the full user feed
         do {
+            
+            //let results = try await Firestore.firestore().collection("Users").getDocuments()
+            
             let users = try await UsersFeedService.shared.fetchAll()
             self.users = users
 //            guard let currentUser = Auth.auth().currentUser else {

@@ -6,10 +6,90 @@ import SDWebImageSwiftUI
 //  Created by Andrew Betancourt on 2/25/25.
 //
 import SwiftUI
+import FirebaseAuth
+
+struct BarVote: Codable {
+    let bar: Int
+    let wait_time: String
+}
+
+struct PostBarVote: Codable {
+    let bar: Int
+    let wait_time: String
+}
+
+class BarDetailPopupViewModel: ObservableObject {
+    
+    func getBarVotes() async throws -> [BarVote] {
+        guard let uid = Auth.auth().currentUser else { throw UsersAPIError.noToken }
+        let idToken = try await uid.getIDToken()
+        //var request = URLRequest(url: baseURL.appendingPathComponent("users"))
+        guard let url = URL(string: "https://barbuddy-backend-148659891217.us-central1.run.app/api/bar-votes/") else {
+            return []
+        }
+        var request = URLRequest(url: url)
+        request.setValue("Bearer \(idToken)", forHTTPHeaderField: "Authorization")
+        do {
+            let (data, _) = try await URLSession.shared.data(for: request)
+            if let jsonData = String(data: data, encoding: .utf8) {
+                print("suggestions json \(jsonData)")
+            }
+            return try JSONDecoder().decode([BarVote].self, from: data)
+        } catch let e as DecodingError {
+            throw UsersAPIError.decoding(e)
+        } catch {
+            throw UsersAPIError.transport(error)
+        }
+    }
+    
+    func createBarVote(bar: Bar, waitTime: String) async -> Bool {
+        
+        guard let url = URL(string: "https://barbuddy-backend-148659891217.us-central1.run.app/api/bar-votes/") else {
+            return false
+        }
+        
+        let barVoteBody = PostBarVote(bar: bar.id, wait_time: waitTime)
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        do {
+            request.httpBody = try JSONEncoder().encode(barVoteBody)
+        }
+        catch {
+            return false
+        }
+        
+        do {
+            let (data, response) = try await URLSession.shared.data(for: request)
+            
+            if let jsonString = String(data: data, encoding: .utf8) {
+                print("json string: \(jsonString)")
+            }
+            
+            if let responseStatusCode = response as? HTTPURLResponse {
+                if responseStatusCode.statusCode >= 400 {
+                    print("bad response \(responseStatusCode.statusCode)")
+                    return false
+                }
+                if responseStatusCode.statusCode == 200 || responseStatusCode.statusCode == 201 {
+                    return true
+                }
+            }
+            
+        } catch {
+            return false
+        }
+        
+        return false
+    }
+    
+}
 
 struct BarDetailPopup: View {
     @Environment(\.dismiss) var dismiss
     @EnvironmentObject var viewModel: MapViewModel
+    @StateObject var barDetailViewModel = BarDetailPopupViewModel()
     let bar: Bar
     @State private var waitButtonProperties = ButtonProperties(type: "wait")
     @State private var crowdButtonProperties = ButtonProperties(type: "crowd")
@@ -30,6 +110,7 @@ struct BarDetailPopup: View {
     private var waitTime: String {
         viewModel.statuses[idx]?.wait_time ?? "–"
     }
+    
     var body: some View {
         NavigationView {
             VStack(spacing: 25) {
@@ -63,22 +144,28 @@ struct BarDetailPopup: View {
                                 RoundedRectangle(cornerRadius: 15)
                                     .foregroundStyle(.salmon.opacity(0.2))
                                     .frame(width: 131, height: 50)
-                                Text(waitTime)
+                                Text(bar.waitTime ?? "-")
                                     .foregroundColor(Color("DarkPurple"))
                                     .bold()
                             }
 
                             Button {
                                 // send vote with current values
-                                Task {
-                                    try? await BarStatusService.shared
-                                        .submitVote(
-                                            barId: idx,
-                                            crowdSize: crowdSize,
-                                            waitTime: waitTime
-                                        )
-                                    await viewModel.loadBarData()
-                                }
+//                                Task {
+//                                    let result = await BarStatusService.shared.createBarVote(bar: bar, waitTime: waitTime)
+//                                    if result {
+//                                        print("vote worked!")
+//                                    } else {
+//                                        print("vote failed!")
+//                                    }
+////                                    try? await BarStatusService.shared
+////                                        .submitVote(
+////                                            barId: idx,
+////                                            crowdSize: crowdSize,
+////                                            waitTime: waitTime
+////                                        )
+////                                    await viewModel.loadBarData()
+//                                }
                                 withAnimation(
                                     .spring(duration: 0.5, bounce: 0.3)
                                 ) {
@@ -206,7 +293,7 @@ struct BarDetailPopup: View {
             // Wait‑time menu
             if waitButtonProperties.showMenu {
                 HStack {
-                    VoteWaitTimeView(properties: $waitButtonProperties)
+                    VoteWaitTimeView(bar: bar, properties: $waitButtonProperties)
                         .offset(x: waitButtonProperties.offset)
                         .padding(.leading)
                         .gesture(

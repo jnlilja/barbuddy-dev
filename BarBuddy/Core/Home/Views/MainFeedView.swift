@@ -6,14 +6,18 @@
 import BottomSheet
 import MapKit
 import SwiftUI
+import Combine
+
 struct MainFeedView: View {
-    @EnvironmentObject var viewModel: MapViewModel
+    @StateObject var viewModel = MapViewModel()
     @State private var bottomSheetPosition: BottomSheetPosition = .relative(0.86)
     @State private var selectedItem: Int?
     @State private var isDetailPresented = false
     @State private var searchText = ""
     @Environment(\.colorScheme) var colorScheme
-    let locationViewModel = LocationManager()
+    @State var locationViewModel = LocationManager()
+    @State private var cancellables = Set<AnyCancellable>()
+    
     var body: some View {
         NavigationStack {
             ZStack {
@@ -25,36 +29,67 @@ struct MainFeedView: View {
             .toolbar { toolbarContent }
         }
         .environmentObject(viewModel)
-        .task { await viewModel.loadBarData() }
+        .task {
+            await viewModel.loadBarData()
+            do {
+                let barVotes = try await viewModel.getBarVotes()
+                viewModel.barVotes = barVotes
+                
+                for barVote in barVotes {
+                    if let barIndex = viewModel.bars.firstIndex(where: { $0.id == barVote.bar }) {
+                        var bar = viewModel.bars[barIndex]
+                        bar.waitTime = barVote.wait_time
+                        viewModel.bars[barIndex] = bar
+                    }
+                }
+                
+            } catch {
+                
+            }
+            Timer.publish(every: 300, on: .main, in: .common)
+            .autoconnect()
+            .sink { _ in
+                Task {
+                    do {
+                        let barVotes = try await viewModel.getBarVotes()
+                        await MainActor.run {
+                            viewModel.barVotes = barVotes
+                        }
+                    } catch {
+                        
+                    }
+                }
+            }
+            .store(in: &cancellables)
+        }
     }
     // MARK: — Map Layer
     private var mapLayer: some View {
-        Text("To be fixed")
-//        Map(position: $viewModel.cameraPosition, selection: $selectedItem) {
-//            ForEach(viewModel.bars) { bar in
-//                Annotation(bar.name, coordinate: bar.location) {
-//                    annotationView(for: bar)
-//                }
-//            }
-//            UserAnnotation()
-//        }
+        Map(position: $viewModel.cameraPosition, selection: $selectedItem) {
+            ForEach(viewModel.bars) { bar in
+                Annotation(bar.name, coordinate: CLLocationCoordinate2D(latitude: bar.location.latitude, longitude: bar.location.longitude)) {
+                    annotationView(for: bar)
+                }
+            }
+            UserAnnotation()
+        }
 //        .onChange(of: selectedItem) { _, new in
 //            isDetailPresented = new != nil
 //        }
-//        .mapControls {
-//            MapUserLocationButton()
-//            MapCompass()
-//            MapPitchToggle()
-//        }
-//        .ignoresSafeArea(.keyboard)
-//        .onAppear { locationViewModel.startLocationServices() }
-//        .sheet(isPresented: $isDetailPresented) {
-//            if let bar = selectedBar {
-//                BarDetailPopup(bar: bar)
-//                    .environmentObject(viewModel)
-//            }
-//        }
-//        .tint(.salmon)
+        .mapControls {
+            MapUserLocationButton()
+            MapCompass()
+            MapPitchToggle()
+        }
+        .ignoresSafeArea(.keyboard)
+        .onAppear { locationViewModel.startLocationServices() }
+        .sheet(isPresented: $isDetailPresented) {
+            if let bar = selectedBar {
+                BarDetailPopup(bar: bar)
+                    .environmentObject(viewModel)
+            }
+        }
+        .tint(.salmon)
     }
     private func annotationView(for bar: Bar) -> some View {
         ZStack {
@@ -96,14 +131,14 @@ struct MainFeedView: View {
             ) {
                 ScrollView {
                     contentList
-                        .gesture(
-                            DragGesture().onChanged { value in
-                                // Allow drag gesture to dismiss the bottom sheet
-                                if value.translation.height > 0 {
-                                    bottomSheetPosition = .relativeBottom(0.21)
-                                }
-                            }
-                        )
+//                        .gesture(
+//                            DragGesture().onChanged { value in
+//                                // Allow drag gesture to dismiss the bottom sheet
+//                                if value.translation.height > 0 {
+//                                    bottomSheetPosition = .relativeBottom(0.21)
+//                                }
+//                            }
+//                        )
                 }
             }
             .customBackground(.darkBlue.opacity(0.9))
@@ -125,11 +160,11 @@ struct MainFeedView: View {
     }
     private var contentList: some View {
         VStack {
-            NavigationLink(destination: DealsAndEventsView()) {
-                EventCard()
-                    .padding([.horizontal, .bottom])
-            }
-            .buttonStyle(PlainButtonStyle())
+//            NavigationLink(destination: DealsAndEventsView()) {
+//                EventCard()
+//                    .padding([.horizontal, .bottom])
+//            }
+//            .buttonStyle(PlainButtonStyle())
             if filteredBars.isEmpty {
                 Text("No results found")
                     .foregroundColor(.white)

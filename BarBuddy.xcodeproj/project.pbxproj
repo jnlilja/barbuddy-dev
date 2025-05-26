@@ -12,6 +12,7 @@
 		1BF7EF472D79161D001786D8 /* BottomSheet in Frameworks */ = {isa = PBXBuildFile; productRef = 1BF7EF462D79161D001786D8 /* BottomSheet */; };
 		1BFF2B742DB6C59400D160AB /* PusherSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 1BFF2B732DB6C59400D160AB /* PusherSwift */; };
 		1BFF2B772DB6C73900D160AB /* SDWebImageSwiftUI in Frameworks */ = {isa = PBXBuildFile; productRef = 1BFF2B762DB6C73900D160AB /* SDWebImageSwiftUI */; };
+		203E06F52DD7CF11005AE0E2 /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = 203E06F42DD7CF11005AE0E2 /* FirebaseCore */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -77,6 +78,7 @@
 				1BF7EF472D79161D001786D8 /* BottomSheet in Frameworks */,
 				1BBB5B712D979D0400A5E2E8 /* FirebaseAuth in Frameworks */,
 				1BEC0A212DB0825F00ED74F0 /* FirebaseFirestore in Frameworks */,
+				203E06F52DD7CF11005AE0E2 /* FirebaseCore in Frameworks */,
 				1BFF2B742DB6C59400D160AB /* PusherSwift in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -98,12 +100,20 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		203E06F32DD7CF11005AE0E2 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		599153A82D540523004B2832 = {
 			isa = PBXGroup;
 			children = (
 				599153B32D540523004B2832 /* BarBuddy */,
 				599153C42D540525004B2832 /* BarBuddyTests */,
 				599153CE2D540525004B2832 /* BarBuddyUITests */,
+				203E06F32DD7CF11005AE0E2 /* Frameworks */,
 				599153B22D540523004B2832 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -143,6 +153,7 @@
 				1BEC0A202DB0825F00ED74F0 /* FirebaseFirestore */,
 				1BFF2B732DB6C59400D160AB /* PusherSwift */,
 				1BFF2B762DB6C73900D160AB /* SDWebImageSwiftUI */,
+				203E06F42DD7CF11005AE0E2 /* FirebaseCore */,
 			);
 			productName = BarBuddy;
 			productReference = 599153B12D540523004B2832 /* BarBuddy.app */;
@@ -660,6 +671,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 1BFF2B752DB6C73900D160AB /* XCRemoteSwiftPackageReference "SDWebImageSwiftUI" */;
 			productName = SDWebImageSwiftUI;
+		};
+		203E06F42DD7CF11005AE0E2 /* FirebaseCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 1BBB5B6F2D979D0400A5E2E8 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseCore;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

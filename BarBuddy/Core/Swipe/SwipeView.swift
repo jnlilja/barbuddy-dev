@@ -206,6 +206,7 @@ struct SwipeView: View {
             .task {
                 vm.isLoading = true
                 let bars = await BarStatusService.shared.fetchBars()
+                
                 await vm.loadSuggestions()
                 vm.isLoading = false
                 if let bars = bars {
