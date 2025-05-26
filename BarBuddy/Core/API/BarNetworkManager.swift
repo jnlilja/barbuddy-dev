@@ -382,7 +382,12 @@ actor BarNetworkManager {
         }
     }
     
-    func patchBarStatus(statusID: Int) async throws {
+    func patchBarStatus(statusID: Int, status: BarStatus) async throws {
+        struct patchStruct: Encodable {
+            let crowdSize: String?
+            let waitTime: String?
+        }
+
         let endpoint = baseURL + "bar-status/\(statusID)/"
         guard let url = URL(string: endpoint) else {
             throw APIError.badURL
@@ -395,6 +400,9 @@ actor BarNetworkManager {
         request.httpMethod = "PATCH"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        
+        var patch = patchStruct(crowdSize: status.crowdSize, waitTime: status.waitTime)
+        request.httpBody = try encoder.encode(patch)
         
         let (_, response) = try await session.data(for: request)
         guard let response = response as? HTTPURLResponse, (200...299).contains(response.statusCode) else {

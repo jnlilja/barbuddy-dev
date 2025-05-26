@@ -65,8 +65,6 @@ struct LoginView: View {
                     Button {
                         Task {
                             await sessionManager.signIn(email: email, password: password)
-                            // authVM.currentUser is now filled by AuthViewModel;
-                            // dismiss or navigate to the main app UI here if you like.
                         }
                     } label: {
                         Text("Login")

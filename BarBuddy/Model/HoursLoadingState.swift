@@ -9,9 +9,9 @@ import Foundation
 
 enum HoursLoadingState {
     case loading
-    case success
-    case noWait
-    case failure
+    case loaded
+    case noWaitTime
+    case failed
     case closed
 }
 

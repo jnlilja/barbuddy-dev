@@ -15,10 +15,6 @@ struct BarDetailPopup: View {
     @State private var waitButtonProperties = ButtonProperties(type: "wait")
     @State private var hours: String?
 
-    // Dynamic values from your endpoints
-    private var crowdSize: String {
-        viewModel.statuses.first(where: { $0.bar == bar.id })?.crowdSize ?? ""
-    }
     private var waitTime: String {
         viewModel.statuses.first(where: { $0.bar == bar.id })?.waitTime ?? ""
     }
@@ -69,13 +65,13 @@ struct BarDetailPopup: View {
                                     ProgressView()
                                         .tint(.darkPurple)
                                         .scaleEffect(1.5)
-                                case .success:
+                                case .loaded:
                                     Text(waitTime)
                                     
-                                case .noWait:
+                                case .noWaitTime:
                                     Text("No wait")
                                     
-                                case .failure:
+                                case .failed:
                                     Text("Wait time unavailable")
                                         .frame(width: 150)
                                         .multilineTextAlignment(.center)
@@ -115,8 +111,8 @@ struct BarDetailPopup: View {
                                 }
                             }
                             // Disable vote button if bar is closed or wait time could not be fetched
-                            .disabled(loadingState == .closed || loadingState == .failure)
-                            .opacity(loadingState == .closed || loadingState == .failure ? 0.5 : 1)
+                            .disabled(loadingState == .closed || loadingState == .failed)
+                            .opacity(loadingState == .closed || loadingState == .failed ? 0.5 : 1)
                             .padding(.top)
 
                         } else {
@@ -144,7 +140,7 @@ struct BarDetailPopup: View {
             }
             .task {
                 guard let hours, !hours.contains("Closed") else {
-                    loadingState = hours == nil ? .failure : .closed
+                    loadingState = hours == nil ? .failed : .closed
                     return
                 }
 
@@ -158,12 +154,12 @@ struct BarDetailPopup: View {
                 }
                 
                 if viewModel.statuses.isEmpty {
-                    loadingState = .failure
+                    loadingState = .failed
                     print("No bar status data available")
                 }
                 else {
                     // Check if the bar data is available
-                    loadingState = waitTime.isEmpty ? .noWait : .success
+                    loadingState = waitTime.isEmpty ? .noWaitTime : .loaded
                 }
             }
             .transition(.blurReplace)

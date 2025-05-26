@@ -39,7 +39,7 @@ final class VoteViewModel {
         
         status.lastUpdated = DateFormatter.formatTimeStamp(Date())
         
-        try await BarNetworkManager.shared.patchBarStatus(statusID: statusId)
+        try await BarNetworkManager.shared.patchBarStatus(statusID: statusId, status: status)
     }
     
     private func getMostVotedWaitTime() -> String? {

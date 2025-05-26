@@ -32,12 +32,12 @@ struct VoteSelectionView: View {
                 GridItem(.adaptive(minimum: 70, maximum: 150))
             ]) {
                 
-                VoteBoxButtonView(text: "< 5 min", opacity: 0.06, properties: $properties, bar: $bar, selectedOption: $selectedOption)
-                VoteBoxButtonView(text: "5 - 10 min", opacity: 0.1, properties: $properties, bar: $bar, selectedOption: $selectedOption)
-                VoteBoxButtonView(text: "10 - 20 min", opacity: 0.2, properties: $properties, bar: $bar, selectedOption: $selectedOption)
-                VoteBoxButtonView(text: "20 - 30 min", opacity: 0.3, properties: $properties, bar: $bar, selectedOption: $selectedOption)
-                VoteBoxButtonView(text: "30 - 45 min", opacity: 0.4, properties: $properties, bar: $bar, selectedOption: $selectedOption)
-                VoteBoxButtonView(text: "> 45 min", opacity: 0.5, properties: $properties, bar: $bar, selectedOption: $selectedOption)
+                VoteButtonView(text: "< 5 min", opacity: 0.06, properties: $properties, selectedOption: $selectedOption)
+                VoteButtonView(text: "5 - 10 min", opacity: 0.1, properties: $properties, selectedOption: $selectedOption)
+                VoteButtonView(text: "10 - 20 min", opacity: 0.2, properties: $properties, selectedOption: $selectedOption)
+                VoteButtonView(text: "20 - 30 min", opacity: 0.3, properties: $properties, selectedOption: $selectedOption)
+                VoteButtonView(text: "30 - 45 min", opacity: 0.4, properties: $properties, selectedOption: $selectedOption)
+                VoteButtonView(text: "> 45 min", opacity: 0.5, properties: $properties, selectedOption: $selectedOption)
             }
             .padding(.horizontal)
             
