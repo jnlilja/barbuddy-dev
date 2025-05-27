@@ -401,7 +401,7 @@ actor BarNetworkManager {
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         
-        var patch = patchStruct(crowdSize: status.crowdSize, waitTime: status.waitTime)
+        let patch = patchStruct(crowdSize: status.crowdSize, waitTime: status.waitTime)
         request.httpBody = try encoder.encode(patch)
         
         let (_, response) = try await session.data(for: request)

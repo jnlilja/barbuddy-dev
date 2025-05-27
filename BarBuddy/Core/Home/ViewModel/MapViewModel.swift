@@ -21,7 +21,6 @@ final class MapViewModel {
         fallback: .automatic
     )
     var statuses: [BarStatus] = []
-    var pricing: [Int: String] = [:]
 
     // MARK: – Static list of bars
     /// Type Bars is a typealias of [Bar]

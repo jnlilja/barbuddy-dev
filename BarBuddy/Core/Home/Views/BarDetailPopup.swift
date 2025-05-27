@@ -13,7 +13,6 @@ struct BarDetailPopup: View {
     @State var bar: Bar
     @State private var loadingState: HoursLoadingState = .loading
     @State private var waitButtonProperties = ButtonProperties(type: "wait")
-    @State private var hours: String?
 
     private var waitTime: String {
         viewModel.statuses.first(where: { $0.bar == bar.id })?.waitTime ?? ""
@@ -59,7 +58,7 @@ struct BarDetailPopup: View {
                                     .shadow(radius: 10)
 
                                 // MARK: — Loading state
-                                
+
                                 switch loadingState {
                                 case .loading:
                                     ProgressView()
@@ -67,10 +66,10 @@ struct BarDetailPopup: View {
                                         .scaleEffect(1.5)
                                 case .loaded:
                                     Text(waitTime)
-                                    
+
                                 case .noWaitTime:
                                     Text("No wait")
-                                    
+
                                 case .failed:
                                     Text("Wait time unavailable")
                                         .frame(width: 150)
@@ -111,8 +110,16 @@ struct BarDetailPopup: View {
                                 }
                             }
                             // Disable vote button if bar is closed or wait time could not be fetched
-                            .disabled(loadingState == .closed || loadingState == .failed)
-                            .opacity(loadingState == .closed || loadingState == .failed ? 0.5 : 1)
+                            .disabled(
+                                loadingState == .closed
+                                || loadingState == .failed
+                                || loadingState == .loading
+                            )
+                            .opacity(
+                                loadingState == .closed
+                                || loadingState == .failed
+                                || loadingState == .loading ? 0.5 : 1
+                            )
                             .padding(.top)
 
                         } else {
@@ -139,8 +146,10 @@ struct BarDetailPopup: View {
                 .navigationBarTitleDisplayMode(.inline)
             }
             .task {
-                guard let hours, !hours.contains("Closed") else {
-                    loadingState = hours == nil ? .failed : .closed
+                if let hours = await bar.getHours() {
+                    loadingState = hours.contains("Closed") ? .closed : .loading
+                } else {
+                    loadingState = .failed
                     return
                 }
 
@@ -152,12 +161,11 @@ struct BarDetailPopup: View {
                 } catch {
                     print("Error calculating votes: \(error)")
                 }
-                
+
                 if viewModel.statuses.isEmpty {
-                    loadingState = .failed
+                    loadingState = .loading
                     print("No bar status data available")
-                }
-                else {
+                } else {
                     // Check if the bar data is available
                     loadingState = waitTime.isEmpty ? .noWaitTime : .loaded
                 }
