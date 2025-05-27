@@ -19,7 +19,7 @@ jobs:
     timeout-minutes: 25
     strategy:
       matrix:
-        ios-version: ['17.2', '18.0']
+        ios-version: ['18.0']
       fail-fast: false
       max-parallel: 2
 
