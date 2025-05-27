@@ -41,6 +41,23 @@ struct ProfileView: View {
                 Color("DarkBlue")
                     .ignoresSafeArea()
                 // ─── Main profile + tabs + content ───
+                Button {
+                                showSignOutAlert = true
+                            } label: {
+                                Text("Log Out")
+                                    .font(.headline)
+                                    .foregroundColor(.white)
+                                    .padding(.vertical, 14)
+                                    .padding(.horizontal, 50)
+                                    .background(Color("Salmon"))           // same hue as before
+                                    .clipShape(Capsule())
+                            }
+                            .alert("Confirm Sign Out", isPresented: $showSignOutAlert) {
+                                Button("Cancel", role: .cancel) {}
+                                Button("Sign Out") {
+                                    authVM.signOut()
+                                }
+                            }
                 if let user = authVM.currentUser {
                     VStack(spacing: 25) {
                         // Profile header
@@ -252,21 +269,7 @@ struct ProfileView: View {
                 .animation(.easeInOut(duration: 0.25), value: isSearchActive)
                 .zIndex(1)
             }
-            .toolbar {
-                // Temporary signout view
-                ToolbarItem(placement: .navigation) {
-                    Button {
-                        //authVM.signOut()
-                        showSignOutAlert = true
-                    } label: {
-                        Image(systemName: "figure.walk.departure")
-                            .environment(\.layoutDirection, .rightToLeft)
-                        
-                        Text("Sign Out")
-                    }
-                    .foregroundColor(.salmon)
-                    .font(.headline)
-                }
+
 //                ToolbarItem(placement: .navigationBarLeading) {
 //                    NavigationLink(destination: RequestsView()) {
 //                        Label("Friend Requests", systemImage: "person.crop.circle.badge.plus")
@@ -281,7 +284,7 @@ struct ProfileView: View {
 //                    }
 //                    .tint(Color("Salmon"))
 //                }
-            }
+            
         }
         .tint(Color("Salmon"))
         .alert("Confirm Sign Out", isPresented: $showSignOutAlert) {
