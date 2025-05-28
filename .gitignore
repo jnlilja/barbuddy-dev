@@ -11,6 +11,9 @@ venv/
 # Environment file for iOS
 .env
 
+# iOS Test Plan File
+BarBuddy.xctestplan
+
 backend/entrypoint.sh
 
 # Ignore other common Python files
