@@ -43,6 +43,7 @@ struct MainFeedView: View {
                 .dragIndicatorColor(
                     bottomSheetPosition == .relativeTop(1) ? .clear : .white
                 )
+                .enableContentDrag()
                 .enableAppleScrollBehavior()
                 .customAnimation(.snappy)
                 .ignoresSafeArea(.keyboard)
@@ -132,6 +133,7 @@ struct MainFeedView: View {
                 }
                 .transition(.opacity)
                 .animation(.easeInOut, value: searchText)
+                
             }
         }
     }

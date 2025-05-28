@@ -17,21 +17,29 @@ import SwiftUI
 /// pricing, and a static list of bars. The class also includes methods
 /// to load bar data and update the camera position based on a selected bar.
 final class MapViewModel {
-    var cameraPosition: MapCameraPosition = .userLocation(
-        fallback: .automatic
+    private static let pacificBeachCoordinate = CLLocationCoordinate2D(
+        latitude: 32.794,
+        longitude: -117.253
+    )
+    var cameraPosition: MapCameraPosition = .region(
+        .init(
+            center: pacificBeachCoordinate,
+            span: .init(latitudeDelta: 0.01, longitudeDelta: 0.01)
+        )
     )
     var statuses: [BarStatus] = []
 
     // MARK: – Static list of bars
     /// Type Bars is a typealias of [Bar]
     var bars: Bars = [
-        Bar(id: 0,
+        Bar(
+            id: 0,
             name: "Mavericks Beach Club",
             address: "860 Garnet Ave, San Diego, CA 92109",
             latitude: 32.7969526,
             longitude: -117.2543182,
             images: []
-           ),
+        ),
         Bar(
             id: 1,
             name: "Thrusters Lounge",
@@ -328,13 +336,8 @@ final class MapViewModel {
             images: [],
             currentUserCount: "",
             activityLevel: ""
-        )
+        ),
     ]
-
-    private let pacificBeachCoordinate = CLLocationCoordinate2D(
-        latitude: 32.794,
-        longitude: -117.253
-    )
 
     init() {
         Task { await loadBarData() }
@@ -367,7 +370,7 @@ final class MapViewModel {
         let req = MKLocalSearch.Request()
         req.naturalLanguageQuery = bar
         req.region = .init(
-            center: pacificBeachCoordinate,
+            center: MapViewModel.pacificBeachCoordinate,
             latitudinalMeters: 1000,
             longitudinalMeters: 1000
         )
