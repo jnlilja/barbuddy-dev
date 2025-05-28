@@ -14,6 +14,8 @@ venv/
 # iOS Test Plan File
 BarBuddy.xctestplan
 
+.DS_Store
+
 backend/entrypoint.sh
 
 # Ignore other common Python files
