@@ -153,7 +153,6 @@ struct BarDetailPopup: View {
                     return
                 }
 
-                await viewModel.loadBarData()
                 do {
                     if let id = bar.id {
                         try await voteViewModel.calculateVotes(for: id)

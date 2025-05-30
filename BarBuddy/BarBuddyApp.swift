@@ -10,6 +10,7 @@ import Firebase
 
 @main
 struct BarBuddyApp: App {
+    @StateObject private var authViewModel = AuthViewModel()
     @State private var mapViewModel = MapViewModel()
     @State private var voteViewModel = VoteViewModel()
     
@@ -20,9 +21,10 @@ struct BarBuddyApp: App {
 
     var body: some Scene {
         WindowGroup {
-            HomeView()
+            ContentView()
                 .environment(mapViewModel)
                 .environment(voteViewModel)
+                .environmentObject(authViewModel)
         }
     }
 }

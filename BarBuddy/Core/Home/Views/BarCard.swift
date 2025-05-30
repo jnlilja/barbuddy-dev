@@ -14,13 +14,11 @@ struct BarCard: View {
     @Environment(\.colorScheme) var colorScheme
     @State private var showingSwipe = false
     @Environment(VoteViewModel.self) var voteViewModel
+    @State private var loading = true
     
     private var waitTime: String? {
-        viewModel.statuses.first(where: { $0.bar == bar.id })?.waitTime
+        viewModel.statuses.first(where: { $0.bar == bar.id })?.waitTime ?? ""
     }
-//    private var crowdSize: String {
-//        viewModel.statuses.first(where: { $0.bar == bar.id })?.crowdSize ?? "-"
-//    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -49,88 +47,89 @@ struct BarCard: View {
                     .frame(height: 200)
                     .cornerRadius(10)
             }
-            // Dynamic Quick‑Info Bubbles
-//            HStack(spacing: 12) {
-//                InfoTag(icon: "record.circle", text: "Current wait time: \(waitTime)")
-//                InfoTag(icon: "person.3.fill",     text: crowdSize)
-//                InfoTag(icon: "dollarsign.circle", text: bar.averagePrice ?? "-")
-//            }
-//            .frame(maxWidth: .infinity)
-            // Single “Meet People Here” button
-//            ActionButton(text: "Meet People Here", icon: "person.2.fill") {
-//                showingSwipe = true
-//            }
-            ZStack(alignment: .leading) {
-                RoundedRectangle(cornerRadius: 10)
-                    .fill(Color("DarkPurple"))
-                    .frame(height: 50)
-                
-                HStack(alignment: .center) {
-                    Image(systemName: "clock.fill")
-                        .foregroundColor(.white)
-                        .font(.system(size: 20))
+            HStack(spacing: 5) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 20)
+                        .fill(.darkBlue)
+                        .frame(width: 230, height: 80)
                     
-                    // Current wait time
-                    if let waitTime = waitTime {
-                        Text("Current wait time: ")
-                            .foregroundColor(.white)
-                            .font(.system(size: 18))
-                        
-                        Text(waitTime)
-                            .foregroundColor(.white)
-                            .font(.system(size: 18, weight: .bold))
-                            .padding(.trailing)
-                    }
-                    // Display "Closed" if bar is closed
-                    else if (hours?.contains("Closed") ?? false) {
-                        Text("Closed")
-                            .foregroundColor(.white)
-                            .font(.system(size: 18).bold())
-                            .padding(.trailing)
-                    }
-                    // Display "Wait time unavailable" if no wait time is available
-                    // Most likely API error if this happens
-                    else {
-                        Text("Wait time unavailable")
-                            .foregroundColor(.white)
-                            .font(.system(size: 18).bold())
-                            .padding(.trailing)
+                    VStack(spacing: 5) {
+                        Text("Est. Line Wait time")
+                            .font(.system(size: 14, weight: .bold))
+                        if loading {
+                            ProgressView()
+                                .tint(.white)
+                        }
+                        else {
+                            Group {
+                                if hours == nil {
+                                    Text("Unavailable")
+                                } else if let hours, hours.contains("Closed") {
+                                    Text("Closed")
+                                } else if let waitTime, !waitTime.isEmpty {
+                                    Text(waitTime)
+                                } else {
+                                    Text("No votes yet")
+                                }
+                            }
+                            .font(.title)
+                            .bold()
+                        }
                     }
                 }
-                .padding(.leading)
+                .foregroundColor(.white)
+                
+                NavigationLink(destination: BarDetailPopup(bar: bar)
+                    .environment(voteViewModel)
+                    .environment(viewModel)) {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 20)
+                            .fill(.darkBlue)
+                            .frame(width: 100, height: 80)
+                        
+                        VStack(spacing: 5) {
+                            Text("Wrong?")
+                                .font(.system(size: 14, weight: .medium))
+                            
+                            Text("Vote Wait Time >")
+                                .multilineTextAlignment(.center)
+                                .frame(width: 80)
+                                .bold()
+                        }
+                    }
+                    .foregroundColor(.white)
+                }
             }
         }
         .task {
-            await viewModel.loadBarData()
             hours = await bar.getHours()
+            loading = false
         }
         .padding()
         .background(colorScheme == .dark ? Color(.secondarySystemBackground) : .white)
         .cornerRadius(15)
         .shadow(radius: 5)
-        .sheet(isPresented: $showingSwipe) {
-            SwipeView()
-                .environment(viewModel)
-        }
     }
 }
 #Preview(traits: .sizeThatFitsLayout) {
-    BarCard(bar: Bar(
-        name: "Moonshine Beach",
-        address: "1165 Garnet Ave, San Diego, CA 92109",
-        latitude: 32.7980179,
-        longitude: -117.2484153,
-        location: "",
-        usersAtBar: 0,
-        currentStatus: "",
-        averageRating: "",
-        images: [],
-        currentUserCount: "",
-        activityLevel: ""
-    ))
-    .environment(MapViewModel())
-    .environment(VoteViewModel())
-    .padding()
+    NavigationStack {
+        BarCard(bar: Bar(
+            name: "Moonshine Beach",
+            address: "1165 Garnet Ave, San Diego, CA 92109",
+            latitude: 32.7980179,
+            longitude: -117.2484153,
+            location: "",
+            usersAtBar: 0,
+            currentStatus: "",
+            averageRating: "",
+            images: [],
+            currentUserCount: "",
+            activityLevel: ""
+        ))
+        .environment(MapViewModel())
+        .environment(VoteViewModel())
+        .padding()
+    }
 }
 
 

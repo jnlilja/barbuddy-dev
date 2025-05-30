@@ -11,7 +11,7 @@ struct MessagesView: View {
     @StateObject private var vm = UsersViewModel()
     @State private var currentUserID: Int? = nil
     @State private var isLoadingUserID = false
-    @EnvironmentObject private var authVM: SessionManager
+    @EnvironmentObject private var authVM: AuthViewModel
 
     var body: some View {
         NavigationStack {
@@ -97,5 +97,5 @@ struct MessagesView: View {
 // Preview with dummy environment
 #Preview {
     MessagesView()
-        .environmentObject(SessionManager())
+        .environmentObject(AuthViewModel())
 }

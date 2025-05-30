@@ -4,7 +4,7 @@ import SwiftUI
 struct SignUpView: View {
     @Binding var path: NavigationPath
     @EnvironmentObject private var viewModel: SignUpViewModel
-    @EnvironmentObject private var authVM: SessionManager
+    @EnvironmentObject private var authVM: AuthViewModel
 
     var body: some View {
         ZStack {
@@ -36,7 +36,7 @@ struct SignUpView: View {
                     .autocapitalization(.none)
 
                 // ───────── Password
-                SecureField("Password", text: $viewModel.newPassword)
+                SecureField("Password", text: $viewModel.password)
                     .textFieldStyle(CustomTextFieldStyle())
                     .overlay(
                         RoundedRectangle(cornerRadius: 10)
@@ -74,10 +74,8 @@ struct SignUpView: View {
 
                 // ───────── Sign‑up button
                 Button {
-                    guard viewModel.runClientValidation() else { return }
-                    let user = viewModel.buildProfile()
-                    Task { await authVM.signUp(profile: user) }
-                    //path.append(SignUpNavigation.ageVerification)
+                    guard viewModel.validateAndSignUp() else { return }
+                    Task { await authVM.signUp(email: viewModel.email, password: viewModel.password) }
                 } label: {
                     Text("Sign Up")
                         .foregroundColor(.white)
@@ -89,23 +87,20 @@ struct SignUpView: View {
             }
             .padding()
         }
-        .alert("Sign‑Up Error", isPresented: $viewModel.showingAlert) {
+        .alert("Validation Error", isPresented: $viewModel.showingAlert) {
             Button("OK", role: .cancel) {}
         } message: {
             Text(viewModel.alertMessage)
+        }
+        .alert("Authentication Error", isPresented: $authVM.showingAlert) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(authVM.getErrorMessage())
         }
     }
 }
 #Preview {
     SignUpView(path: .constant(NavigationPath()))
         .environmentObject(SignUpViewModel())
-}
-
-// MARK: – View‑model helpers
-extension SignUpViewModel {
-    /// Runs client‑side validation; shows alerts; returns true when valid.
-    fileprivate func runClientValidation() -> Bool {
-        //validateAndSignUp()
-        return !showingAlert
-    }
+        .environmentObject(AuthViewModel())
 }

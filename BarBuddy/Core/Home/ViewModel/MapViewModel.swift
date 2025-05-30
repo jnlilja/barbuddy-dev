@@ -345,9 +345,11 @@ final class MapViewModel {
 
     func loadBarData() async {
         async let statusJob = BarNetworkManager.shared.fetchStatuses()
+        async let barsFetched = BarNetworkManager.shared.fetchAllBars()
 
         do {
             self.statuses = try await statusJob
+            self.bars = try await barsFetched
         } catch {
             print("Could not load statuses: \(error)")
         }

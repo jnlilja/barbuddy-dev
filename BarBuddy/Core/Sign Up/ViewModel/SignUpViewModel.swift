@@ -11,7 +11,7 @@ final class SignUpViewModel: ObservableObject {
     // ───────── UI‑bound fields ─────────
     @Published var email            = ""
     @Published var newUsername      = ""
-    @Published var newPassword      = ""
+    @Published var password         = ""
     @Published var confirmPassword  = ""
 
     @Published var firstName        = ""
@@ -37,7 +37,7 @@ final class SignUpViewModel: ObservableObject {
                 first_name: firstName,
                 last_name: lastName,
                 email: email,
-                password: newPassword,
+                password: password,
                 confirm_password: confirmPassword,
                 date_of_birth: dateOfBirth,
                 hometown: hometown,
@@ -49,81 +49,23 @@ final class SignUpViewModel: ObservableObject {
             )
         }
 
-    // MARK: - Public entry point from the UI
     func validateAndSignUp() -> Bool {
-        // 1) Basic client‑side validation
-        guard isValidEmailFormat(email) else {
-            fire("Please enter a valid email.")
+        let checks: [(Bool, String)] = [
+          (isValidEmailFormat(email),              "Please enter a valid email."),
+          (newUsername.count >= 3,                 "Username must be at least 3 characters."),
+          (isValidPasswordFormat(password),     "Password must be at least 8 characters with a number & special character."),
+          (password == confirmPassword,         "Passwords do not match.")
+        ]
+
+        for (passes, message) in checks {
+          guard passes else {
+            error(message)
             return false
+          }
         }
-        guard newUsername.count >= 3 else {
-            fire("Username must be ≥ 3 characters.")
-            return false
-        }
-        guard isValidPasswordFormat(newPassword) else {
-            fire("Password must be ≥ 8 characters with a number & special char.")
-            return false
-        }
-        guard newPassword == confirmPassword else { fire("Passwords do not match.")
-            return false
-        }
-        
         return true
-
-        // 2) Build profile & call Auth + API
-//        let profile = PostUser(
-//            username: newUsername,
-//            first_name: firstName,
-//            last_name: lastName,
-//            email: email,
-//            password: newPassword,      // store hashed in backend, plain here only to send
-//            date_of_birth: dateOfBirth,
-//            hometown: hometown,
-//            job_or_university: jobOrUniversity,
-//            favorite_drink: favoriteDrink,
-//            profile_pictures: [:],
-//            account_type: "regular",
-//            sexual_preference: sexualPreference
-//        )
-        
-        //await signUp(profile: profile)
-//
-//        Task {
-//            await signUp(profile: profile)
-//        }
     }
 
-    // MARK: - Sign‑up flow
-    private func signUp(profile: PostUser) async {
-//        do {
-            // 1) Create Firebase Auth account
-//            _ = try await Auth.auth().createUser(withEmail: profile.email,
-//                                                 password: profile.password)
-
-            // 2) Send profile JSON to your API
-            
-            //TODO: - refactor to SignupUser
-            //let result = await PostUserAPIService.shared.register(user: profile)
-            
-//            switch result {
-//            case .success(let success):
-//                //load ID token
-//                
-//                print("✅ New user created & stored.")
-//            case .failure(let failure):
-//                print("an error occured")
-//                alertMessage = "Sign up failed"
-//                showingAlert = true
-//            }
-            
-//            try await PostUserAPIService.shared.create(user: profile)
-//
-//            alertMessage = "Account created successfully!"
-//            showingAlert = true
-//        } catch {
-//            fire(error.localizedDescription)
-//        }
-    }
 
     // MARK: - Helpers
     private func isValidEmailFormat(_ str: String) -> Bool {
@@ -134,7 +76,7 @@ final class SignUpViewModel: ObservableObject {
         let regex = "^(?=.*[0-9])(?=.*[!@#$%^&*]).{8,}$"
         return NSPredicate(format: "SELF MATCHES %@", regex).evaluate(with: str)
     }
-    private func fire(_ message: String) {
+    private func error(_ message: String) {
         alertMessage  = message
         showingAlert  = true
     }

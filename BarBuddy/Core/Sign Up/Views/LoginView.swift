@@ -17,7 +17,7 @@ struct LoginView: View {
     
     @StateObject private var viewModel = SignUpViewModel()
     @State private var path = NavigationPath()
-    @EnvironmentObject var sessionManager: SessionManager
+    @EnvironmentObject var authVM: AuthViewModel// for user profile
     @StateObject private var vm = LoginViewModel()       // pulls profile via /users
 
     var body: some View {
@@ -64,7 +64,7 @@ struct LoginView: View {
                     // ───────── Login button
                     Button {
                         Task {
-                            await sessionManager.signIn(email: email, password: password)
+                            await authVM.signIn(email: email, password: password)
                         }
                     } label: {
                         Text("Login")
@@ -81,17 +81,7 @@ struct LoginView: View {
                     .font(.subheadline)
                     .foregroundColor(Color("DarkPurple"))
                 }
-                
-                if sessionManager.isLoading {
-                    LoadingScreenView()
-                        .navigationBarBackButtonHidden()
-                        .transition(.blurReplace)
-                }
             }
-            //        .sheet(isPresented: $showingSignUpSheet) {
-            //            SignUpView(isPresented: $showingSignUpSheet)
-            //                .environmentObject(authVM)   // pass auth down
-            //        }
             .navigationDestination(for: SignUpNavigation.self) { view in
                 switch view {
                 case .createAccount: SignUpView(path: $path)
@@ -106,33 +96,15 @@ struct LoginView: View {
 //                case .photoUpload: PhotoUploadView()
                 }
             }
-            .alert("Login Error",
-                   isPresented: $showingAlert,
-                   actions: { Button("OK", role: .cancel) { } },
-                   message: { Text(alertMessage) })
-            .alert("Sign Up Error", isPresented: $sessionManager.showErrorAlert) {
-                Button {
-                    
-                } label: {
-                    Text("OK")
-                }
-            } message: {
-                Text(sessionManager.errorMessage)
-            }
+            
         }
         .environmentObject(viewModel)
         .tint(.salmon)
-    }
-
-    // helper
-    private func alert(_ msg: String) {
-        alertMessage = msg
-        showingAlert = true
     }
 }
 
 #Preview("Login View") {
     LoginView()
         .environmentObject(SignUpViewModel())
-        .environmentObject(SessionManager())
+        .environmentObject(AuthViewModel())
 }

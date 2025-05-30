@@ -2,7 +2,7 @@ import SwiftUI
 import CoreLocation
 
 struct SwipeView: View {
-    @EnvironmentObject var sessionManager: SessionManager
+    @EnvironmentObject var authViewModel: AuthViewModel
     @StateObject private var vm = SwipeViewModel()
     @State private var isLikeAnimating = false
     @State private var isDislikeAnimating = false
@@ -206,14 +206,14 @@ struct SwipeView: View {
             .task {
                 do {
                     vm.isLoading = true
-                    let bars = try await BarNetworkManager.shared.fetchAllBars()
+                    _ = try await BarNetworkManager.shared.fetchAllBars()
                     await vm.loadSuggestions()
                     vm.isLoading = false
-                    if let bars = bars {
-                        vm.bars = bars
-                    } else {
-                        print("never found bars")
-                    }
+//                    if let bars = bars {
+//                        vm.bars = bars
+//                    } else {
+//                        print("never found bars")
+//                    }
                 } catch {
                     print("Error fetching bars: \(error)")
                 }
@@ -302,5 +302,5 @@ struct SwipeView: View {
 
 #Preview {
     SwipeView()
-        .environmentObject(SessionManager())
+        .environmentObject(AuthViewModel())
 }

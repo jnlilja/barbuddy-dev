@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct ProfileView: View {
-    @EnvironmentObject private var authVM: SessionManager
+    @EnvironmentObject var authVM: AuthViewModel
     @State private var selectedTab: Int = 0
     @State private var searchText: String = ""
     @State private var selectedImage: String? = nil
@@ -385,7 +385,7 @@ struct InfoItem: Identifiable {
         .environmentObject(
             {
                 // build & seed your AuthViewModel in one expression
-                let vm = SessionManager()
+                let vm = AuthViewModel()
                 vm.currentUser = GetUser(
                     id: 1,
                     username: "jdoe",

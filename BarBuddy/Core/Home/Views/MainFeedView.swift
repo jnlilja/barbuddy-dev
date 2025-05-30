@@ -49,7 +49,9 @@ struct MainFeedView: View {
                 .ignoresSafeArea(.keyboard)
         }
         .environment(viewModel)
-        .task { await viewModel.loadBarData() }
+        .task {
+            await viewModel.loadBarData()
+        }
     }
     // MARK: — Map Layer
     private var mapLayer: some View {
@@ -121,15 +123,9 @@ struct MainFeedView: View {
                     .font(.title3)
             } else {
                 ForEach(filteredBars) { bar in
-                    NavigationLink(
-                        destination: BarDetailPopup(bar: bar)
-                            .environment(viewModel)
-                    ) {
-                        BarCard(bar: bar)
-                            .environment(viewModel)
-                            .padding([.horizontal, .bottom])
-                    }
-                    .buttonStyle(PlainButtonStyle())
+                    BarCard(bar: bar)
+                        .environment(viewModel)
+                        .padding([.horizontal, .bottom])
                 }
                 .transition(.opacity)
                 .animation(.easeInOut, value: searchText)

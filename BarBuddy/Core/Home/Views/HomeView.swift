@@ -10,11 +10,11 @@
 import SwiftUI
 
 struct HomeView: View {
-//    @State private var selectedTab = 0
+    @State private var selectedTab = 0
 
     var body: some View {
         // Coming in future updates
-//        TabView(selection: $selectedTab) {
+        TabView(selection: $selectedTab) {
 //
 //            SwipeView()
 //                .tabItem {
@@ -30,26 +30,26 @@ struct HomeView: View {
 //                }
 //                .tag(1)
 //
-//            Group {
+            Group {
                 MainFeedView()
                     .tabItem {
                         Image(systemName: "map.fill")
                         Text("Map")
                     }
                     .tint(.salmon)
-//                    .tag(0)
-//                
-//                ProfileView()
-//                    .tabItem {
-//                        Image(systemName: "person.circle")
-//                        Text("Profile")
-//                    }
-//                    .tag(1)
-//            }
-//            .toolbar(.visible, for: .tabBar)
-//            .toolbarBackground(.darkBlue, for: .tabBar)
-//        }
-//        .accentColor(Color("Salmon"))
+                    .tag(0)
+                
+                ProfileView()
+                    .tabItem {
+                        Image(systemName: "person.circle")
+                        Text("Profile")
+                    }
+                    .tag(1)
+            }
+            .toolbar(.visible, for: .tabBar)
+            .toolbarBackground(.darkBlue, for: .tabBar)
+        }
+        .accentColor(Color("Salmon"))
     }
 }
 
@@ -57,4 +57,5 @@ struct HomeView: View {
     HomeView()
         .environment(MapViewModel())
         .environment(VoteViewModel())
+        .environmentObject(AuthViewModel())
 }
