@@ -13,6 +13,7 @@ struct MainFeedView: View {
         0.86
     )
     @State private var searchText = ""
+    @State private var hours: String?
     @Environment(\.colorScheme) var colorScheme
     let locationViewModel = LocationManager()
     @State private var selectedBar: Bar?

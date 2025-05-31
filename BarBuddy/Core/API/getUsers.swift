@@ -8,6 +8,8 @@
 import SwiftUI
 import FirebaseAuth
 
+// TODO: Update to use async/await and remove completion-style methods
+
 // MARK: - Model matching server response
 struct GetUser: Codable, Identifiable, Hashable {
     var id: Int
@@ -58,7 +60,7 @@ final class GetUserAPIService {
                 let statusCode = response.statusCode
                 if statusCode > 400 {
                     print("bad request")
-                    return .failure(.badRequest)
+                    return .failure(.badResponse(statusCode))
                 }
                 if statusCode > 500 {
                     print("internal server error")
@@ -73,7 +75,7 @@ final class GetUserAPIService {
                 return .failure(.badURL)
             }
         } catch {
-            return .failure(.badRequest)
+            return .failure(.serverError)
         }
     }
 
@@ -141,19 +143,6 @@ extension GetUserAPIService {
         }
     }
 }
-
-// MARK: - Async/Await convenience
-//extension GetUserAPIService {
-//    /// Async wrapper around the callback‑based fetchUsers.
-//    func fetchUsers() async throws -> [GetUser] {
-//        try await withCheckedThrowingContinuation { continuation in
-//            self.fetchUsers { result in
-//                continuation.resume(with: result)
-//            }
-//        }
-//    }
-//}
-
 
 // MARK: - ViewModel
 @MainActor

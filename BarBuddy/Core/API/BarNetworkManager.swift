@@ -9,7 +9,6 @@
 import Foundation
 @preconcurrency import FirebaseAuth
 
-// Models matching your DRF serializers
 actor BarNetworkManager {
     static let shared = BarNetworkManager()
     private let session: URLSession
@@ -40,8 +39,8 @@ actor BarNetworkManager {
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         
         let (data, response) = try await session.data(from: url)
-        guard let response = response as? HTTPURLResponse, (200...299).contains(response.statusCode) else {
-            throw APIError.badRequest
+        if let response = response as? HTTPURLResponse, !(200...299).contains(response.statusCode)  {
+            throw APIError.badResponse(response.statusCode)
         }
         return try decoder.decode([BarVote].self, from: data)
     }
@@ -63,8 +62,8 @@ actor BarNetworkManager {
         
         request.httpBody = try encoder.encode(vote)
         let (_, response) = try await session.data(for: request)
-        guard let response = response as? HTTPURLResponse, (200...299).contains(response.statusCode) else {
-            throw APIError.badRequest
+        if let response = response as? HTTPURLResponse, !(200...299).contains(response.statusCode)  {
+            throw APIError.badResponse(response.statusCode)
         }
     }
     
@@ -85,8 +84,8 @@ actor BarNetworkManager {
         
         let (data, response) = try await session.data(from: url)
         
-        guard let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) else {
-            throw APIError.badRequest
+        if let httpResponse = response as? HTTPURLResponse, !(200...299).contains(httpResponse.statusCode) {
+            throw APIError.badResponse(httpResponse.statusCode)
         }
         
         return try decoder.decode(BarVote.self, from: data)
@@ -107,8 +106,8 @@ actor BarNetworkManager {
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         
         let (_, response) = try await session.data(for: request)
-        guard let response = response as? HTTPURLResponse, (200...299).contains(response.statusCode) else {
-            throw APIError.badRequest
+        if let response = response as? HTTPURLResponse, !(200...299).contains(response.statusCode)  {
+            throw APIError.badResponse(response.statusCode)
         }
     }
     
@@ -127,8 +126,8 @@ actor BarNetworkManager {
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         
         let (_, response) = try await session.data(for: request)
-        guard let response = response as? HTTPURLResponse, (200...299).contains(response.statusCode) else {
-            throw APIError.badRequest
+        if let response = response as? HTTPURLResponse, !(200...299).contains(response.statusCode)  {
+            throw APIError.badResponse(response.statusCode)
         }
     }
     
@@ -147,8 +146,8 @@ actor BarNetworkManager {
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         
         let (_, response) = try await session.data(for: request)
-        guard let response = response as? HTTPURLResponse, (200...299).contains(response.statusCode) else {
-            throw APIError.badRequest
+        if let response = response as? HTTPURLResponse, !(200...299).contains(response.statusCode)  {
+            throw APIError.badResponse(response.statusCode)
         }
     }
     
@@ -171,8 +170,8 @@ actor BarNetworkManager {
         
         let (data, response) = try await session.data(for: request)
         
-        guard let response = response as? HTTPURLResponse, (200...299).contains(response.statusCode) else {
-            throw APIError.badRequest
+        if let response = response as? HTTPURLResponse, !(200...299).contains(response.statusCode)  {
+            throw APIError.badResponse(response.statusCode)
         }
         
         return try decoder.decode(BarHours.self, from: data)
@@ -195,9 +194,9 @@ actor BarNetworkManager {
         
         let (data, response) = try await session.data(for: request)
         
-        guard let http = response as? HTTPURLResponse,
-                  (200...299).contains(http.statusCode) else {
-                throw APIError.badRequest
+        if let http = response as? HTTPURLResponse,
+                  !(200...299).contains(http.statusCode) {
+                throw APIError.badResponse(http.statusCode)
             }
         
         return try decoder.decode(BarHours.self, from: data)
@@ -220,9 +219,9 @@ actor BarNetworkManager {
         
         let (data, response) = try await session.data(for: request)
         
-        guard let http = response as? HTTPURLResponse,
-              (200...299).contains(http.statusCode) else {
-            throw APIError.badRequest
+        if let http = response as? HTTPURLResponse,
+              !(200...299).contains(http.statusCode) {
+            throw APIError.badResponse(http.statusCode)
         }
         
         return try decoder.decode([BarHours].self, from: data)
@@ -245,7 +244,7 @@ actor BarNetworkManager {
         let (_, response) = try await session.data(for: request)
         
         if let response = response as? HTTPURLResponse, (200...299).contains(response.statusCode) {
-            throw APIError.badRequest
+            throw APIError.badResponse(response.statusCode)
         }
     }
     
@@ -264,8 +263,8 @@ actor BarNetworkManager {
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         
         let (_, response) = try await session.data(for: request)
-        guard let response = response as? HTTPURLResponse, (200...299).contains(response.statusCode) else {
-            throw APIError.badRequest
+        if let response = response as? HTTPURLResponse, !(200...299).contains(response.statusCode)  {
+            throw APIError.badResponse(response.statusCode)
         }
     }
     
@@ -286,7 +285,7 @@ actor BarNetworkManager {
         let (_, response) = try await session.data(for: request)
         
         if let response = response as? HTTPURLResponse, !(200...299).contains(response.statusCode) {
-            throw APIError.badRequest
+            throw APIError.badResponse(response.statusCode)
         }
     }
     
@@ -333,7 +332,7 @@ actor BarNetworkManager {
         let (data, response) = try await URLSession.shared.data(for: request)
         
         if let response = response as? HTTPURLResponse, (200...299).contains(response.statusCode) {
-            throw APIError.badRequest
+            throw APIError.badResponse(response.statusCode)
         }
         
         return try decoder.decode(BarStatus.self, from: data)
@@ -356,8 +355,8 @@ actor BarNetworkManager {
         request.httpBody = try encoder.encode(barStatus)
         
         let (data, response) = try await session.data(for: request)
-        guard let response = response as? HTTPURLResponse, (200...299).contains(response.statusCode) else {
-            throw APIError.badRequest
+        if let response = response as? HTTPURLResponse, !(200...299).contains(response.statusCode)  {
+            throw APIError.badResponse(response.statusCode)
         }
         return try decoder.decode(BarStatus.self, from: data)
     }
@@ -377,8 +376,8 @@ actor BarNetworkManager {
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         
         let (_, response) = try await session.data(for: request)
-        guard let response = response as? HTTPURLResponse, (200...299).contains(response.statusCode) else {
-            throw APIError.badRequest
+        if let response = response as? HTTPURLResponse, !(200...299).contains(response.statusCode)  {
+            throw APIError.badResponse(response.statusCode)
         }
     }
     
@@ -405,8 +404,8 @@ actor BarNetworkManager {
         request.httpBody = try encoder.encode(patch)
         
         let (_, response) = try await session.data(for: request)
-        guard let response = response as? HTTPURLResponse, (200...299).contains(response.statusCode) else {
-            throw APIError.badRequest
+        if let response = response as? HTTPURLResponse, !(200...299).contains(response.statusCode)  {
+            throw APIError.badResponse(response.statusCode)
         }
     }
     
@@ -425,8 +424,8 @@ actor BarNetworkManager {
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         
         let (_, response) = try await session.data(for: request)
-        guard let response = response as? HTTPURLResponse, (200...299).contains(response.statusCode) else {
-            throw APIError.badRequest
+        if let response = response as? HTTPURLResponse, !(200...299).contains(response.statusCode)  {
+            throw APIError.badResponse(response.statusCode)
         }
     }
     
@@ -448,8 +447,8 @@ actor BarNetworkManager {
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         
         let (data, response) = try await session.data(for: request)
-        guard let response = response as? HTTPURLResponse, (200...299).contains(response.statusCode) else {
-            throw APIError.badRequest
+        if let response = response as? HTTPURLResponse, !(200...299).contains(response.statusCode)  {
+            throw APIError.badResponse(response.statusCode)
         }
         return try decoder.decode(Bar.self, from: data)
     }
@@ -469,8 +468,8 @@ actor BarNetworkManager {
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         
         let (_, response) = try await session.data(for: request)
-        guard let response = response as? HTTPURLResponse, (200...299).contains(response.statusCode) else {
-            throw APIError.badRequest
+        if let response = response as? HTTPURLResponse, !(200...299).contains(response.statusCode)  {
+            throw APIError.badResponse(response.statusCode)
         }
     }
     
@@ -489,8 +488,8 @@ actor BarNetworkManager {
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         
         let (_, response) = try await session.data(for: request)
-        guard let response = response as? HTTPURLResponse, (200...299).contains(response.statusCode) else {
-            throw APIError.badRequest
+        if let response = response as? HTTPURLResponse, !(200...299).contains(response.statusCode)  {
+            throw APIError.badResponse(response.statusCode)
         }
     }
     
@@ -509,8 +508,8 @@ actor BarNetworkManager {
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         
         let (_, response) = try await session.data(for: request)
-        guard let response = response as? HTTPURLResponse, (200...299).contains(response.statusCode) else {
-            throw APIError.badRequest
+        if let response = response as? HTTPURLResponse, !(200...299).contains(response.statusCode) {
+            throw APIError.badResponse(response.statusCode)
         }
     }
     
@@ -530,8 +529,8 @@ actor BarNetworkManager {
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         
         let (data, response) = try await session.data(for: request)
-        guard let response = response as? HTTPURLResponse, (200...299).contains(response.statusCode) else {
-            throw APIError.badRequest
+        if let response = response as? HTTPURLResponse, !(200...299).contains(response.statusCode)  {
+            throw APIError.badResponse(response.statusCode)
         }
         return try decoder.decode(Bar.self, from: data)
     }
@@ -552,8 +551,8 @@ actor BarNetworkManager {
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         
         let (data, response) = try await session.data(for: request)
-        guard let response = response as? HTTPURLResponse, (200...299).contains(response.statusCode) else {
-            throw APIError.badRequest
+        if let response = response as? HTTPURLResponse, !(200...299).contains(response.statusCode) {
+            throw APIError.badResponse(response.statusCode)
         }
         return try decoder.decode([Bar].self, from: data)
     }
@@ -574,8 +573,8 @@ actor BarNetworkManager {
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         
         let (data, response) = try await session.data(for: request)
-        guard let response = response as? HTTPURLResponse, (200...299).contains(response.statusCode) else {
-            throw APIError.badRequest
+        if let response = response as? HTTPURLResponse, !(200...299).contains(response.statusCode)  {
+            throw APIError.badResponse(response.statusCode)
         }
         
         return try decoder.decode([Bar].self, from: data)
@@ -599,8 +598,8 @@ actor BarNetworkManager {
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         
         let (data, response) = try await session.data(for: request)
-        guard let response = response as? HTTPURLResponse, (200...299).contains(response.statusCode) else {
-            throw APIError.badRequest
+        if let response = response as? HTTPURLResponse, !(200...299).contains(response.statusCode)  {
+            throw APIError.badResponse(response.statusCode)
         }
         
         return try decoder.decode([BarImage].self, from: data)
@@ -621,8 +620,8 @@ actor BarNetworkManager {
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         
         let (data, response) = try await session.data(for: request)
-        guard let response = response as? HTTPURLResponse, (200...299).contains(response.statusCode) else {
-            throw APIError.badRequest
+        if let response = response as? HTTPURLResponse, !(200...299).contains(response.statusCode)  {
+            throw APIError.badResponse(response.statusCode)
         }
         
         // Leaving this here for now since way may need to return
@@ -645,8 +644,8 @@ actor BarNetworkManager {
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         
         let (data, response) = try await session.data(for: request)
-        guard let response = response as? HTTPURLResponse, (200...299).contains(response.statusCode) else {
-            throw APIError.badRequest
+        if let response = response as? HTTPURLResponse, !(200...299).contains(response.statusCode)  {
+            throw APIError.badResponse(response.statusCode)
         }
         
         return try decoder.decode(BarImage.self, from: data)
@@ -667,8 +666,8 @@ actor BarNetworkManager {
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         
         let (_, response) = try await session.data(for: request)
-        guard let response = response as? HTTPURLResponse, (200...299).contains(response.statusCode) else {
-            throw APIError.badRequest
+        if let response = response as? HTTPURLResponse, !(200...299).contains(response.statusCode)  {
+            throw APIError.badResponse(response.statusCode)
         }
     }
     
@@ -687,8 +686,8 @@ actor BarNetworkManager {
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         
         let (_, response) = try await session.data(for: request)
-        guard let response = response as? HTTPURLResponse, (200...299).contains(response.statusCode) else {
-            throw APIError.badRequest
+        if let response = response as? HTTPURLResponse, !(200...299).contains(response.statusCode)  {
+            throw APIError.badResponse(response.statusCode)
         }
     }
     
@@ -707,8 +706,8 @@ actor BarNetworkManager {
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         
         let (_, response) = try await session.data(for: request)
-        guard let response = response as? HTTPURLResponse, (200...299).contains(response.statusCode) else {
-            throw APIError.badRequest
+        if let response = response as? HTTPURLResponse, !(200...299).contains(response.statusCode)  {
+            throw APIError.badResponse(response.statusCode)
         }
     }
 }

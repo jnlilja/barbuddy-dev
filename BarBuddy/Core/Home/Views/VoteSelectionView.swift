@@ -27,9 +27,9 @@ struct VoteSelectionView: View {
                 .padding(.bottom, 20)
             
             LazyVGrid(columns: [
-                GridItem(.adaptive(minimum: 70, maximum: 150), spacing: 5),
-                GridItem(.adaptive(minimum: 70, maximum: 150), spacing: 5),
-                GridItem(.adaptive(minimum: 70, maximum: 150))
+                GridItem(.adaptive(minimum: 70, maximum: 120), spacing: 15),
+                GridItem(.adaptive(minimum: 70, maximum: 120), spacing: 15),
+                GridItem(.adaptive(minimum: 70, maximum: 120))
             ]) {
                 
                 VoteButtonView(text: "< 5 min", opacity: 0.06, properties: $properties, selectedOption: $selectedOption)

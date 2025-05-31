@@ -12,7 +12,7 @@ enum APIError: Error {
     case badURL
     case noToken
     case noUser
-    case badRequest
+    case badResponse(Int) // HTTP status code, e.g. 404, 500
     case serverError
     case transport(Error)    // URLSession / Auth failures
     case encoding(Error)     // JSONEncoder / JSONSerialization failed
@@ -30,7 +30,7 @@ extension APIError: LocalizedError {
         case .decoding(let e):   return "Decoding failed: \(e.localizedDescription)"
         case .noUser:
             return "No User"
-        case .badRequest:
+        case .badResponse:
             return "Bad Request"
         case .serverError:
             return "Server Error"

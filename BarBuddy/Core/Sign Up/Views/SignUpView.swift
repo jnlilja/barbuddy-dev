@@ -5,6 +5,11 @@ struct SignUpView: View {
     @Binding var path: NavigationPath
     @EnvironmentObject private var viewModel: SignUpViewModel
     @EnvironmentObject private var authVM: AuthViewModel
+    @FocusState private var focusedField: FocusField?
+    
+    enum FocusField {
+        case email, password, confirmPassword
+    }
 
     var body: some View {
         ZStack {
@@ -29,11 +34,13 @@ struct SignUpView: View {
                     )
                     .autocapitalization(.none)
                     .keyboardType(.emailAddress)
+                    .focused($focusedField, equals: .email)
+                    .submitLabel(.next)
 
                 // ───────── Username
-                TextField("Username", text: $viewModel.newUsername)
-                    .textFieldStyle(CustomTextFieldStyle())
-                    .autocapitalization(.none)
+//                TextField("Username", text: $viewModel.newUsername)
+//                    .textFieldStyle(CustomTextFieldStyle())
+//                    .autocapitalization(.none)
 
                 // ───────── Password
                 SecureField("Password", text: $viewModel.password)
@@ -46,6 +53,8 @@ struct SignUpView: View {
                                 lineWidth: 1
                             )
                     )
+                    .focused($focusedField, equals: .password)
+                    .submitLabel(.next)
 
                 // ───────── Confirm password
                 SecureField(
@@ -61,6 +70,8 @@ struct SignUpView: View {
                             lineWidth: 1
                         )
                 )
+                .focused($focusedField, equals: .confirmPassword)
+                .submitLabel(.done)
 
                 // validation hint
                 if !viewModel.isValidPassword {
@@ -84,6 +95,17 @@ struct SignUpView: View {
                         .cornerRadius(10)
                 }
                 .padding(.top, 20)
+            }
+            .onSubmit {
+                if focusedField == .email {
+                    focusedField = .password
+                } else if focusedField == .password {
+                    focusedField = .confirmPassword
+                } else {
+                    focusedField = nil
+                    guard viewModel.validateAndSignUp() else { return }
+                    Task { await authVM.signUp(email: viewModel.email, password: viewModel.password) }
+                }
             }
             .padding()
         }

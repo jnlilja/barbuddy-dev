@@ -61,7 +61,7 @@ struct Bar: Codable, Identifiable, Hashable {
                     print("patchHours error: \(error)")
                 case APIError.noToken:
                     print("patchHours error: No token. Please log in.")
-                case APIError.badRequest:
+                case APIError.badResponse:
                     print("patchHours error: Bad request")
                 case APIError.badURL:
                     print("patchHours error: URL is not valid.")
@@ -83,7 +83,7 @@ struct Bar: Codable, Identifiable, Hashable {
             }
             
             guard let open = hours.openTime,
-                    let close = hours.closeTime else { return nil }
+                  let close = hours.closeTime else { return nil }
             let closed = isClosed(open, close)
             hours.isClosed = closed
             
@@ -97,7 +97,7 @@ struct Bar: Codable, Identifiable, Hashable {
                     print("patchHours error: \(error)")
                 case APIError.noToken:
                     print("patchHours error: No token. Please log in.")
-                case APIError.badRequest:
+                case APIError.badResponse:
                     print("patchHours error: Bad request")
                 case APIError.badURL:
                     print("patchHours error: URL is not valid.")
@@ -108,7 +108,7 @@ struct Bar: Codable, Identifiable, Hashable {
             }
             return "\(closed ? "Closed" : "Open"): \(open) - \(close)"
             
-        } catch APIError.badRequest {
+        } catch APIError.badResponse {
             print("Could not fetch hours")
         } catch APIError.noToken {
             print("Could not fetch hours. No token.")
@@ -133,24 +133,24 @@ struct Bar: Codable, Identifiable, Hashable {
         else {
             return true
         }
-
+        
         let calendar = Calendar.current
-
+        
         // Get the current date and time
         let nowComponents = calendar.dateComponents(in: .current, from: Date())
         let now = calendar.date(from: nowComponents)!
-
+        
         // Get today's open and close times
         var barHourComponents = calendar.dateComponents([.year, .month, .day], from: Date())
         
         barHourComponents.hour = calendar.component(.hour, from: openDateRaw)
         barHourComponents.minute = calendar.component(.minute, from: openDateRaw)
         let openDate = calendar.date(from: barHourComponents)!
-
+        
         barHourComponents.hour = calendar.component(.hour, from: closeDateRaw)
         barHourComponents.minute = calendar.component(.minute, from: closeDateRaw)
         var closeDate = calendar.date(from: barHourComponents)!
-
+        
         // If close time is earlier than open, it means it goes into the next day
         if closeDate <= openDate {
             closeDate = calendar.date(byAdding: .day, value: 1, to: closeDate)!
@@ -159,8 +159,15 @@ struct Bar: Codable, Identifiable, Hashable {
         // Check if the current time is outside the open hours
         return now < openDate || now >= closeDate
     }
+    
+    func formatBarHours(hours: inout BarHours) -> String? {
+        guard let open = hours.openTime,
+              let close = hours.closeTime else { return nil }
+        let closed = isClosed(open, close)
+        hours.isClosed = closed
+        return "\(closed ? "Closed" : "Open"): \(open) - \(close)"
+    }
 }
-
 extension Bar {
     // For testing purposes
     static let DUMMY_DATA = Bar(

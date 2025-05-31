@@ -10,7 +10,6 @@ import SwiftUI
 
 struct SearchBar: View {
     @Binding var searchText: String
-    @FocusState private var focusedField
     
     var body: some View {
         HStack {
@@ -19,6 +18,7 @@ struct SearchBar: View {
             
             TextField("Search bars...", text: $searchText)
                 .textFieldStyle(RoundedBorderTextFieldStyle())
+                .submitLabel(.search)
         }
         .padding(.horizontal)
         .padding(.vertical, 8)

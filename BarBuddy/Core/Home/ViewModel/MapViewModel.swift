@@ -28,6 +28,7 @@ final class MapViewModel {
         )
     )
     var statuses: [BarStatus] = []
+    var hours: [BarHours] = []
 
     // MARK: – Static list of bars
     /// Type Bars is a typealias of [Bar]
@@ -339,17 +340,19 @@ final class MapViewModel {
         ),
     ]
 
-    init() {
-        Task { await loadBarData() }
-    }
+//    init() {
+//        Task { await loadBarData() }
+//    }
 
     func loadBarData() async {
         async let statusJob = BarNetworkManager.shared.fetchStatuses()
         async let barsFetched = BarNetworkManager.shared.fetchAllBars()
+        async let hoursJob = BarNetworkManager.shared.fetchAllBarHours()
 
         do {
             self.statuses = try await statusJob
             self.bars = try await barsFetched
+            self.hours = try await hoursJob
         } catch {
             print("Could not load statuses: \(error)")
         }

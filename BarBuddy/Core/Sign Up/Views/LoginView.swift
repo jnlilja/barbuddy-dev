@@ -11,20 +11,24 @@ import FirebaseAuth
 struct LoginView: View {
     @State private var email              = ""
     @State private var password           = ""
-    @State private var showingSignUpSheet = false
     @State private var alertMessage       = ""
-    @State private var showingAlert       = false
     
     @StateObject private var viewModel = SignUpViewModel()
     @State private var path = NavigationPath()
-    @EnvironmentObject var authVM: AuthViewModel// for user profile
-    @StateObject private var vm = LoginViewModel()       // pulls profile via /users
+    @EnvironmentObject var authVM: AuthViewModel
+    @StateObject private var vm = LoginViewModel()
+    
+    @FocusState private var focusedField: FocusField?
+    
+    enum FocusField {
+        case email, password
+    }
 
     var body: some View {
         NavigationStack(path: $path) {
             ZStack {
                 AnimatedBackgroundView()
-                Circle().scale(1.7).foregroundColor(Color("Nude")).opacity(0.15)
+                Circle().scale(1.7).foregroundColor(.nude).opacity(0.15)
                 Circle().scale(1.35).foregroundColor(.nude).opacity(0.9)
                 
                 VStack(spacing: 15) {
@@ -51,6 +55,9 @@ struct LoginView: View {
                         .cornerRadius(10)
                         .overlay(RoundedRectangle(cornerRadius: 10)
                             .stroke(Color("DarkPurple"), lineWidth: 1))
+                        .focused($focusedField, equals: .email)
+                        .submitLabel(.next)
+                        .textContentType(.emailAddress)
                     
                     SecureField("Password", text: $password)
                         .padding()
@@ -60,6 +67,9 @@ struct LoginView: View {
                         .overlay(RoundedRectangle(cornerRadius: 10)
                             .stroke(Color("DarkPurple"), lineWidth: 1))
                         .padding(.top, 10)
+                        .focused($focusedField, equals: .password)
+                        .submitLabel(.done)
+                        .textContentType(.password)
                     
                     // ───────── Login button
                     Button {
@@ -82,6 +92,14 @@ struct LoginView: View {
                     .foregroundColor(Color("DarkPurple"))
                 }
             }
+            .onSubmit {
+                if focusedField == .email {
+                    focusedField = .password
+                } else {
+                    focusedField = nil
+                    Task { await authVM.signIn(email: email, password: password) }
+                }
+            }
             .navigationDestination(for: SignUpNavigation.self) { view in
                 switch view {
                 case .createAccount: SignUpView(path: $path)
@@ -96,7 +114,6 @@ struct LoginView: View {
 //                case .photoUpload: PhotoUploadView()
                 }
             }
-            
         }
         .environmentObject(viewModel)
         .tint(.salmon)

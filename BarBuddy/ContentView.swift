@@ -21,4 +21,6 @@ struct ContentView: View {
 #Preview {
     ContentView()
         .environmentObject(AuthViewModel())
+        .environment(MapViewModel())
+        .environment(VoteViewModel())
 }
