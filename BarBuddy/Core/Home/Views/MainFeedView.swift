@@ -9,6 +9,7 @@ import SwiftUI
 
 struct MainFeedView: View {
     @Environment(MapViewModel.self) var viewModel
+    @Environment(BarViewModel.self) var barViewModel
     @State private var bottomSheetPosition: BottomSheetPosition = .relative(
         0.86
     )
@@ -19,7 +20,7 @@ struct MainFeedView: View {
     @State private var selectedBar: Bar?
     
     private var filteredBars: [Bar] {
-        viewModel.bars.filter {
+        barViewModel.bars.filter {
             searchText.isEmpty
                 || $0.name.localizedCaseInsensitiveContains(searchText)
         }
@@ -49,16 +50,18 @@ struct MainFeedView: View {
                 .customAnimation(.snappy)
                 .ignoresSafeArea(.keyboard)
         }
-        .environment(viewModel)
         .task {
-            await viewModel.loadBarData()
+
+            await barViewModel.loadBarData()
+            
         }
+        .environment(viewModel)
     }
     // MARK: — Map Layer
     private var mapLayer: some View {
         @Bindable var mapVM = viewModel
         return Map(position: $mapVM.cameraPosition, selection: $selectedBar) {
-            ForEach(viewModel.bars) { bar in
+            ForEach(barViewModel.bars) { bar in
                 Annotation(bar.name, coordinate: bar.coordinate) {
                     annotationView(for: bar)
                 }
@@ -99,7 +102,7 @@ struct MainFeedView: View {
         }
     }
     private var headerView: some View {
-        SearchBar(searchText: $searchText)
+        SearchBar(searchText: $searchText, prompt: "Search bars")
             .padding([.horizontal, .bottom])
             .onSubmit(of: .text) {
                 bottomSheetPosition = .relativeBottom(0.21)
@@ -114,7 +117,7 @@ struct MainFeedView: View {
     private var contentList: some View {
         VStack {
             NavigationLink(destination: DealsAndEventsView()) {
-                EventCard()
+                DealsAndEventsButtonView()
                     .padding([.horizontal, .bottom])
             }
             .buttonStyle(PlainButtonStyle())
@@ -138,7 +141,9 @@ struct MainFeedView: View {
     private var toolbarContent: some ToolbarContent {
         ToolbarItem(placement: .principal) {
             Text("Pacific Beach")
-                .font(.title).fontDesign(.rounded).fontWeight(.heavy)
+                .font(.title)
+                .fontDesign(.rounded)
+                .fontWeight(.heavy)
                 .foregroundStyle(
                     (colorScheme == .dark
                         || bottomSheetPosition == .relativeTop(1))
@@ -152,4 +157,5 @@ struct MainFeedView: View {
     MainFeedView()
         .environment(MapViewModel())
         .environment(VoteViewModel())
+        .environment(BarViewModel())
 }

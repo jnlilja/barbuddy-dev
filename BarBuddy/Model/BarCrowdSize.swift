@@ -11,5 +11,5 @@ struct BarCrowdSize: Codable {
     var id: Int?
     var bar: Int
     var crowdSize: String
-    var timestamp: String
+    var timestamp: Date?
 }

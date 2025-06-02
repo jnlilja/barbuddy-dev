@@ -31,19 +31,13 @@ final class VoteViewModel {
         guard var status = try await BarNetworkManager.shared.fetchStatuses().first(where: { $0.bar == barId }) else {
             throw VoteError.noStatus
         }
-        status.waitTime = getMostVotedWaitTime()
+        status.waitTime = waitTimeVotes.max(by: { $0.value < $1.value })?.key
         
         guard let statusId = status.id else {
             throw VoteError.missingId
         }
         
-        status.lastUpdated = DateFormatter.formatTimeStamp(Date())
-        
         try await BarNetworkManager.shared.patchBarStatus(statusID: statusId, status: status)
-    }
-    
-    private func getMostVotedWaitTime() -> String? {
-        return waitTimeVotes.max(by: { $0.value < $1.value })?.key
     }
 }
 

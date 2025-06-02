@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct DealCard: View {
+struct DealCardView: View {
     let title: String
     let location: String
     let description: String
@@ -43,5 +43,5 @@ struct DealCard: View {
 }
 
 #Preview {
-    DealCard(title: "Free Mango Cart", location: "Diry Birds", description: "Free mango cart for students", days: "Monday")
+    DealCardView(title: "Free Mango Cart", location: "Diry Birds", description: "Free mango cart for students", days: "Monday")
 }

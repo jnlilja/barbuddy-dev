@@ -10,13 +10,14 @@ import SwiftUI
 
 struct SearchBar: View {
     @Binding var searchText: String
+    @State var prompt: String
     
     var body: some View {
         HStack {
             Image(systemName: "magnifyingglass")
                 .foregroundColor(Color("Salmon"))
             
-            TextField("Search bars...", text: $searchText)
+            TextField(prompt, text: $searchText)
                 .textFieldStyle(RoundedBorderTextFieldStyle())
                 .submitLabel(.search)
         }
@@ -26,4 +27,9 @@ struct SearchBar: View {
         .cornerRadius(10)
         .shadow(radius: 2)
     }
+}
+
+#Preview {
+    SearchBar(searchText: .constant(""), prompt: "Enter search term")
+        .padding(.horizontal)
 }

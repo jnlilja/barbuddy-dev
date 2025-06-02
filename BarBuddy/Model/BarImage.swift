@@ -12,5 +12,5 @@ struct BarImage: Codable, Identifiable, Hashable {
     let bar: Int
     let image: String
     let caption: String?
-    let uploadedAt: String?
+    var uploadedAt: Date?
 }

@@ -8,10 +8,6 @@
 import Foundation
 
 struct BarHours: Codable, Identifiable, Hashable {
-    enum Day: String, Codable, CaseIterable {
-        case monday, tuesday, wednesday, thursday, friday, saturday, sunday
-    }
-
     var id: Int
     var bar: Int
     var day: String?

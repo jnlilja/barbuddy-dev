@@ -76,9 +76,7 @@ struct VoteSelectionView: View {
                                         try await BarNetworkManager.shared.submitVote(
                                             vote: BarVote(
                                                 bar: id,
-                                                waitTime: vote,
-                                                timeStamp: DateFormatter.formatTimeStamp(Date())
-                                            )
+                                                waitTime: vote)
                                         )
                                         print("Vote submitted successfully for bar \(id) with wait time: \(vote)")
                                     }

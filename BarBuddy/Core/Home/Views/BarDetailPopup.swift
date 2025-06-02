@@ -10,12 +10,13 @@ struct BarDetailPopup: View {
     @Environment(\.dismiss) var dismiss
     @Environment(MapViewModel.self) var viewModel
     @Environment(VoteViewModel.self) var voteViewModel
+    @Environment(BarViewModel.self) var barViewModel
     @State var bar: Bar
     @State private var loadingState: HoursLoadingState = .loading
     @State private var waitButtonProperties = ButtonProperties(type: "wait")
 
     private var waitTime: String {
-        viewModel.statuses.first(where: { $0.bar == bar.id })?.waitTime ?? ""
+        barViewModel.statuses.first(where: { $0.bar == bar.id })?.waitTime ?? ""
     }
 
     var body: some View {
@@ -146,7 +147,7 @@ struct BarDetailPopup: View {
                 .navigationBarTitleDisplayMode(.inline)
             }
             .task {
-                if let hours = await bar.getHours() {
+                if let hours = await barViewModel.getHours(for: bar) {
                     loadingState = hours.contains("Closed") ? .closed : .loading
                 } else {
                     loadingState = .failed
@@ -161,7 +162,7 @@ struct BarDetailPopup: View {
                     print("Error calculating votes: \(error)")
                 }
 
-                if viewModel.statuses.isEmpty {
+                if barViewModel.statuses.isEmpty {
                     loadingState = .loading
                     print("No bar status data available")
                 } else {
@@ -191,4 +192,5 @@ struct BarDetailPopup: View {
     )
     .environment(MapViewModel())
     .environment(VoteViewModel())
+    .environment(BarViewModel())
 }
