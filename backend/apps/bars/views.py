@@ -29,35 +29,49 @@ class BarViewSet(viewsets.ModelViewSet):
     serializer_class = BarSerializer
 
     def get_queryset(self):
-        queryset = Bar.objects.all()
+        queryset = Bar.objects.all().prefetch_related(
+            'users_at_bar', 
+            'images',
+            'ratings',
+            'wait_time_votes',
+            'crowd_size_votes'
+        )
         
         # Get location parameters
         latitude = self.request.query_params.get('latitude')
         longitude = self.request.query_params.get('longitude')
         radius = self.request.query_params.get('radius', 5)  # Default 5km
         
+        # Only apply location filtering if both lat/long are provided
         if latitude and longitude:
             try:
                 user_location = Point(
-                    float(longitude),  # x coordinate
-                    float(latitude),   # y coordinate
+                    float(longitude),
+                    float(latitude),
                     srid=4326
                 )
-                # Annotate with distance and filter within radius
+                # Add prefetch_related to reduce database queries
                 queryset = queryset.annotate(
                     distance=Distance('location', user_location)
                 ).filter(
                     location__distance_lte=(user_location, D(km=float(radius)))
-                ).order_by('distance')
+                ).order_by('distance').prefetch_related('users_at_bar', 'images')
             except (ValueError, TypeError):
-                pass
+                # Log error but don't crash
+                print(f"Invalid location parameters: lat={latitude}, lon={longitude}")
         
         return queryset
 
     @action(detail=True, methods=['get'], url_path='aggregated-vote')
     def aggregated_vote(self, request, pk=None):
-        bar = self.get_object()
-        return Response(bar.get_aggregated_vote_status())
+        try:
+            bar = self.get_object()
+            return Response(bar.get_aggregated_vote_status())
+        except Exception as e:
+            return Response(
+                {"error": f"Failed to retrieve aggregated votes: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
     @action(detail=False, methods=['get'])
     def most_active(self, request):
@@ -102,28 +116,15 @@ class BarStatusViewSet(viewsets.ModelViewSet):
         response_data = []
         for status in queryset:
             bar = status.bar
-            wait_time_votes = bar.wait_time_votes.all()
-            crowd_size_votes = bar.crowd_size_votes.all()
-            
-            # Calculate most common wait time
-            wait_time_counts = {}
-            for vote in wait_time_votes:
-                wait_time_counts[vote.wait_time] = wait_time_counts.get(vote.wait_time, 0) + 1
-            most_common_wait_time = max(wait_time_counts.items(), key=lambda x: x[1])[0] if wait_time_counts else None
-            
-            # Calculate most common crowd size
-            crowd_size_counts = {}
-            for vote in crowd_size_votes:
-                crowd_size_counts[vote.crowd_size] = crowd_size_counts.get(vote.crowd_size, 0) + 1
-            most_common_crowd_size = max(crowd_size_counts.items(), key=lambda x: x[1])[0] if crowd_size_counts else None
+            aggregated_votes = aggregate_bar_votes(bar.id)
             
             status_data = serializer.data[queryset.index(status)]
             status_data.update({
                 'bar_id': bar.id,
-                'aggregated_wait_time': most_common_wait_time,
-                'aggregated_crowd_size': most_common_crowd_size,
-                'wait_time_vote_count': len(wait_time_votes),
-                'crowd_size_vote_count': len(crowd_size_votes)
+                'aggregated_wait_time': aggregated_votes['wait_time'],
+                'aggregated_crowd_size': aggregated_votes['crowd_size'],
+                'wait_time_vote_count': aggregated_votes['wait_time_count'],
+                'crowd_size_vote_count': aggregated_votes['crowd_size_count']
             })
             response_data.append(status_data)
         
@@ -203,51 +204,19 @@ class BarVoteViewSet(viewsets.ModelViewSet):
         })
 
     def perform_create(self, serializer):
-        # Remove the code that checks for recent votes
-        # Simply save with the current user
-        serializer.save(user=self.request.user)
-
-
-class BarCrowdSizeViewSet(viewsets.ModelViewSet):
-    """
-    ViewSet for submitting votes on crowd size.
-    Enforces one vote per user per 24h window.
-    """
-    serializer_class = BarCrowdSizeSerializer
-    permission_classes = [permissions.IsAuthenticated]
-
-    def get_queryset(self):
-        qs = BarCrowdSize.objects.all()
-        bar_id = self.request.query_params.get('bar')
-        if bar_id:
-            qs = qs.filter(bar__id=bar_id)
-        return qs
-
-    @action(detail=False, methods=['get'], url_path='summary')
-    def vote_summary(self, request):
-        bar_id = request.query_params.get("bar")
-        if not bar_id:
-            return Response({"error": "Bar ID is required."}, status=400)
-        summary = aggregate_bar_votes(bar_id)
-        return Response({
-            "bar": bar_id,
-            "aggregated_crowd_size": summary["crowd_size"],
-        })
-
-    def perform_create(self, serializer):
         # prevent re-vote within 24h
         cutoff = timezone.now() - timedelta(hours=24)
-        recent = BarCrowdSize.objects.filter(
+        recent = BarVote.objects.filter(
             bar=serializer.validated_data['bar'],
             user=self.request.user,
             timestamp__gte=cutoff
         ).first()
         if recent:
             raise serializers.ValidationError(
-                "You can only vote once every 24 hours for this bar's crowd size."
                 "You can only vote once every 24 hours for this bar's wait time."
             )
         serializer.save(user=self.request.user)
+
 
 class BarCrowdSizeViewSet(viewsets.ModelViewSet):
     """
@@ -315,7 +284,7 @@ class BarHoursViewSet(viewsets.ModelViewSet):
     queryset = BarHours.objects.all()
 
     def get_permissions(self):
-        if self.action in ['create', 'update', 'partial_update', 'destroy', 'bulk_update']:
+        if self.action in ['create', 'update', 'partial_update', 'destroy']:
             return [permissions.IsAdminUser()]
         return [permissions.IsAuthenticated()]
 

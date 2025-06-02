@@ -5,7 +5,6 @@ from django.contrib.gis.db import models as gis
 from django.db import transaction
 from django.contrib.gis.measure import D
 from django.utils import timezone
-from django.db import transaction
 from apps.users.models import User
 from datetime import timedelta
 
@@ -118,6 +117,12 @@ class BarStatus(models.Model):
 
     def __str__(self):
         return f"{self.bar.name} Status — {self.last_updated}"
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['bar']),
+            models.Index(fields=['last_updated']),
+        ]
 
 
 class BarRating(models.Model):

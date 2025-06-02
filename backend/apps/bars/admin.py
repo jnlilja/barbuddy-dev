@@ -7,7 +7,7 @@ from django.core.exceptions import ValidationError
 from django.contrib.gis.measure import D
 from django.contrib.gis.db.models.functions import Distance
 
-from .models import Bar, BarStatus, BarRating, BarImage, BarHours
+from .models import Bar, BarStatus, BarRating, BarImage, BarHours, BarVote, BarCrowdSize
 from apps.users.models import User
 
 # Try to pick up the GeoDjango map widget; if it isn't installed, fall back:
@@ -130,3 +130,15 @@ class BarHoursAdmin(admin.ModelAdmin):
     list_display = ("bar", "day", "open_time", "close_time", "is_closed")
     list_filter = ("day", "is_closed")
     search_fields = ("bar__name",)
+
+@admin.register(BarVote)
+class BarVoteAdmin(admin.ModelAdmin):
+    list_display = ("bar", "user", "wait_time", "timestamp")
+    list_filter = ("wait_time",)
+    search_fields = ("bar__name", "user__username")
+
+@admin.register(BarCrowdSize)
+class BarCrowdSizeAdmin(admin.ModelAdmin):
+    list_display = ("bar", "user", "crowd_size", "timestamp")
+    list_filter = ("crowd_size",)
+    search_fields = ("bar__name", "user__username")
