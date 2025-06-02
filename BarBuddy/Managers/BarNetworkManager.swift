@@ -19,6 +19,7 @@ actor BarNetworkManager {
         self.session = session
         decoder.keyDecodingStrategy = .convertFromSnakeCase
         encoder.keyEncodingStrategy = .convertToSnakeCase
+        decoder.dateDecodingStrategy = .iso8601
     }
     
     // MARK: Bar Vote
@@ -29,7 +30,7 @@ actor BarNetworkManager {
         guard let url = URL(string: endpoint) else {
             throw APIError.badURL
         }
-        guard let token = try await AuthViewModel().authUser?.getIDToken() else {
+        guard let token = try await Auth.auth().currentUser?.getIDToken() else {
             throw APIError.noToken
         }
         var request = URLRequest(url: url)
@@ -51,7 +52,7 @@ actor BarNetworkManager {
         guard let url = URL(string: endpoint) else {
             throw APIError.badURL
         }
-        guard let token = try await AuthViewModel().authUser?.getIDToken() else {
+        guard let token = try await Auth.auth().currentUser?.getIDToken() else {
             throw APIError.noToken
         }
         
@@ -72,7 +73,7 @@ actor BarNetworkManager {
         guard let url = URL(string: endpoint) else {
             throw APIError.badURL
         }
-        guard let token = try await AuthViewModel().authUser?.getIDToken() else {
+        guard let token = try await Auth.auth().currentUser?.getIDToken() else {
             throw APIError.noToken
         }
         
@@ -96,7 +97,7 @@ actor BarNetworkManager {
         guard let url = URL(string: endpoint) else {
             throw APIError.badURL
         }
-        guard let token = try await AuthViewModel().authUser?.getIDToken() else {
+        guard let token = try await Auth.auth().currentUser?.getIDToken() else {
             throw APIError.noToken
         }
         
@@ -116,7 +117,7 @@ actor BarNetworkManager {
         guard let url = URL(string: endpoint) else {
             throw APIError.badURL
         }
-        guard let token = try await AuthViewModel().authUser?.getIDToken() else {
+        guard let token = try await Auth.auth().currentUser?.getIDToken() else {
             throw APIError.noToken
         }
         
@@ -136,7 +137,7 @@ actor BarNetworkManager {
         guard let url = URL(string: endpoint) else {
             throw APIError.badURL
         }
-        guard let token = try await AuthViewModel().authUser?.getIDToken() else {
+        guard let token = try await Auth.auth().currentUser?.getIDToken() else {
             throw APIError.noToken
         }
         
@@ -158,7 +159,7 @@ actor BarNetworkManager {
         guard let url = URL(string: endpoint) else {
             throw APIError.badURL
         }
-        guard let token = try await AuthViewModel().authUser?.getIDToken() else {
+        guard let token = try await Auth.auth().currentUser?.getIDToken() else {
             throw APIError.noToken
         }
         var request = URLRequest(url: url)
@@ -182,7 +183,7 @@ actor BarNetworkManager {
         guard let url = URL(string: endpoint) else {
             throw APIError.badURL
         }
-        guard let token = try await AuthViewModel().authUser?.getIDToken() else {
+        guard let token = try await Auth.auth().currentUser?.getIDToken() else {
                 throw APIError.noToken
             }
         
@@ -207,7 +208,7 @@ actor BarNetworkManager {
         guard let url = URL(string: endpoint) else {
             throw APIError.badURL
         }
-        guard let token = try await AuthViewModel().authUser?.getIDToken() else {
+        guard let token = try await Auth.auth().currentUser?.getIDToken() else {
             throw APIError.noToken
         }
         
@@ -232,7 +233,7 @@ actor BarNetworkManager {
         guard let url = URL(string: endpoint) else {
             throw APIError.badURL
         }
-        guard let token = try await AuthViewModel().authUser?.getIDToken() else {
+        guard let token = try await Auth.auth().currentUser?.getIDToken() else {
             throw APIError.noToken
         }
         
@@ -253,7 +254,7 @@ actor BarNetworkManager {
         guard let url = URL(string: endpoint) else {
             throw BarHoursError.doesNotExist("Could not find bar hours with id: \(id)")
         }
-        guard let token = try await AuthViewModel().authUser?.getIDToken() else {
+        guard let token = try await Auth.auth().currentUser?.getIDToken() else {
             throw APIError.noToken
         }
         
@@ -273,7 +274,7 @@ actor BarNetworkManager {
         guard let url = URL(string: endpoint) else {
             throw APIError.badURL
         }
-        guard let token = try await AuthViewModel().authUser?.getIDToken() else {
+        guard let token = try await Auth.auth().currentUser?.getIDToken() else {
             throw APIError.noToken
         }
         
@@ -291,13 +292,12 @@ actor BarNetworkManager {
     
     // MARK: Bar Status
     
-    // GET /bar-status/
     func fetchStatuses() async throws -> [BarStatus] {
         let endpoint = baseURL + "bar-status/"
         guard let url = URL(string: endpoint) else {
             throw APIError.badURL
         }
-        guard let token = try await AuthViewModel().authUser?.getIDToken() else {
+        guard let token = try await Auth.auth().currentUser?.getIDToken() else {
             throw APIError.noToken
         }
         var request = URLRequest(url: url)
@@ -306,10 +306,10 @@ actor BarNetworkManager {
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         
-        let (data, response) = try await session.data(from: url)
+        let (data, response) = try await session.data(for: request)
+
         if let httpResponse = response as? HTTPURLResponse, !(200...299).contains(httpResponse.statusCode) {
-            print("Error fetching statuses: \(httpResponse.statusCode)")
-            throw URLError(.badServerResponse)
+            throw APIError.badResponse(httpResponse.statusCode)
         }
         return try decoder.decode([BarStatus].self, from: data)
     }
@@ -319,7 +319,7 @@ actor BarNetworkManager {
         guard let url = URL(string: endpoint) else {
             throw APIError.badURL
         }
-        guard let token = try await AuthViewModel().authUser?.getIDToken() else {
+        guard let token = try await Auth.auth().currentUser?.getIDToken() else {
             throw APIError.noToken
         }
         
@@ -343,7 +343,7 @@ actor BarNetworkManager {
         guard let url = URL(string: endpoint) else {
             throw APIError.badURL
         }
-        guard let token = try await AuthViewModel().authUser?.getIDToken() else {
+        guard let token = try await Auth.auth().currentUser?.getIDToken() else {
             throw APIError.noToken
         }
         
@@ -366,7 +366,7 @@ actor BarNetworkManager {
         guard let url = URL(string: endpoint) else {
             throw APIError.badURL
         }
-        guard let token = try await AuthViewModel().authUser?.getIDToken() else {
+        guard let token = try await Auth.auth().currentUser?.getIDToken() else {
             throw APIError.noToken
         }
         
@@ -391,7 +391,7 @@ actor BarNetworkManager {
         guard let url = URL(string: endpoint) else {
             throw APIError.badURL
         }
-        guard let token = try await AuthViewModel().authUser?.getIDToken() else {
+        guard let token = try await Auth.auth().currentUser?.getIDToken() else {
             throw APIError.noToken
         }
         
@@ -414,7 +414,7 @@ actor BarNetworkManager {
         guard let url = URL(string: endpoint) else {
             throw APIError.badURL
         }
-        guard let token = try await AuthViewModel().authUser?.getIDToken() else {
+        guard let token = try await Auth.auth().currentUser?.getIDToken() else {
             throw APIError.noToken
         }
         
@@ -436,7 +436,7 @@ actor BarNetworkManager {
         guard let url = URL(string: endpoint) else {
             throw APIError.badURL
         }
-        guard let token = try await AuthViewModel().authUser?.getIDToken() else {
+        guard let token = try await Auth.auth().currentUser?.getIDToken() else {
             throw APIError.noToken
         }
         
@@ -458,7 +458,7 @@ actor BarNetworkManager {
         guard let url = URL(string: endpoint) else {
             throw APIError.badURL
         }
-        guard let token = try await AuthViewModel().authUser?.getIDToken() else {
+        guard let token = try await Auth.auth().currentUser?.getIDToken() else {
             throw APIError.noToken
         }
         
@@ -478,7 +478,7 @@ actor BarNetworkManager {
         guard let url = URL(string: endpoint) else {
             throw APIError.badURL
         }
-        guard let token = try await AuthViewModel().authUser?.getIDToken() else {
+        guard let token = try await Auth.auth().currentUser?.getIDToken() else {
             throw APIError.noToken
         }
         
@@ -498,7 +498,7 @@ actor BarNetworkManager {
         guard let url = URL(string: endpoint) else {
             throw APIError.badURL
         }
-        guard let token = try await AuthViewModel().authUser?.getIDToken() else {
+        guard let token = try await Auth.auth().currentUser?.getIDToken() else {
             throw APIError.noToken
         }
         
@@ -518,7 +518,7 @@ actor BarNetworkManager {
         guard let url = URL(string: endpoint) else {
             throw APIError.badURL
         }
-        guard let token = try await AuthViewModel().authUser?.getIDToken() else {
+        guard let token = try await Auth.auth().currentUser?.getIDToken() else {
             throw APIError.noToken
         }
         
@@ -540,7 +540,7 @@ actor BarNetworkManager {
         guard let url = URL(string: endpoint) else {
             throw APIError.badURL
         }
-        guard let token = try await AuthViewModel().authUser?.getIDToken() else {
+        guard let token = try await Auth.auth().currentUser?.getIDToken() else {
             throw APIError.noToken
         }
         
@@ -562,7 +562,7 @@ actor BarNetworkManager {
         guard let url = URL(string: endpoint) else {
             throw APIError.badURL
         }
-        guard let token = try await AuthViewModel().authUser?.getIDToken() else {
+        guard let token = try await Auth.auth().currentUser?.getIDToken() else {
             throw APIError.noToken
         }
         
@@ -587,7 +587,7 @@ actor BarNetworkManager {
         guard let url = URL(string: endpoint) else {
             throw APIError.badURL
         }
-        guard let token = try await AuthViewModel().authUser?.getIDToken() else {
+        guard let token = try await Auth.auth().currentUser?.getIDToken() else {
             throw APIError.noToken
         }
         
@@ -610,7 +610,7 @@ actor BarNetworkManager {
         guard let url = URL(string: endpoint) else {
             throw APIError.badURL
         }
-        guard let token = try await AuthViewModel().authUser?.getIDToken() else {
+        guard let token = try await Auth.auth().currentUser?.getIDToken() else {
             throw APIError.noToken
         }
         
@@ -633,7 +633,7 @@ actor BarNetworkManager {
         guard let url = URL(string: endpoint) else {
             throw APIError.badURL
         }
-        guard let token = try await AuthViewModel().authUser?.getIDToken() else {
+        guard let token = try await Auth.auth().currentUser?.getIDToken() else {
             throw APIError.noToken
         }
         
@@ -656,7 +656,7 @@ actor BarNetworkManager {
         guard let url = URL(string: endpoint) else {
             throw APIError.badURL
         }
-        guard let token = try await AuthViewModel().authUser?.getIDToken() else {
+        guard let token = try await Auth.auth().currentUser?.getIDToken() else {
             throw APIError.noToken
         }
         
@@ -676,7 +676,7 @@ actor BarNetworkManager {
         guard let url = URL(string: endpoint) else {
             throw APIError.badURL
         }
-        guard let token = try await AuthViewModel().authUser?.getIDToken() else {
+        guard let token = try await Auth.auth().currentUser?.getIDToken() else {
             throw APIError.noToken
         }
         
@@ -691,12 +691,12 @@ actor BarNetworkManager {
         }
     }
     
-    func deleteBarImage(bar: Int, imageID: Int) async throws {
-        let endpoint = baseURL + "bars/\(bar)/images/\(imageID)/"
+    func deleteBarImage(barId: Int, imageId: Int) async throws {
+        let endpoint = baseURL + "bars/\(barId)/images/\(imageId)/"
         guard let url = URL(string: endpoint) else {
             throw APIError.badURL
         }
-        guard let token = try await AuthViewModel().authUser?.getIDToken() else {
+        guard let token = try await Auth.auth().currentUser?.getIDToken() else {
             throw APIError.noToken
         }
         

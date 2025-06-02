@@ -10,5 +10,5 @@ struct BarVote: Codable {
     var id: Int?
     var bar: Int
     var waitTime: String
-    var timeStamp: String
+    var timeStamp: Date?
 }

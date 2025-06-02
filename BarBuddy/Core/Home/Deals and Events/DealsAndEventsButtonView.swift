@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct EventCard: View {
+struct DealsAndEventsButtonView: View {
     var body: some View {
         ZStack {
             Color(.systemBackground)
@@ -41,5 +41,5 @@ struct EventCard: View {
 }
 
 #Preview(traits: .sizeThatFitsLayout) {
-    EventCard()
+    DealsAndEventsButtonView()
 }

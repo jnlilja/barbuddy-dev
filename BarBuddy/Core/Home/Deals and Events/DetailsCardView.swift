@@ -1,5 +1,5 @@
 //
-//  DetailedEventCard.swift
+//  DetailsCardView.swift
 //  BarBuddy
 //
 //  Created by Andrew Betancourt on 4/13/25.
@@ -8,7 +8,7 @@
 import SwiftUI
 
 // Card Views
-struct DetailedEventCard: View {
+struct DetailsCardView: View {
     let title: String
     let location: String
     let time: String
@@ -46,7 +46,7 @@ struct DetailedEventCard: View {
 }
 
 #Preview {
-    DetailedEventCard(
+    DetailsCardView(
         title: "Happy Hour",
         location: "Hideaway",
         time: "9pm",

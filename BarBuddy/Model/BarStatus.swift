@@ -11,5 +11,5 @@ struct BarStatus: Codable, Equatable, Sendable {
     var bar: Int
     var crowdSize: String?
     var waitTime: String?
-    var lastUpdated: String
+    var lastUpdated: Date?
 }

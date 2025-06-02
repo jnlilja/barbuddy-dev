@@ -32,157 +32,313 @@ struct Bar: Codable, Identifiable, Hashable {
     var events: [Event] {
         Event.eventData.filter { $0.bar == id }
     }
-    
-    // Function to fetch the bar's hours
-    func getHours() async -> String? {
-        guard let id = id else { return nil }
-        // Try to get from cache
-        if var cached = await BarHoursCache.shared.get(for: id) {
-            guard let open = cached.openTime,
-                  let close = cached.closeTime else { return nil }
-            
-            // Get last cached status and check if it needs to be updated
-            let previousClosedStatus = cached.isClosed
-            let isCurrentlyClosed = isClosed(open, close)
-            
-            // If the status has not changed, do not update
-            guard previousClosedStatus != isCurrentlyClosed else {
-                return "\(isCurrentlyClosed ? "Closed" : "Open"): \(open) - \(close)"
-            }
-            cached.isClosed = isCurrentlyClosed
-            
-            // Patch hours and update cache
-            do {
-                try await BarNetworkManager.shared.patchBarHours(id: cached.id)
-                await BarHoursCache.shared.set(value: cached, forKey: cached.id)
-            } catch {
-                switch error {
-                case BarHoursError.doesNotExist(error: let error):
-                    print("patchHours error: \(error)")
-                case APIError.noToken:
-                    print("patchHours error: No token. Please log in.")
-                case APIError.badResponse:
-                    print("patchHours error: Bad request")
-                case APIError.badURL:
-                    print("patchHours error: URL is not valid.")
-                default:
-                    print("Pathing hours failed with error - \(error.localizedDescription)")
-                }
-                return nil
-            }
-            return "\(isCurrentlyClosed ? "Closed" : "Open"): \(open) - \(close)"
-        }
-        // Fetch all hours if not in cache
-        do {
-            let allHours = try await BarNetworkManager.shared.fetchAllBarHours()
-            guard var hours = allHours.first(where: { $0.bar == id }) else { return nil }
-            
-            // Cache all fetched hours
-            for h in allHours {
-                await BarHoursCache.shared.set(value: h, forKey: h.id)
-            }
-            
-            guard let open = hours.openTime,
-                  let close = hours.closeTime else { return nil }
-            let closed = isClosed(open, close)
-            hours.isClosed = closed
-            
-            // Patch hours and update cache
-            do {
-                try await BarNetworkManager.shared.patchBarHours(id: hours.id)
-                await BarHoursCache.shared.set(value: hours, forKey: hours.id)
-            } catch {
-                switch error {
-                case BarHoursError.doesNotExist(error: let error):
-                    print("patchHours error: \(error)")
-                case APIError.noToken:
-                    print("patchHours error: No token. Please log in.")
-                case APIError.badResponse:
-                    print("patchHours error: Bad request")
-                case APIError.badURL:
-                    print("patchHours error: URL is not valid.")
-                default:
-                    print("Pathing hours failed with error - \(error.localizedDescription)")
-                }
-                return nil
-            }
-            return "\(closed ? "Closed" : "Open"): \(open) - \(close)"
-            
-        } catch APIError.badResponse {
-            print("Could not fetch hours")
-        } catch APIError.noToken {
-            print("Could not fetch hours. No token.")
-        } catch APIError.badURL {
-            print("Could not fetch hours. URL is not valid.")
-        } catch {
-            print("Could not fetch hours - \(error.localizedDescription)")
-        }
-        return nil
-    }
-    
-    // Check if the bar is closed based on the current time and the bar's hours
-    private func isClosed(_ openTime: String, _ closeTime: String) -> Bool {
-        // Only handle 12-hour format with AM/PM
-        let formatter = DateFormatter()
-        formatter.dateFormat = "h:mm a"
-        formatter.locale = Locale(identifier: "en_US_POSIX")
-        
-        guard
-            let openDateRaw = formatter.date(from: openTime),
-            let closeDateRaw = formatter.date(from: closeTime)
-        else {
-            return true
-        }
-        
-        let calendar = Calendar.current
-        
-        // Get the current date and time
-        let nowComponents = calendar.dateComponents(in: .current, from: Date())
-        let now = calendar.date(from: nowComponents)!
-        
-        // Get today's open and close times
-        var barHourComponents = calendar.dateComponents([.year, .month, .day], from: Date())
-        
-        barHourComponents.hour = calendar.component(.hour, from: openDateRaw)
-        barHourComponents.minute = calendar.component(.minute, from: openDateRaw)
-        let openDate = calendar.date(from: barHourComponents)!
-        
-        barHourComponents.hour = calendar.component(.hour, from: closeDateRaw)
-        barHourComponents.minute = calendar.component(.minute, from: closeDateRaw)
-        var closeDate = calendar.date(from: barHourComponents)!
-        
-        // If close time is earlier than open, it means it goes into the next day
-        if closeDate <= openDate {
-            closeDate = calendar.date(byAdding: .day, value: 1, to: closeDate)!
-        }
-        
-        // Check if the current time is outside the open hours
-        return now < openDate || now >= closeDate
-    }
-    
-    func formatBarHours(hours: inout BarHours) -> String? {
-        guard let open = hours.openTime,
-              let close = hours.closeTime else { return nil }
-        let closed = isClosed(open, close)
-        hours.isClosed = closed
-        return "\(closed ? "Closed" : "Open"): \(open) - \(close)"
-    }
 }
 extension Bar {
-    // For testing purposes
-    static let DUMMY_DATA = Bar(
-        id: 1,
-        name: "Example Bar",
-        address: "123 Main St, Anytown, USA",
-        averagePrice: nil,
-        latitude: 37.7749,
-        longitude: -122.4194,
-        location: nil,
-        usersAtBar: nil,
-        currentStatus: nil,
-        averageRating: nil,
-        images: nil,
-        currentUserCount: nil,
-        activityLevel: nil
-    )
+    static let MOCK_DATA: Bars = [
+        Bar(
+            id: 0,
+            name: "Mavericks Beach Club",
+            address: "860 Garnet Ave, San Diego, CA 92109",
+            latitude: 32.7969526,
+            longitude: -117.2543182,
+            images: []
+        ),
+        Bar(
+            id: 1,
+            name: "Thrusters Lounge",
+            address: "4633 Mission Blvd, San Diego, CA 92109",
+            latitude: 32.7982187,
+            longitude: -117.2558549,
+            images: []
+        ),
+        Bar(
+            id: 2,
+            name: "710 Beach Club",
+            address: "710 Garnet Ave, San Diego, CA 92109",
+            latitude: 32.7964687,
+            longitude: -117.2565146,
+            images: []
+        ),
+        Bar(
+            id: 3,
+            name: "Open Bar",
+            address: "4302 Mission Blvd, San Diego, CA 92109",
+            latitude: 32.7937602,
+            longitude: -117.2547777,
+            images: []
+        ),
+        Bar(
+            id: 4,
+            name: "The Grass Skirt",
+            address: "910 Grand Ave, San Diego, CA 92109",
+            latitude: 32.7955066,
+            longitude: -117.2528919,
+            images: []
+        ),
+        Bar(
+            id: 5,
+            name: "Hideaway",
+            address: "4474 Mission Blvd, San Diego, CA 92109",
+            latitude: 32.7961859,
+            longitude: -117.2558475,
+            images: []
+        ),
+        Bar(
+            id: 6,
+            name: "Flamingo Deck",
+            address: "4609 Mission Blvd, San Diego, CA 92109",
+            latitude: 32.7911123,
+            longitude: -117.2540975,
+            images: []
+        ),
+        Bar(
+            id: 7,
+            name: "The Beverly Beach Garden",
+            address: "4190 Mission Blvd, San Diego, CA 92109",
+            latitude: 32.7924436,
+            longitude: -117.2544375,
+            images: []
+        ),
+        Bar(
+            id: 8,
+            name: "Riptides PB",
+            address: "1014 Grand Ave, San Diego, CA 92109",
+            latitude: 32.7959306,
+            longitude: -117.2510682,
+            images: []
+        ),
+        Bar(
+            id: 9,
+            name: "PB Avenue",
+            address: "1060 Garnet Ave, San Diego, CA 92109",
+            latitude: 32.7977653,
+            longitude: -117.2506176,
+            images: []
+        ),
+        
+        Bar(
+            id: 10,
+            name: "Moonshine Beach",
+            address: "1165 Garnet Ave, San Diego, CA 92109",
+            latitude: 32.7980179,
+            longitude: -117.2484153,
+            location: "",
+            usersAtBar: 0,
+            currentStatus: "",
+            averageRating: "",
+            images: [],
+            currentUserCount: "",
+            activityLevel: ""
+        ),
+        Bar(
+            id: 11,
+            name: "PB Shore Club",
+            address: "4343 Ocean Blvd, San Diego, CA 92109",
+            latitude: 32.7942403,
+            longitude: -117.2558471,
+            location: "",
+            usersAtBar: 0,
+            currentStatus: "",
+            averageRating: "",
+            images: [],
+            currentUserCount: "",
+            activityLevel: ""
+        ),
+        Bar(
+            id: 12,
+            name: "Society PB",
+            address: "1051 Garnet Ave, San Diego, CA 92109",
+            latitude: 32.7975231,
+            longitude: -117.2506688,
+            location: "",
+            usersAtBar: 0,
+            currentStatus: "",
+            averageRating: "",
+            images: [],
+            currentUserCount: "",
+            activityLevel: ""
+        ),
+        Bar(
+            id: 13,
+            name: "Lahaina Beach House",
+            address: "710 Oliver Ct, San Diego, CA 92109",
+            latitude: 32.7916952,
+            longitude: -117.2551161,
+            location: "",
+            usersAtBar: 0,
+            currentStatus: "",
+            averageRating: "",
+            images: [],
+            currentUserCount: "",
+            activityLevel: ""
+        ),
+        Bar(
+            id: 14,
+            name: "Break Point",
+            address: "945 Garnet Ave, San Diego, CA 92109",
+            latitude: 32.7970878,
+            longitude: -117.2526739,
+            location: "",
+            usersAtBar: 0,
+            currentStatus: "",
+            averageRating: "",
+            images: [],
+            currentUserCount: "",
+            activityLevel: ""
+        ),
+        Bar(
+            id: 15,
+            name: "Dirty Birds",
+            address: "4656 Mission Blvd, San Diego, CA 92109",
+            latitude: 32.7987627,
+            longitude: -117.2563120,
+            location: "",
+            usersAtBar: 0,
+            currentStatus: "",
+            averageRating: "",
+            images: [],
+            currentUserCount: "",
+            activityLevel: ""
+        ),
+        Bar(
+            id: 16,
+            name: "bar Ella",
+            address: "915 Garnet Ave, San Diego, CA 92109",
+            latitude: 32.7976868,
+            longitude: -117.2512401,
+            location: "",
+            usersAtBar: 0,
+            currentStatus: "",
+            averageRating: "",
+            images: [],
+            currentUserCount: "",
+            activityLevel: ""
+        ),
+        Bar(
+            id: 17,
+            name: "Alehouse",
+            address: "721 Grand Ave, San Diego, CA 92109",
+            latitude: 32.7943251,
+            longitude: -117.2552584,
+            location: "",
+            usersAtBar: 0,
+            currentStatus: "",
+            averageRating: "",
+            images: [],
+            currentUserCount: "",
+            activityLevel: ""
+        ),
+        Bar(
+            id: 18,
+            name: "The Duck Dive",
+            address: "4650 Mission Blvd, San Diego, CA 92109",
+            latitude: 32.7985307,
+            longitude: -117.2562483,
+            location: "",
+            usersAtBar: 0,
+            currentStatus: "",
+            averageRating: "",
+            images: [],
+            currentUserCount: "",
+            activityLevel: ""
+        ),
+        Bar(
+            id: 19,
+            name: "PB Local",
+            address: "809 Thomas Ave, San Diego, CA 92109",
+            latitude: 32.7936288,
+            longitude: -117.2541387,
+            location: "",
+            usersAtBar: 0,
+            currentStatus: "",
+            averageRating: "",
+            images: [],
+            currentUserCount: "",
+            activityLevel: ""
+        ),
+        Bar(
+            id: 20,
+            name: "Firehouse",
+            address: "722 Grand Ave, San Diego, CA 92109",
+            latitude: 32.7947949,
+            longitude: -117.2555755,
+            location: "",
+            usersAtBar: 0,
+            currentStatus: "",
+            averageRating: "",
+            images: [],
+            currentUserCount: "",
+            activityLevel: ""
+        ),
+        Bar(
+            id: 21,
+            name: "Waterbar",
+            address: "4325 Ocean Blvd, San Diego, CA 92109",
+            latitude: 32.79393763764441,
+            longitude: -117.25568880504693,
+            location: "",
+            usersAtBar: 0,
+            currentStatus: "",
+            averageRating: "",
+            images: [],
+            currentUserCount: "",
+            activityLevel: ""
+        ),
+        Bar(
+            id: 22,
+            name: "Tap Room",
+            address: "1269 Garnet Ave, San Diego, CA 92109",
+            latitude: 32.79830577170787,
+            longitude: -117.24664621336298,
+            location: "",
+            usersAtBar: 0,
+            currentStatus: "",
+            averageRating: "",
+            images: [],
+            currentUserCount: "",
+            activityLevel: ""
+        ),
+        Bar(
+            id: 23,
+            name: "The Collective",
+            address: "1220 Garnet Ave, San Diego, CA 92109",
+            latitude: 32.7983731693196,
+            longitude: -117.24682047353912,
+            location: "",
+            usersAtBar: 0,
+            currentStatus: "",
+            averageRating: "",
+            images: [],
+            currentUserCount: "",
+            activityLevel: ""
+        ),
+        Bar(
+            id: 24,
+            name: "Baja Beach Cafe",
+            address: "701 Thomas Ave, San Diego, CA 92109",
+            latitude: 32.793322191294415,
+            longitude: -117.25567834010458,
+            location: "",
+            usersAtBar: 0,
+            currentStatus: "",
+            averageRating: "",
+            images: [],
+            currentUserCount: "",
+            activityLevel: ""
+        ),
+        Bar(
+            id: 25,
+            name: "Bare Back Grill",
+            address: "4640 Mission Blvd, San Diego, CA 92109",
+            latitude: 32.798274966357184,
+            longitude: -117.25623510971276,
+            location: "",
+            usersAtBar: 0,
+            currentStatus: "",
+            averageRating: "",
+            images: [],
+            currentUserCount: "",
+            activityLevel: ""
+        ),
+    ]
 }

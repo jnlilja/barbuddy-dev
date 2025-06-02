@@ -8,10 +8,12 @@
 import SwiftUI
 
 struct ContentView: View {
+    @State private var barViewModel = BarViewModel()
     @EnvironmentObject var authViewModel: AuthViewModel
     var body: some View {
         if authViewModel.authUser != nil {
             HomeView()
+                .environment(barViewModel)
         } else {
             LoginView()
         }
@@ -23,4 +25,5 @@ struct ContentView: View {
         .environmentObject(AuthViewModel())
         .environment(MapViewModel())
         .environment(VoteViewModel())
+        .environment(BarViewModel())
 }

@@ -11,13 +11,14 @@ struct BarCard: View {
     let bar: Bar
     @State private var hours: String?
     @Environment(MapViewModel.self) var viewModel
+    @Environment(BarViewModel.self) var barViewModel
     @Environment(\.colorScheme) var colorScheme
     @Environment(VoteViewModel.self) var voteViewModel
     @Environment(\.displayScale) var displayScale
     @State private var loading = true
     
     private var waitTime: String? {
-        viewModel.statuses.first(where: { $0.bar == bar.id })?.waitTime ?? ""
+        barViewModel.statuses.first(where: { $0.bar == bar.id })?.waitTime ?? ""
     }
     
     private var screenWidth: CGFloat {
@@ -106,11 +107,11 @@ struct BarCard: View {
             }
         }
         .onAppear {
-            guard var currentHours = viewModel.hours.first(where: { $0.bar == bar.id }) else {
+            guard var currentHours = barViewModel.hours.first(where: { $0.bar == bar.id }) else {
                 loading = false
                 return
             }
-            hours = bar.formatBarHours(hours: &currentHours)
+            hours = barViewModel.formatBarHours(hours: &currentHours)
             loading = false
         }
         .padding()
