@@ -24,6 +24,5 @@ struct ContentView: View {
     ContentView()
         .environmentObject(AuthViewModel())
         .environment(MapViewModel())
-        .environment(VoteViewModel())
         .environment(BarViewModel())
 }

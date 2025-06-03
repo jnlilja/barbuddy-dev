@@ -56,6 +56,5 @@ struct HomeView: View {
 #Preview("Home View") {
     HomeView()
         .environment(MapViewModel())
-        .environment(VoteViewModel())
         .environmentObject(AuthViewModel())
 }

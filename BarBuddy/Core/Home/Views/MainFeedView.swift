@@ -51,9 +51,7 @@ struct MainFeedView: View {
                 .ignoresSafeArea(.keyboard)
         }
         .task {
-
             await barViewModel.loadBarData()
-            
         }
         .environment(viewModel)
     }
@@ -84,7 +82,7 @@ struct MainFeedView: View {
     }
     private func annotationView(for bar: Bar) -> some View {
         ZStack {
-            if bar.events.isEmpty {
+            if barViewModel.events.isEmpty {
                 Circle()
                     .frame(width: 30, height: 30)
                     .foregroundStyle(.darkBlue)
@@ -156,6 +154,5 @@ struct MainFeedView: View {
 #Preview {
     MainFeedView()
         .environment(MapViewModel())
-        .environment(VoteViewModel())
-        .environment(BarViewModel())
+        .environment(BarViewModel.PREVIEW)
 }

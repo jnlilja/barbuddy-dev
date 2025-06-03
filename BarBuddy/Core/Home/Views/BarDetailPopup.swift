@@ -9,14 +9,13 @@ import SDWebImageSwiftUI
 struct BarDetailPopup: View {
     @Environment(\.dismiss) var dismiss
     @Environment(MapViewModel.self) var viewModel
-    @Environment(VoteViewModel.self) var voteViewModel
     @Environment(BarViewModel.self) var barViewModel
     @State var bar: Bar
     @State private var loadingState: HoursLoadingState = .loading
     @State private var waitButtonProperties = ButtonProperties(type: "wait")
 
     private var waitTime: String {
-        barViewModel.statuses.first(where: { $0.bar == bar.id })?.waitTime ?? ""
+        barViewModel.statuses.first(where: { $0.bar == bar.id })?.waitTime ?? "<5 min"
     }
 
     var body: some View {
@@ -111,16 +110,16 @@ struct BarDetailPopup: View {
                                 }
                             }
                             // Disable vote button if bar is closed or wait time could not be fetched
-                            .disabled(
-                                loadingState == .closed
-                                || loadingState == .failed
-                                || loadingState == .loading
-                            )
-                            .opacity(
-                                loadingState == .closed
-                                || loadingState == .failed
-                                || loadingState == .loading ? 0.5 : 1
-                            )
+//                            .disabled(
+//                                loadingState == .closed
+//                                || loadingState == .failed
+//                                || loadingState == .loading
+//                            )
+//                            .opacity(
+//                                loadingState == .closed
+//                                || loadingState == .failed
+//                                || loadingState == .loading ? 0.5 : 1
+//                            )
                             .padding(.top)
 
                         } else {
@@ -155,9 +154,7 @@ struct BarDetailPopup: View {
                 }
 
                 do {
-                    if let id = bar.id {
-                        try await voteViewModel.calculateVotes(for: id)
-                    }
+                    try await barViewModel.getMostVotedWaitTime(barId: bar.id)
                 } catch {
                     print("Error calculating votes: \(error)")
                 }
@@ -176,21 +173,8 @@ struct BarDetailPopup: View {
 }
 #Preview(traits: .sizeThatFitsLayout) {
     BarDetailPopup(
-        bar: Bar(
-            name: "Hideaway",
-            address: "4474 Mission Blvd, San Diego, CA 92109",
-            averagePrice: "$$",
-            latitude: 32.7961859,
-            longitude: -117.2558475,
-            location: "",
-            usersAtBar: 10,
-            currentStatus: "",
-            averageRating: "",
-            currentUserCount: "",
-            activityLevel: "Packed"
-        )
+        bar: Bar.sampleBar
     )
     .environment(MapViewModel())
-    .environment(VoteViewModel())
     .environment(BarViewModel())
 }

@@ -23,4 +23,7 @@ struct Event: Identifiable, Searchable, Codable {
         || eventDescription.localizedCaseInsensitiveContains(query)
     }
     
+    var formattedTime: String {
+        return eventTime.formatted(.dateTime.hour().minute())
+    }
 }

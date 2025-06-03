@@ -13,7 +13,6 @@ struct BarCard: View {
     @Environment(MapViewModel.self) var viewModel
     @Environment(BarViewModel.self) var barViewModel
     @Environment(\.colorScheme) var colorScheme
-    @Environment(VoteViewModel.self) var voteViewModel
     @Environment(\.displayScale) var displayScale
     @State private var loading = true
     
@@ -40,7 +39,7 @@ struct BarCard: View {
             Text(hours ?? "Hours unavailable")
                 .foregroundColor(colorScheme == .dark ? .nude : Color("DarkPurple"))
             // Image placeholder
-            if let barImageURL = bar.images?.first?.image {
+            if let barImageURL = bar.images.first?.image {
                 WebImage(url: URL(string: barImageURL))
                     .resizable()
                     .frame(height: 200)
@@ -85,7 +84,6 @@ struct BarCard: View {
                 .foregroundColor(.white)
                 
                 NavigationLink(destination: BarDetailPopup(bar: bar)
-                    .environment(voteViewModel)
                     .environment(viewModel)) {
                         ZStack {
                             RoundedRectangle(cornerRadius: 20)
@@ -123,22 +121,10 @@ struct BarCard: View {
 }
 #Preview(traits: .sizeThatFitsLayout) {
     NavigationStack {
-        BarCard(bar: Bar(
-            name: "Moonshine Beach",
-            address: "1165 Garnet Ave, San Diego, CA 92109",
-            latitude: 32.7980179,
-            longitude: -117.2484153,
-            location: "",
-            usersAtBar: 0,
-            currentStatus: "",
-            averageRating: "",
-            images: [],
-            currentUserCount: "",
-            activityLevel: ""
-        ))
-        .environment(MapViewModel())
-        .environment(VoteViewModel())
-        .padding()
+        BarCard(bar: Bar.sampleBar)
+            .environment(MapViewModel())
+            .environment(BarViewModel())
+            .padding()
     }
 }
 

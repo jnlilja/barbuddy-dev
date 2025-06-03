@@ -8,8 +8,8 @@
 import Foundation
 
 struct BarCrowdSize: Codable {
-    var id: Int?
-    var bar: Int
-    var crowdSize: String
-    var timestamp: Date?
+    let id: Int
+    let bar: Int
+    let crowdSize: String
+    let timestamp: Date
 }

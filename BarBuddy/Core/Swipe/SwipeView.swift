@@ -29,7 +29,7 @@ struct SwipeView: View {
     private func barFilterIndicator(bar: Bar) -> some View {
         HStack(spacing: 12) {
             // Bar image
-            if let firstImage = bar.images?.first, let imageURL = URL(string: firstImage.image) {
+            if let firstImage = bar.images.first, let imageURL = URL(string: firstImage.image) {
                 AsyncImage(url: imageURL) { phase in
                     switch phase {
                     case .success(let image):

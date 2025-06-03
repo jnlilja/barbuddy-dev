@@ -17,6 +17,7 @@ struct DealsAndEventsView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var searchText: String = ""
     @State private var serverDate: Date = Date()
+    @Environment(BarViewModel.self) private var barViewModel
 
     // Compute weekday from serverDate
     private var todayName: String {
@@ -26,9 +27,9 @@ struct DealsAndEventsView: View {
         return df.string(from: serverDate)
     }
 
-    private var filteredEvents: [BarEvent] {
-        BarEvent.allEvents.filter { event in
-            event.day.contains(todayName)
+    private var filteredEvents: [Event] {
+        barViewModel.events.filter { event in
+            event.isToday.contains(todayName)
                 && event.matchesSearch(query: searchText)
         }
     }
@@ -60,10 +61,10 @@ struct DealsAndEventsView: View {
 
                                 ForEach(filteredEvents) { event in
                                     DetailsCardView(
-                                        title: event.title,
-                                        location: event.location,
-                                        time: event.timeDescription,
-                                        description: event.description
+                                        title: event.eventName,
+                                        location: event.barName,
+                                        time: event.formattedTime,
+                                        description: event.eventDescription
                                     )
                                 }
                             }
@@ -122,5 +123,8 @@ struct DealsAndEventsView: View {
 }
 
 #Preview("Deals and Events") {
-    NavigationStack { DealsAndEventsView() }
+    NavigationStack {
+        DealsAndEventsView()
+            .environment(BarViewModel())
+    }
 }

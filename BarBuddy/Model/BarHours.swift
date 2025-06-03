@@ -8,10 +8,10 @@
 import Foundation
 
 struct BarHours: Codable, Identifiable, Hashable {
-    var id: Int
-    var bar: Int
-    var day: String?
-    var openTime: String?
-    var closeTime: String?
-    var isClosed: Bool?
+    let id: Int
+    let bar: Int
+    let day: String
+    let openTime: String
+    let closeTime: String
+    var isClosed: Bool
 }

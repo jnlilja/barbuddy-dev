@@ -20,7 +20,7 @@ struct BarSwipeCard: View {
     var body: some View {
         VStack(spacing: 0) {
             // ───────── Profile picture
-            let barImage = profile.images?.first?.image ?? ""
+            let barImage = profile.images.first?.image ?? ""
             let barImageURL = URL(string: barImage)
             AsyncImage(url: barImageURL) { phase in
                 switch phase {
@@ -39,14 +39,14 @@ struct BarSwipeCard: View {
                     .font(.system(size: 28, weight: .bold))
                     .foregroundColor(.white)
 
-                Text("\(profile.activityLevel ?? "-")")
+                Text("\(profile.activityLevel)")
                     .font(.subheadline)
                     .foregroundColor(.white.opacity(0.8))
 
                 Divider().overlay(Color.white)
 
                 Label(
-                    "Price: \(profile.averagePrice ?? "-")",
+                    "Price: \(profile.averagePrice)",
                     systemImage: "dollarsign.circle.fill"
                 )
 

@@ -7,9 +7,9 @@
 import Foundation
 
 struct BarStatus: Codable, Equatable, Sendable {
-    var id: Int?
-    var bar: Int
-    var crowdSize: String?
-    var waitTime: String?
-    var lastUpdated: Date?
+    let id: Int
+    let bar: Int
+    var crowdSize: String
+    var waitTime: String
+    let lastUpdated: Date
 }

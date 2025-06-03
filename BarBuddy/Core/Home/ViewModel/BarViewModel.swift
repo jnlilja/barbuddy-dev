@@ -13,36 +13,187 @@ final class BarViewModel {
     var bars: Bars = []
     var statuses: [BarStatus] = []
     var hours: [BarHours] = []
+    var events: [Event] = []
     
     func loadBarData() async {
         async let fetchedStatuses = BarNetworkManager.shared.fetchStatuses()
         async let fetchedBars = BarNetworkManager.shared.fetchAllBars()
         async let fetchedHours = BarNetworkManager.shared.fetchAllBarHours()
+        async let fetchedEvents = BarNetworkManager.shared.fetchEvents()
+        
+        do {
+            self.events = try await fetchedEvents
+        } catch let error as NSError where error.domain == NSURLErrorDomain {
+            print("Bar Events fetch ERROR:", terminator: " ")
+            switch error.code {
+            case NSURLErrorCannotParseResponse:
+                print("Failed to parse response from the server. Statuses may not be available.")
+            case NSURLErrorNotConnectedToInternet:
+                print("No internet connection. Please check your network settings.")
+            case NSURLErrorTimedOut:
+                print("The request timed out. Please try again later.")
+            case NSURLErrorNetworkConnectionLost:
+                print("Network connection was lost. Please check your internet connection.")
+            default:
+                print("An unexpected error occurred: \(error.localizedDescription)")
+            }
+        } catch let apiError as APIError {
+            print("Bar Events fetch ERROR:", terminator: " ")
+            switch apiError {
+            case .noToken:
+                print("No token available. Please log in.")
+            case .badResponse(let statusCode):
+                print("Bad response from the server. Status code: \(statusCode)")
+            case .badURL:
+                print("The URL is not valid.")
+            case .serverError:
+                print("Server error occurred. Please try again later.")
+            case .transport(let transportError):
+                print("Transport error: \(transportError.localizedDescription)")
+            case .encoding(let encodingError):
+                print("Encoding error: \(encodingError.localizedDescription)")
+            case .decoding(let decodingError):
+                print("Decoding error: \(decodingError.localizedDescription)")
+            case .noUser:
+                print("No user is currently logged in.")
+            }
+        } catch {
+            print("lmao idk bruh you may be cooked 😭: \(error)")
+        }
 
         do {
             self.statuses = try await fetchedStatuses
-            self.bars = try await fetchedBars
-            self.hours = try await fetchedHours
+        } catch let error as NSError where error.domain == NSURLErrorDomain {
+            print("Bar Status fetch ERROR:", terminator: " ")
+            switch error.code {
+            case NSURLErrorCannotParseResponse:
+                print("Failed to parse response from the server.")
+            case NSURLErrorNotConnectedToInternet:
+                print("No internet connection. Please check your network settings.")
+            case NSURLErrorTimedOut:
+                print("The request timed out. Please try again later.")
+            case NSURLErrorNetworkConnectionLost:
+                print("Network connection was lost. Please check your internet connection.")
+            default:
+                print("An unexpected error occurred: \(error.localizedDescription)")
+            }
+        } catch let apiError as APIError {
+            print("Bar Status fetch ERROR:", terminator: " ")
+            switch apiError {
+            case .noToken:
+                print("No token available. Please log in.")
+            case .badResponse(let statusCode):
+                print("Bad response from the server. Status code: \(statusCode)")
+            case .badURL:
+                print("The URL is not valid.")
+            case .serverError:
+                print("Server error occurred. Please try again later.")
+            case .transport(let transportError):
+                print("Transport error: \(transportError.localizedDescription)")
+            case .encoding(let encodingError):
+                print("Encoding error: \(encodingError.localizedDescription)")
+            case .decoding(let decodingError):
+                print("Decoding error: \(decodingError.localizedDescription)")
+            case .noUser:
+                print("No user is currently logged in.")
+            }
         } catch {
-            print("All or some of the bar data failed to load: \(error)")
+            print("lmao idk bruh you may be cooked 😭: \(error)")
+        }
+        
+        do {
+            self.bars = try await fetchedBars
+        } catch let error as NSError where error.domain == NSURLErrorDomain {
+            print("Bar fetch ERROR:", terminator: " ")
+            switch error.code {
+            case NSURLErrorCannotParseResponse:
+                print("Failed to parse response from the server. Statuses may not be available.")
+            case NSURLErrorNotConnectedToInternet:
+                print("No internet connection. Please check your network settings.")
+            case NSURLErrorTimedOut:
+                print("The request timed out. Please try again later.")
+            case NSURLErrorNetworkConnectionLost:
+                print("Network connection was lost. Please check your internet connection.")
+            default:
+                print("An unexpected error occurred: \(error.localizedDescription)")
+            }
+        } catch let apiError as APIError {
+            print("Bars fetch ERROR:", terminator: " ")
+            switch apiError {
+            case .noToken:
+                print("No token available. Please log in.")
+            case .badResponse(let statusCode):
+                print("Bad response from the server. Status code: \(statusCode)")
+            case .badURL:
+                print("The URL is not valid.")
+            case .serverError:
+                print("Server error occurred. Please try again later.")
+            case .transport(let transportError):
+                print("Transport error: \(transportError.localizedDescription)")
+            case .encoding(let encodingError):
+                print("Encoding error: \(encodingError.localizedDescription)")
+            case .decoding(let decodingError):
+                print("Decoding error: \(decodingError.localizedDescription)")
+            case .noUser:
+                print("No user is currently logged in.")
+            }
+        } catch {
+            print("lmao idk bruh you may be cooked 😭: \(error)")
+        }
+        
+        do {
+            self.hours = try await fetchedHours
+        } catch let error as NSError where error.domain == NSURLErrorDomain {
+            print("Bar Hours fetch ERROR:", terminator: " ")
+            switch error.code {
+            case NSURLErrorCannotParseResponse:
+                print("Failed to parse response from the server.")
+            case NSURLErrorNotConnectedToInternet:
+                print("No internet connection. Please check your network settings.")
+            case NSURLErrorTimedOut:
+                print("The request timed out. Please try again later.")
+            case NSURLErrorNetworkConnectionLost:
+                print("Network connection was lost. Please check your internet connection.")
+            default:
+                print("An unexpected error occurred: \(error.localizedDescription)")
+            }
+        } catch let apiError as APIError {
+            print("Bar Hours fetch ERROR:", terminator: " ")
+            switch apiError {
+            case .noToken:
+                print("No token available. Please log in.")
+            case .badResponse(let statusCode):
+                print("Bad response from the server. Status code: \(statusCode)")
+            case .badURL:
+                print("The URL is not valid.")
+            case .serverError:
+                print("Server error occurred. Please try again later.")
+            case .transport(let transportError):
+                print("Transport error: \(transportError.localizedDescription)")
+            case .encoding(let encodingError):
+                print("Encoding error: \(encodingError.localizedDescription)")
+            case .decoding(let decodingError):
+                print("Decoding error: \(decodingError.localizedDescription)")
+            case .noUser:
+                print("No user is currently logged in.")
+            }
+        } catch {
+            print("lmao idk bruh you may be cooked 😭: \(error)")
         }
     }
     
     // Function to fetch the bar's hours
     func getHours(for bar: Bar) async -> String? {
-        guard let id = bar.id else { return nil }
         // Try to get from cache
-        if var cached = await BarHoursCache.shared.get(for: id) {
-            guard let open = cached.openTime,
-                  let close = cached.closeTime else { return nil }
+        if var cached = await BarHoursCache.shared.get(for: bar.id) {
             
             // Get last cached status and check if it needs to be updated
             let previousClosedStatus = cached.isClosed
-            let isCurrentlyClosed = isClosed(open, close)
+            let isCurrentlyClosed = isClosed(cached.openTime, cached.closeTime)
             
             // If the status has not changed, do not update
             guard previousClosedStatus != isCurrentlyClosed else {
-                return "\(isCurrentlyClosed ? "Closed" : "Open"): \(open) - \(close)"
+                return "\(isCurrentlyClosed ? "Closed" : "Open"): \(cached.openTime) - \(cached.closeTime)"
             }
             cached.isClosed = isCurrentlyClosed
             
@@ -65,21 +216,19 @@ final class BarViewModel {
                 }
                 return nil
             }
-            return "\(isCurrentlyClosed ? "Closed" : "Open"): \(open) - \(close)"
+            return "\(isCurrentlyClosed ? "Closed" : "Open"): \(cached.openTime) - \(cached.closeTime)"
         }
         // Fetch all hours if not in cache
         do {
             let allHours = try await BarNetworkManager.shared.fetchAllBarHours()
-            guard var hours = allHours.first(where: { $0.bar == id }) else { return nil }
+            guard var hours = allHours.first(where: { $0.bar == bar.id }) else { return nil }
             
             // Cache all fetched hours
             for h in allHours {
                 await BarHoursCache.shared.set(value: h, forKey: h.id)
             }
-            
-            guard let open = hours.openTime,
-                  let close = hours.closeTime else { return nil }
-            let closed = isClosed(open, close)
+        
+            let closed = isClosed(hours.openTime, hours.closeTime)
             hours.isClosed = closed
             
             // Patch hours and update cache
@@ -101,7 +250,7 @@ final class BarViewModel {
                 }
                 return nil
             }
-            return "\(closed ? "Closed" : "Open"): \(open) - \(close)"
+            return "\(closed ? "Closed" : "Open"): \(hours.openTime) - \(hours.closeTime)"
             
         } catch APIError.badResponse {
             print("Could not fetch hours")
@@ -116,8 +265,7 @@ final class BarViewModel {
     }
     
     func formatBarHours(hours: inout BarHours) -> String? {
-        guard let open = hours.openTime,
-              let close = hours.closeTime else { return nil }
+        let (open, close) = (hours.openTime, hours.closeTime)
         let closed = isClosed(open, close)
         hours.isClosed = closed
         return "\(closed ? "Closed" : "Open"): \(open) - \(close)"
@@ -162,4 +310,28 @@ final class BarViewModel {
         // Check if the current time is outside the open hours
         return now < openDate || now >= closeDate
     }
+    
+    func getMostVotedWaitTime(barId: Int) async throws {
+        let votes = try await BarNetworkManager.shared.fetchVoteSummaries().filter { $0.bar == barId }
+        var countMap: [String: Int] = [:]
+        votes.forEach { vote in
+            countMap[vote.waitTime, default: 0] += 1
+        }
+        
+        guard var status = self.statuses.first(where: { $0.bar == barId }) else {
+            print("No status found for bar \(barId)")
+            throw APIError.noUser
+        }
+        status.waitTime = countMap.max(by: { $0.value < $1.value })?.key ?? "<5 min"
+        try await BarNetworkManager.shared.putBarStatus(status)
+
+    }
+}
+
+extension BarViewModel {
+    static let PREVIEW: BarViewModel = {
+        let viewModel = BarViewModel()
+        viewModel.bars = Bar.sampleBars
+        return viewModel
+    }()
 }
