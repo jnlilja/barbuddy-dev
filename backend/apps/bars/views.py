@@ -1,6 +1,7 @@
 from rest_framework import viewsets, permissions, serializers, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework import generics
 from django.utils import timezone
 from datetime import timedelta
 
@@ -166,8 +167,10 @@ class BarStatusViewSet(viewsets.ModelViewSet):
 class BarRatingViewSet(viewsets.ModelViewSet):
     """
     ViewSet for managing bar ratings.
+    Allows users to create, update, and delete their own ratings.
     """
     serializer_class = BarRatingSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
         qs = BarRating.objects.all()
@@ -175,6 +178,44 @@ class BarRatingViewSet(viewsets.ModelViewSet):
         if bar_id:
             qs = qs.filter(bar__id=bar_id)
         return qs
+    
+    def perform_create(self, serializer):
+        # Check if user already rated this bar
+        bar = serializer.validated_data['bar']
+        existing_rating = BarRating.objects.filter(
+            bar=bar,
+            user=self.request.user
+        ).first()
+        
+        if existing_rating:
+            # Update existing rating instead of creating a new one
+            existing_rating.rating = serializer.validated_data['rating']
+            existing_rating.review = serializer.validated_data.get('review', '')
+            existing_rating.save()
+            return existing_rating
+        else:
+            # Create new rating
+            return serializer.save(user=self.request.user)
+    
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        # Only allow users to update their own ratings
+        if instance.user != request.user:
+            return Response(
+                {"error": "You can only update your own ratings."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        return super().update(request, *args, **kwargs)
+    
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        # Only allow users to delete their own ratings
+        if instance.user != request.user:
+            return Response(
+                {"error": "You can only delete your own ratings."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        return super().destroy(request, *args, **kwargs)
 
 
 class BarVoteViewSet(viewsets.ModelViewSet):
@@ -261,20 +302,39 @@ class BarCrowdSizeViewSet(viewsets.ModelViewSet):
 class BarImageViewSet(viewsets.ModelViewSet):
     """
     ViewSet for uploading, listing & deleting images for a bar.
-    Nested by bar_pk in the URL.
+    Supports both /api/bars/{bar_pk}/images/ and /api/bar-images/?bar={bar_id}
     """
     serializer_class = BarImageSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        # If you register this as /api/bars/{bar_pk}/images/
-        bar_pk = self.kwargs.get('bar_pk')
-        return BarImage.objects.filter(bar__pk=bar_pk)
+        # Print debug information - see what's actually being received
+        print(f"DEBUG: all kwargs={self.kwargs}")
+        
+        # In nested routes with NestedSimpleRouter and lookup='bar', 
+        # the parameter is named 'bar' not 'bar_pk'
+        bar_id = self.kwargs.get('bar')
+        
+        if bar_id:
+            return BarImage.objects.filter(bar_id=bar_id)
+        
+        # Fallback to query parameter
+        bar_id = self.request.query_params.get('bar')
+        if bar_id:
+            return BarImage.objects.filter(bar_id=bar_id)
+            
+        # Default fallback - all images (consider removing this)
+        return BarImage.objects.all()
 
     def perform_create(self, serializer):
+        # Handle creation from nested URL
         bar_pk = self.kwargs.get('bar_pk')
-        bar = Bar.objects.get(pk=bar_pk)
-        serializer.save(bar=bar)
+        if bar_pk:
+            bar = Bar.objects.get(pk=bar_pk)
+            serializer.save(bar=bar)
+        else:
+            # For non-nested URL, bar should be in the request data
+            serializer.save()
 
 
 class BarHoursViewSet(viewsets.ModelViewSet):
@@ -351,3 +411,13 @@ class BarHoursViewSet(viewsets.ModelViewSet):
             self.get_serializer(created_hours, many=True).data,
             status=status.HTTP_201_CREATED
         )
+
+
+class BarImageListView(generics.ListAPIView):
+    """View for retrieving all images for a specific bar by ID"""
+    serializer_class = BarImageSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get_queryset(self):
+        bar_id = self.kwargs['bar_id']
+        return BarImage.objects.filter(bar_id=bar_id)
