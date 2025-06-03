@@ -57,11 +57,13 @@ class UserViewSet(viewsets.ModelViewSet):
 
 
     def get_queryset(self):
-        user = self.request.user
-        if not user or not user.is_authenticated:
-            print("User not authenticated in get_queryset")
+        if getattr(self, 'swagger_fake_view', False):
             return User.objects.none()
             
+        user = self.request.user
+        if not user or not user.is_authenticated:
+            print("User not authenticated in get_queryset") 
+            return User.objects.none()
         # For detail view (GET /users/{id}/), allow accessing any user
         if self.action == 'retrieve':
             # if the username is empty, return "No user exists"
