@@ -8,7 +8,7 @@
 
 import SwiftUI
 
-struct InfoTag: View {
+struct InfoTagView: View {
     let icon: String
     let text: String
     
@@ -34,7 +34,7 @@ struct InfoTag: View {
 }
 
 #Preview {
-    InfoTag(icon: "star", text: "Sample Text")
+    InfoTagView(icon: "star", text: "Sample Text")
         .padding()
         
 }

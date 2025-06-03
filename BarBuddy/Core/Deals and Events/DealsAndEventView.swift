@@ -47,7 +47,7 @@ struct DealsAndEventsView: View {
                 .ignoresSafeArea()
 
             VStack {
-                SearchBar(searchText: $searchText, prompt: "Search by title, location, or description")
+                SearchBarView(searchText: $searchText, prompt: "Search by title, location, or description")
                     .padding(.horizontal)
 
                 ScrollView {

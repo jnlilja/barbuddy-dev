@@ -8,9 +8,7 @@
 //Test@123dev
 
 import Foundation
-import FirebaseAuth
-import FirebaseCore
-import FirebaseFirestore
+@preconcurrency import FirebaseAuth
 
 @MainActor
 final class AuthViewModel: ObservableObject {

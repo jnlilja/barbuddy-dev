@@ -7,7 +7,7 @@ import SwiftUI
 import MapKit
 import SDWebImageSwiftUI
 
-struct BarCard: View {
+struct BarCardView: View {
     let bar: Bar
     @State private var hours: String?
     @Environment(MapViewModel.self) var viewModel
@@ -83,7 +83,7 @@ struct BarCard: View {
                 }
                 .foregroundColor(.white)
                 
-                NavigationLink(destination: BarDetailPopup(bar: bar)
+                NavigationLink(destination: BarDetailView(bar: bar)
                     .environment(viewModel)) {
                         ZStack {
                             RoundedRectangle(cornerRadius: 20)
@@ -121,7 +121,7 @@ struct BarCard: View {
 }
 #Preview(traits: .sizeThatFitsLayout) {
     NavigationStack {
-        BarCard(bar: Bar.sampleBar)
+        BarCardView(bar: Bar.sampleBar)
             .environment(MapViewModel())
             .environment(BarViewModel())
             .padding()

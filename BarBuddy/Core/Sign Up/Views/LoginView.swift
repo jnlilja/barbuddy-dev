@@ -16,7 +16,6 @@ struct LoginView: View {
     @StateObject private var viewModel = SignUpViewModel()
     @State private var path = NavigationPath()
     @EnvironmentObject var authVM: AuthViewModel
-    @StateObject private var vm = LoginViewModel()
     
     @FocusState private var focusedField: FocusField?
     

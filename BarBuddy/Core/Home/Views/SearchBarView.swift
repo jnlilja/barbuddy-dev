@@ -8,7 +8,7 @@
 
 import SwiftUI
 
-struct SearchBar: View {
+struct SearchBarView: View {
     @Binding var searchText: String
     @State var prompt: String
     
@@ -30,6 +30,6 @@ struct SearchBar: View {
 }
 
 #Preview {
-    SearchBar(searchText: .constant(""), prompt: "Enter search term")
+    SearchBarView(searchText: .constant(""), prompt: "Enter search term")
         .padding(.horizontal)
 }

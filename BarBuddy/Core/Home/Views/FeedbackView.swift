@@ -14,7 +14,7 @@ enum Mood: String, CaseIterable {
     case sad
 }
 
-struct Feedback: View {
+struct FeedbackView: View {
     // Bind the selected mood to the parent view
     @Binding var selectedMood: Mood?
     @State private var showThankYou = false
@@ -69,7 +69,7 @@ struct Feedback: View {
 struct Feedback_Previews: PreviewProvider {
     @State static var previewMood: Mood? = nil
     static var previews: some View {
-        Feedback(selectedMood: $previewMood)
+        FeedbackView(selectedMood: $previewMood)
             .previewLayout(.sizeThatFits)
             .padding()
     }

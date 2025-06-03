@@ -7,6 +7,7 @@
 
 import Foundation
 
+// May keep this for now till I start implementing URL response caching
 actor BarHoursCache {
     
     static let shared = BarHoursCache(maxSize: 100) // Set your max cache size

@@ -76,7 +76,7 @@ struct MainFeedView: View {
         .onAppear { locationViewModel.startLocationServices() }
         .sheet(
             item: $selectedBar,
-            content: { BarDetailPopup(bar: $0) }
+            content: { BarDetailView(bar: $0) }
         )
         .tint(.salmon)
     }
@@ -100,7 +100,7 @@ struct MainFeedView: View {
         }
     }
     private var headerView: some View {
-        SearchBar(searchText: $searchText, prompt: "Search bars")
+        SearchBarView(searchText: $searchText, prompt: "Search bars")
             .padding([.horizontal, .bottom])
             .onSubmit(of: .text) {
                 bottomSheetPosition = .relativeBottom(0.21)
@@ -125,7 +125,7 @@ struct MainFeedView: View {
                     .font(.title3)
             } else {
                 ForEach(filteredBars) { bar in
-                    BarCard(bar: bar)
+                    BarCardView(bar: bar)
                         .environment(viewModel)
                         .padding([.horizontal, .bottom])
                 }

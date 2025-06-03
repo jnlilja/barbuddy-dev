@@ -6,7 +6,7 @@
 import SwiftUI
 import SDWebImageSwiftUI
 
-struct BarDetailPopup: View {
+struct BarDetailView: View {
     @Environment(\.dismiss) var dismiss
     @Environment(MapViewModel.self) var viewModel
     @Environment(BarViewModel.self) var barViewModel
@@ -172,7 +172,7 @@ struct BarDetailPopup: View {
     }
 }
 #Preview(traits: .sizeThatFitsLayout) {
-    BarDetailPopup(
+    BarDetailView(
         bar: Bar.sampleBar
     )
     .environment(MapViewModel())
