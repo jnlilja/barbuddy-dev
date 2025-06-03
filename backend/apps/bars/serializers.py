@@ -13,6 +13,35 @@ class BarImageSerializer(serializers.ModelSerializer):
         fields = ['id', 'image', 'caption', 'uploaded_at']
 
 
+# First, create a serializer for the status object 
+class BarStatusSerializer(serializers.ModelSerializer):
+    # Add a numeric representation of crowd_size
+    
+    class Meta:
+        model = BarStatus
+        fields = ['id', 'bar', 'crowd_size',  'wait_time', 'last_updated']
+    
+    def get_crowd_size_value(self, obj):
+        """Convert string crowd_size to integer for mobile clients"""
+        crowd_size_map = {
+            'empty': 0,
+            'light': 1,
+            'moderate': 2,
+            'busy': 3,
+            'packed': 4
+        }
+        
+        if obj.crowd_size:
+            return crowd_size_map.get(obj.crowd_size.lower(), 2)  # default to moderate (2) if unknown value
+        return None
+
+
+# Create a separate serializer specifically for nested use in BarSerializer
+class BarStatusInfoSerializer(serializers.Serializer):
+    crowd_size = serializers.CharField(allow_null=True)
+    wait_time = serializers.CharField(allow_null=True)
+    last_updated = serializers.DateTimeField(allow_null=True)
+        
 class BarSerializer(serializers.ModelSerializer):
     # Add latitude/longitude fields to the serializer
     latitude = serializers.FloatField(write_only=True)
@@ -21,6 +50,7 @@ class BarSerializer(serializers.ModelSerializer):
     users_at_bar = serializers.PrimaryKeyRelatedField(
         many=True, queryset=User.objects.all(), required=False
     )
+    # Use the new info serializer that explicitly defines fields for better Swagger documentation
     current_status = serializers.SerializerMethodField()
     average_rating = serializers.SerializerMethodField()
     images = BarImageSerializer(many=True, read_only=True)
@@ -37,6 +67,22 @@ class BarSerializer(serializers.ModelSerializer):
             'current_user_count',
             'activity_level'
         ]
+    
+    def get_current_status(self, obj):
+        status = obj.get_latest_status()
+        if not status:
+            return {
+                "crowd_size": None,
+                "crowd_size_value": None,
+                "wait_time": None,
+                "last_updated": None
+            }
+        
+        return {
+            "crowd_size": status.get('crowd_size'),
+            "wait_time": status.get('wait_time'),
+            "last_updated": status.get('last_updated')
+        }
 
     def get_location(self, obj):
         if not obj.location:
@@ -45,9 +91,6 @@ class BarSerializer(serializers.ModelSerializer):
             "latitude": obj.location.y,
             "longitude": obj.location.x
         }
-
-    def get_current_status(self, obj):
-        return obj.get_latest_status()
 
     def get_average_rating(self, obj):
         avg = obj.ratings.aggregate(Avg("rating"))["rating__avg"]
@@ -100,10 +143,7 @@ class BarSerializer(serializers.ModelSerializer):
         return instance
 
 
-class BarStatusSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = BarStatus
-        fields = ['id', 'bar', 'crowd_size', 'wait_time', 'last_updated']
+
 
 class BarRatingSerializer(serializers.ModelSerializer):
     class Meta:
