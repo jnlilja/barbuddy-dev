@@ -63,16 +63,7 @@ class BarViewSet(viewsets.ModelViewSet):
         
         return queryset
 
-    @action(detail=True, methods=['get'], url_path='aggregated-vote')
-    def aggregated_vote(self, request, pk=None):
-        try:
-            bar = self.get_object()
-            return Response(bar.get_aggregated_vote_status())
-        except Exception as e:
-            return Response(
-                {"error": f"Failed to retrieve aggregated votes: {str(e)}"},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+
 
     @action(detail=False, methods=['get'])
     def most_active(self, request):
@@ -96,69 +87,83 @@ class BarViewSet(viewsets.ModelViewSet):
 
 class BarStatusViewSet(viewsets.ModelViewSet):
     """
-    ViewSet for managing bar status updates.
-    Returns aggregated wait time and crowd size votes for each bar.
+    ViewSet for retrieving and managing the current aggregated status of bars.
+    Each bar has at most one status record which represents current conditions.
     """
-    queryset = BarStatus.objects.all()
     serializer_class = BarStatusSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    queryset = BarStatus.objects.all()
 
     def get_queryset(self):
-        queryset = BarStatus.objects.all()
+        queryset = super().get_queryset()
         bar_id = self.request.query_params.get('bar')
         if bar_id:
-            queryset = queryset.filter(bar__id=bar_id)
+            queryset = queryset.filter(bar_id=bar_id)
+            # Update the status from latest votes on each request
+            self.update_status_from_votes(bar_id)
         return queryset
-
-    def list(self, request, *args, **kwargs):
-        queryset = self.get_queryset()
-        serializer = self.get_serializer(queryset, many=True)
+    
+    def update_status_from_votes(self, bar_id):
+        """Update status from votes whenever endpoint is called"""
+        from apps.bars.services.voting import aggregate_bar_votes
+        from django.utils import timezone
+        from datetime import timedelta
         
-        # Get the aggregated data for each bar
-        response_data = []
-        for status in queryset:
-            bar = status.bar
-            aggregated_votes = aggregate_bar_votes(bar.id)
+        # Use recent votes (last hour)
+        result = aggregate_bar_votes(bar_id, lookback_hours=1)
+        if not result['crowd_size'] and not result['wait_time']:
+            return  # No votes to aggregate
             
-            status_data = serializer.data[queryset.index(status)]
-            status_data.update({
-                'bar_id': bar.id,
-                'aggregated_wait_time': aggregated_votes['wait_time'],
-                'aggregated_crowd_size': aggregated_votes['crowd_size'],
-                'wait_time_vote_count': aggregated_votes['wait_time_count'],
-                'crowd_size_vote_count': aggregated_votes['crowd_size_count']
-            })
-            response_data.append(status_data)
-        
-        return Response(response_data)
-
+        try:
+            bar = Bar.objects.get(id=bar_id)
+            
+            # Calculate recent vote counts
+            recent_crowd_votes = bar.crowd_size_votes.filter(
+                timestamp__gte=timezone.now() - timedelta(hours=1)
+            ).count()
+            
+            recent_wait_votes = bar.wait_time_votes.filter(
+                timestamp__gte=timezone.now() - timedelta(hours=1)
+            ).count()
+            
+            status, created = BarStatus.objects.get_or_create(
+                bar_id=bar_id,
+                defaults={
+                    'crowd_size': result['crowd_size'] or 'moderate',
+                    'wait_time': result['wait_time'] or '<5 min',
+                    'crowd_size_votes': recent_crowd_votes,
+                    'wait_time_votes': recent_wait_votes
+                }
+            )
+            
+            if not created:
+                # Update with latest aggregated values
+                if result['crowd_size']:
+                    status.crowd_size = result['crowd_size']
+                if result['wait_time']:
+                    status.wait_time = result['wait_time']
+                status.crowd_size_votes = recent_crowd_votes
+                status.wait_time_votes = recent_wait_votes
+                status.save()
+        except Bar.DoesNotExist:
+            pass
+    
     def retrieve(self, request, *args, **kwargs):
+        # Update status before retrieving detail view
         instance = self.get_object()
+        self.update_status_from_votes(instance.bar_id)
+        
+        # Refresh from database after update
+        instance.refresh_from_db()
+        
         serializer = self.get_serializer(instance)
         
-        # Get the aggregated data for this specific bar
+        # Include vote counts
         bar = instance.bar
-        wait_time_votes = bar.wait_time_votes.all()
-        crowd_size_votes = bar.crowd_size_votes.all()
-        
-        # Calculate most common wait time
-        wait_time_counts = {}
-        for vote in wait_time_votes:
-            wait_time_counts[vote.wait_time] = wait_time_counts.get(vote.wait_time, 0) + 1
-        most_common_wait_time = max(wait_time_counts.items(), key=lambda x: x[1])[0] if wait_time_counts else None
-        
-        # Calculate most common crowd size
-        crowd_size_counts = {}
-        for vote in crowd_size_votes:
-            crowd_size_counts[vote.crowd_size] = crowd_size_counts.get(vote.crowd_size, 0) + 1
-        most_common_crowd_size = max(crowd_size_counts.items(), key=lambda x: x[1])[0] if crowd_size_counts else None
-        
         response_data = serializer.data
         response_data.update({
-            'bar_id': bar.id,
-            'aggregated_wait_time': most_common_wait_time,
-            'aggregated_crowd_size': most_common_crowd_size,
-            'wait_time_vote_count': len(wait_time_votes),
-            'crowd_size_vote_count': len(crowd_size_votes)
+            'wait_time_vote_count': bar.wait_time_votes.count(),
+            'crowd_size_vote_count': bar.crowd_size_votes.count()
         })
         
         return Response(response_data)
@@ -233,16 +238,7 @@ class BarVoteViewSet(viewsets.ModelViewSet):
             qs = qs.filter(bar__id=bar_id)
         return qs
 
-    @action(detail=False, methods=['get'], url_path='summary')
-    def vote_summary(self, request):
-        bar_id = request.query_params.get("bar")
-        if not bar_id:
-            return Response({"error": "Bar ID is required."}, status=400)
-        summary = aggregate_bar_votes(bar_id)
-        return Response({
-            "bar": bar_id,
-            "aggregated_wait_time": summary["wait_time"],
-        })
+
 
     def perform_create(self, serializer):
         # prevent re-vote within 24h
@@ -354,17 +350,6 @@ class BarHoursViewSet(viewsets.ModelViewSet):
             return self.queryset.filter(bar_id=bar_id)
         return self.queryset
 
-    @action(detail=False, methods=['get'])
-    def by_bar(self, request):
-        bar_id = request.query_params.get('bar_id')
-        if not bar_id:
-            return Response(
-                {"error": "bar_id parameter is required"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        hours = self.get_queryset().filter(bar_id=bar_id)
-        serializer = self.get_serializer(hours, many=True)
-        return Response(serializer.data)
 
     @action(detail=False, methods=['post'])
     def bulk_update(self, request):

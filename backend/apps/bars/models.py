@@ -32,12 +32,23 @@ class Bar(models.Model):
         update_users_at_bar(self)
 
     def get_latest_status(self):
-        latest = self.status_updates.order_by('-last_updated').first()
-        return {
-            'crowd_size': latest.crowd_size if latest else None,
-            'wait_time':  latest.wait_time  if latest else None,
-            'last_updated': latest.last_updated if latest else None
-        }
+        # Old code accessing the non-existent 'status_updates' related name
+        # latest = self.status_updates.order_by('-last_updated').first()
+        
+        # New code using the correct related name 'status'
+        try:
+            latest = self.status
+            return {
+                'crowd_size': latest.crowd_size if latest else None,
+                'wait_time':  latest.wait_time  if latest else None,
+                'last_updated': latest.last_updated if latest else None
+            }
+        except BarStatus.DoesNotExist:
+            return {
+                'crowd_size': None,
+                'wait_time': None,
+                'last_updated': None
+            }
 
     def get_aggregated_vote_status(self):
         from apps.bars.services.voting import aggregate_bar_votes
@@ -99,10 +110,12 @@ class BarStatus(models.Model):
         ('>30 min',  'More than 30 minutes'),
     ]
 
-    bar         = models.ForeignKey(Bar, on_delete=models.CASCADE, related_name='status_updates')
-    crowd_size  = models.CharField(max_length=50, choices=CROWD_CHOICES)
-    wait_time   = models.CharField(max_length=50, choices=WAIT_TIME_CHOICES)
-    last_updated= models.DateTimeField(auto_now=True)
+    bar = models.OneToOneField(Bar, on_delete=models.CASCADE, related_name='status')
+    crowd_size = models.CharField(max_length=50, choices=CROWD_CHOICES)
+    wait_time = models.CharField(max_length=50, choices=WAIT_TIME_CHOICES)
+    last_updated = models.DateTimeField(auto_now=True)
+    wait_time_votes = models.PositiveIntegerField(default=0)
+    crowd_size_votes = models.PositiveIntegerField(default=0)
 
     def clean(self):
         super().clean()
@@ -267,3 +280,56 @@ class BarHours(models.Model):
         if self.is_closed:
             return f"{self.bar.name} - {self.get_day_display()}: Closed"
         return f"{self.bar.name} - {self.get_day_display()}: {self.open_time.strftime('%I:%M %p')} - {self.close_time.strftime('%I:%M %p')}"
+
+# Signal handlers for automatic status updates
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+
+@receiver(post_save, sender=BarVote)
+@receiver(post_save, sender=BarCrowdSize)
+def update_bar_status_on_vote(sender, instance, created, **kwargs):
+    """Update the BarStatus for a bar whenever a new vote is submitted"""
+    from apps.bars.services.voting import aggregate_bar_votes
+    
+    # Get the bar ID from the vote
+    bar_id = instance.bar_id
+    
+    # Get aggregated vote results (only from last hour)
+    result = aggregate_bar_votes(bar_id, lookback_hours=1)
+    
+    # Skip if no votes to aggregate
+    if not result['crowd_size'] and not result['wait_time']:
+        return
+    
+    # Get or create the status object
+    status, created = BarStatus.objects.get_or_create(
+        bar_id=bar_id,
+        defaults={
+            'crowd_size': result['crowd_size'] or 'moderate',
+            'wait_time': result['wait_time'] or '<5 min',
+            'crowd_size_votes': instance.bar.crowd_size_votes.filter(
+                timestamp__gte=timezone.now() - timedelta(hours=1)
+            ).count(),
+            'wait_time_votes': instance.bar.wait_time_votes.filter(
+                timestamp__gte=timezone.now() - timedelta(hours=1)
+            ).count()
+        }
+    )
+    
+    if not created:
+        # Update existing status with aggregated values from last hour
+        if result['crowd_size']:
+            status.crowd_size = result['crowd_size']
+        if result['wait_time']:
+            status.wait_time = result['wait_time']
+            
+        # Update vote counts to show only recent votes
+        status.crowd_size_votes = instance.bar.crowd_size_votes.filter(
+            timestamp__gte=timezone.now() - timedelta(hours=1)
+        ).count()
+        
+        status.wait_time_votes = instance.bar.wait_time_votes.filter(
+            timestamp__gte=timezone.now() - timedelta(hours=1)
+        ).count()
+        
+        status.save()
