@@ -146,7 +146,20 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
     ],
+    'DEFAULT_SCHEMA_CLASS': 'rest_framework.schemas.coreapi.AutoSchema',
 }
+
+SWAGGER_SETTINGS = {
+    'USE_SESSION_AUTH': False,  # Set to True if using session auth
+    'SECURITY_DEFINITIONS': {
+        'Bearer': {
+            'type': 'apiKey',
+            'name': 'Authorization',
+            'in': 'header'
+        }
+    }
+}
+
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
@@ -300,22 +313,19 @@ STORAGES = {
 MEDIA_URL = f"https://storage.googleapis.com/{GS_BUCKET_NAME}/"
 
 # CORS settings
-CORS_ALLOW_ALL_ORIGINS = True  # For development only
+CORS_ALLOW_ALL_ORIGINS = True  # For development only; restrict in production
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_HEADERS = [
     'accept',
     'accept-encoding',
-    'authorization',
-    'Authorization',  # Add uppercase version
+    'authorization',  
     'content-type',
     'dnt',
     'origin',
     'user-agent',
     'x-csrftoken',
     'x-requested-with',
-    'X-Authorization',  # Add X-Authorization
-    'Content-Type',  # Add uppercase version
-    'Accept',  # Add uppercase version
+    'x-authorization',
 ]
 CORS_EXPOSE_HEADERS = [
     'Authorization',

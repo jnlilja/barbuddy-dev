@@ -30,35 +30,39 @@ if not firebase_admin._apps:
 
 class FirebaseAuthentication(BaseAuthentication):
     def authenticate(self, request):
-        # Don't log all headers - this exposes sensitive information
-        logger.info("Processing authentication request")
-        if request.path.endswith('/register_user/'):
+        # Enhanced debugging
+        logger.info(f"Processing authentication request for path: {request.path}")
+        
+        # Skip authentication for certain paths
+        if request.path.endswith('/register_user/') or 'swagger' in request.path:
+            logger.info(f"Skipping auth for path: {request.path}")
             return None
-            
-        # Try different header names for Authorization
+        
+        # Log all available headers for debugging
+        headers = dict(request.headers.items())
+        safe_headers = {k: v for k, v in headers.items() if k.lower() not in 
+                       ['authorization', 'cookie', 'x-csrf-token']}
+        logger.info(f"Request headers: {safe_headers}")
+        
+        # Check all possible header locations
         auth_header = None
-        header_names = [
-            'Authorization',
-            'HTTP_AUTHORIZATION',
-            'HTTP_X_AUTHORIZATION',
+        header_locations = [
+            ('direct', request.headers.get('Authorization')),
+            ('direct_lower', request.headers.get('authorization')),
+            ('x_prefix', request.headers.get('X-Authorization')),
+            ('meta', request.META.get('HTTP_AUTHORIZATION')),
+            ('meta_lower', request.META.get('HTTP_AUTHORIZATION'.lower())),
+            ('meta_x', request.META.get('HTTP_X_AUTHORIZATION'))
         ]
         
-        for header_name in header_names:
-            # Try direct header access
-            auth_header = request.headers.get(header_name)
-            if auth_header:
-                logger.info(f"Found Authorization header")
+        for location_name, header_value in header_locations:
+            if header_value:
+                auth_header = header_value
+                logger.info(f"Found auth header in {location_name}")
                 break
-                
-            # Try META access with HTTP_ prefix
-            http_header = f"HTTP_{header_name.upper()}" if not header_name.startswith('HTTP_') else header_name
-            auth_header = request.META.get(http_header)
-            if auth_header:
-                logger.info(f"Found Authorization header in META")
-                break
-
+        
         if not auth_header:
-            logger.warning("No Authorization header found")
+            logger.warning("No Authorization header found in any location")
             return None
 
         # Clean up the header value

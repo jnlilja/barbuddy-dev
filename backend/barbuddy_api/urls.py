@@ -3,7 +3,7 @@ from django.urls import path, include, re_path
 # from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from apps.users.views import UserViewSet
-from apps.bars.views import BarViewSet, BarStatusViewSet, BarRatingViewSet, BarImageViewSet, BarHoursViewSet, BarCrowdSizeViewSet
+from apps.bars.views import BarViewSet, BarStatusViewSet, BarRatingViewSet, BarImageViewSet, BarHoursViewSet, BarCrowdSizeViewSet, BarImageListView
 from apps.events.views import EventViewSet
 from apps.matches.views import MatchViewSet
 from apps.messaging.views import MessageViewSet, GroupChatViewSet, PusherViewSet, GroupMessageViewSet
@@ -28,6 +28,7 @@ router = SimpleRouter()
 
 ### Router registration
 # Endpoints names, these must match viewset names
+
 router.register(r'bars', BarViewSet, basename="bars")
 router.register(r'bar-status', BarStatusViewSet, basename="bar-status")
 router.register(r'bar-votes', BarVoteViewSet, basename='barvote')  
@@ -50,6 +51,7 @@ router.register(r'users', UserViewSet, basename="users")
 
 # MUST DO: Pusher
 router.register(r'pusher', PusherViewSet, basename="pusher")
+router.register(r'bar-ratings', BarRatingViewSet, basename='bar-rating')
 
 
 from django.urls import path, re_path
@@ -64,33 +66,21 @@ def health_check(request):
 
 schema_view = get_schema_view(
     openapi.Info(
-        title="My API",
+        title="BarBuddy API",
         default_version='v1',
-        description="API documentation for My API",
-        terms_of_service="https://www.example.com/terms/",
-        contact=openapi.Contact(email="contact@example.com"),
-        license=openapi.License(name="BSD License"),
+        description="API for BarBuddy application",
     ),
     public=True,
     permission_classes=(permissions.AllowAny,),
 )
 
-bars_router = NestedSimpleRouter(router, r'bars', lookup='bar')
-bars_router.register(r'images', BarImageViewSet, basename='bar-images')
-
 urlpatterns = [
     # Admin panel
     path("admin/", admin.site.urls),
     path('api/', include(router.urls)),
-    path('api/', include(bars_router.urls)),
     # Firebase url
     path('api/test-auth/', FirebaseAuthTestView.as_view(), name='firebase-test'),
 
-
-
-    # Include the URLs for the apps
-
-    ##
 
 
     # Swagger / Redoc Docs
@@ -102,7 +92,12 @@ urlpatterns = [
     # Root path handler 
     path('', lambda request: redirect('schema-swagger-ui', permanent=False)),
     path("health/", health_check),
+    path('api/bars/<int:bar_id>/images/', BarImageListView.as_view(), name='bar-images-list'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+print("Available Bar Rating URLs:")
+for url in router.urls:
+    if "rating" in url.name:
+        print(f"- {url.name}: {url.pattern}")
 
 if settings.DEBUG:
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
