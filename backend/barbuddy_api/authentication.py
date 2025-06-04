@@ -6,6 +6,7 @@ from firebase_admin.exceptions import FirebaseError
 from rest_framework.authentication import BaseAuthentication
 from rest_framework.exceptions import AuthenticationFailed
 from django.contrib.auth import get_user_model
+from django.core.exceptions import FieldError
 import os
 import logging
 from datetime import datetime
@@ -30,12 +31,12 @@ if not firebase_admin._apps:
 
 class FirebaseAuthentication(BaseAuthentication):
     def authenticate(self, request):
-        # Enhanced debugging
+        # Add more specific logging for troubleshooting
         logger.info(f"Processing authentication request for path: {request.path}")
         
         # Skip authentication for certain paths
-        if request.path.endswith('/register_user/') or 'swagger' in request.path:
-            logger.info(f"Skipping auth for path: {request.path}")
+        if request.path.endswith('/register_user/') or 'swagger' in request.path or request.path == '/api/auth-test/':
+            logger.info(f"Skipping auth requirement for path: {request.path}")
             return None
         
         # Log all available headers for debugging
@@ -73,12 +74,20 @@ class FirebaseAuthentication(BaseAuthentication):
 
         try:
             id_token = auth_header.split(" ")[1]  # Get the token part after "Bearer "
-            logger.info("Token extracted, beginning verification")
+            logger.info(f"Token starts with: {id_token[:15]}...")
 
+            # Print more detailed token structure for debugging
+            token_parts = id_token.split('.')
+            logger.info(f"Token has {len(token_parts)} parts")
+            
             # Specific Firebase token verification exceptions
             try:
                 logger.info("Attempting to verify Firebase ID token")
                 decoded_token = auth.verify_id_token(id_token)
+                
+                # Log token details (but not the sensitive parts)
+                logger.info(f"Token verified. Auth time: {decoded_token.get('auth_time')}, Provider: {decoded_token.get('firebase', {}).get('sign_in_provider')}")
+                
                 uid = decoded_token.get('uid')
                 if not uid:
                     logger.error("No UID found in decoded token")
@@ -99,8 +108,19 @@ class FirebaseAuthentication(BaseAuthentication):
 
             User = get_user_model()
             try:
-                user = User.objects.get(username=uid)
-                logger.info(f"Found existing user")
+                # Try looking up by firebase_uid field first (assuming you added this field to your User model)
+                try:
+                    user = User.objects.get(firebase_uid=uid)
+                    logger.info(f"Found existing user by firebase_uid")
+                except (User.DoesNotExist, FieldError):
+                    # Fall back to username lookup if firebase_uid field doesn't exist
+                    user = User.objects.get(username=uid)
+                    logger.info(f"Found existing user by username")
+            
+                # Add specific iOS client logs
+                user_agent = request.META.get('HTTP_USER_AGENT', '')
+                if 'CFNetwork' in user_agent or 'Darwin' in user_agent:
+                    logger.info(f"iOS client successfully authenticated: {user.username}")
                 
                 # If this is a POST request to /api/users/, update the user's profile
                 if request.method == 'POST' and request.path == '/api/users/':
@@ -117,7 +137,7 @@ class FirebaseAuthentication(BaseAuthentication):
                         logger.error(f"Value error: {str(e)}")
                         raise AuthenticationFailed(f'Value error: {str(e)}')
                     except Exception as e:
-                        logger.error(f"Error updating user profile")
+                        logger.error(f"Error updating user profile: {str(e)}")
                         raise AuthenticationFailed('Error updating user profile')
             except User.DoesNotExist:
                 # If this is a POST request to /api/users/, create a new user with profile data
@@ -134,7 +154,7 @@ class FirebaseAuthentication(BaseAuthentication):
                         logger.error(f"Value error: {str(e)}")
                         raise AuthenticationFailed(f'Value error: {str(e)}')
                     except Exception as e:
-                        logger.error("Error creating user")
+                        logger.error(f"Error creating user: {str(e)}")
                         raise AuthenticationFailed('Error creating user')
                 else:
                     # For non-POST requests, create a basic user with UID
