@@ -82,7 +82,7 @@ struct MainFeedView: View {
     }
     private func annotationView(for bar: Bar) -> some View {
         ZStack {
-            if barViewModel.events.isEmpty {
+            if BarEvent.allEvents.isEmpty {
                 Circle()
                     .frame(width: 30, height: 30)
                     .foregroundStyle(.darkBlue)

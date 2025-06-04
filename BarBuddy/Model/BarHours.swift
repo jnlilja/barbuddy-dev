@@ -11,7 +11,7 @@ struct BarHours: Codable, Identifiable, Hashable {
     let id: Int
     let bar: Int
     let day: String
-    let openTime: String
-    let closeTime: String
+    let openTime: Date?
+    let closeTime: Date?
     var isClosed: Bool
 }

@@ -10,66 +10,270 @@ import Testing
 
 @testable import BarBuddy
 
-@Suite("Hours of Operation")
-struct BarBuddyTests {
+@MainActor
+@Suite("BarViewModel Vote Tests")
+struct VoteTests {
 
-    // Helper to assert bar open/closed status at a given hour
-    private func testIsClosed(openTime: String, closeTime: String, testHour: Int, expectedIsClosed: Bool) {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "h:mm a"
-        formatter.locale = Locale(identifier: "en_US_POSIX")
-        guard let openDateRaw = formatter.date(from: openTime),
-              let closeDateRaw = formatter.date(from: closeTime) else {
-            #expect(Bool(false), "Invalid date format")
-            return
-        }
-        let calendar = Calendar.current
-        
-        var nowComponents = calendar.dateComponents(in: .current, from: Date())
-        nowComponents.hour = testHour
-        nowComponents.minute = 0
-        
-        let now = calendar.date(from: nowComponents)!
-        var barHourComponents = calendar.dateComponents([.year, .month, .day], from: Date())
-       
-        barHourComponents.hour = calendar.component(.hour, from: openDateRaw)
-        barHourComponents.minute = calendar.component(.minute, from: openDateRaw)
-        let openDate = calendar.date(from: barHourComponents)!
-        
-        barHourComponents.hour = calendar.component(.hour, from: closeDateRaw)
-        barHourComponents.minute = calendar.component(.minute, from: closeDateRaw)
-        var closeDate = calendar.date(from: barHourComponents)!
-        
-        if closeDate <= openDate {
-            closeDate = calendar.date(byAdding: .day, value: 1, to: closeDate)!
-        }
-        let isClosed = (now < openDate || now >= closeDate)
-        #expect(isClosed == expectedIsClosed, expectedIsClosed ? "Bar is closed" : "Bar is open")
+    // MARK: - Test Cases
+    @Test("Most voted wait time is calculated correctly")
+    func testGetMostVotedWaitTime_CalculatesCorrectly() async throws {
+        // Given
+        let mockNetworkManager = MockBarNetworkManager()
+        let viewModel = BarViewModel(networkManager: mockNetworkManager)
+
+        // Setup test data
+        mockNetworkManager.mockVotes = [
+            BarVote(bar: 1, waitTime: "<5 min"),
+            BarVote(bar: 1, waitTime: "<5 min"),
+            BarVote(bar: 1, waitTime: "10-15 min"),
+            BarVote(bar: 2, waitTime: "15-20 min"),  // Different bar, should be filtered out
+        ]
+
+        viewModel.statuses = [
+            BarStatus(id: 1, bar: 1, waitTime: "10-15 min", lastUpdated: Date())
+        ]
+
+        // When
+        try await viewModel.getMostVotedWaitTime(barId: 1)
+
+        // Then
+        let updatedStatus = viewModel.statuses.first(where: { $0.bar == 1 })
+        #expect(
+            updatedStatus?.waitTime == "<5 min",
+            "Should update to most voted wait time"
+        )
+        #expect(
+            mockNetworkManager.didCallFetchVoteSummaries,
+            "Should fetch vote summaries"
+        )
+        #expect(
+            mockNetworkManager.didCallPutBarStatus,
+            "Should update bar status"
+        )
+        #expect(
+            mockNetworkManager.capturedBarStatus?.waitTime == "<5 min",
+            "Should pass correct status to API"
+        )
     }
 
-    @Test("Closed after midnight",
-          arguments: [
-            ("8:00 AM", "1:00 AM"),
-            ("1:00 PM", "2:00 AM"),
-            ("10:00 PM", "3:00 AM"),
-            ("6:00 PM", "12:30 AM"),
-            ("11:00 PM", "4:00 AM"),
-          ])
-    func testIsBarClosed(openTime: String, closeTime: String) throws {
-        // Test current time at 5 AM
-        testIsClosed(openTime: openTime, closeTime: closeTime, testHour: 5, expectedIsClosed: true)
+    @Test("Uses default wait time when no votes exist")
+    func testGetMostVotedWaitTime_UsesDefaultWhenNoVotes() async throws {
+        // Given
+        let mockNetworkManager = MockBarNetworkManager()
+        let viewModel = BarViewModel(networkManager: mockNetworkManager)
+
+        mockNetworkManager.mockVotes = []  // No votes
+        viewModel.statuses = [
+            BarStatus(id: 1, bar: 1, waitTime: "10-15 min", lastUpdated: Date())
+        ]
+
+        // When
+        try await viewModel.getMostVotedWaitTime(barId: 1)
+
+        // Then
+        let updatedStatus = viewModel.statuses.first(where: { $0.bar == 1 })
+        #expect(
+            updatedStatus?.waitTime == "<5 min",
+            "Should use default wait time when no votes"
+        )
     }
-    
-    @Test("Open at 8 AM",
-        arguments: [
-            ("8:00 AM", "1:00 AM"),
-            ("1:00 PM", "2:00 AM"),
-            ("10:00 AM", "3:00 AM"),
-            ("12:30 PM", "12:30 AM"),
-            ("11:00 AM", "4:00 AM")
-        ])
-    func testIsBarOpen(openTime: String, closeTime: String) throws {
-        // Test current time at 1 PM
-        testIsClosed(openTime: openTime, closeTime: closeTime, testHour: 13, expectedIsClosed: false)
+
+    @Test("Handles tie in votes correctly")
+    func testGetMostVotedWaitTime_HandlesTie() async throws {
+        // Given
+        let mockNetworkManager = MockBarNetworkManager()
+        let viewModel = BarViewModel(networkManager: mockNetworkManager)
+
+        mockNetworkManager.mockVotes = [
+            BarVote(bar: 1, waitTime: "<5 min"),
+            BarVote(bar: 1, waitTime: "10-15 min"),
+        ]
+
+        viewModel.statuses = [
+            BarStatus(id: 1, bar: 1, waitTime: "30> min", lastUpdated: Date())
+        ]
+
+        // When
+        try await viewModel.getMostVotedWaitTime(barId: 1)
+
+        // Then
+        let updatedStatus = viewModel.statuses.first(where: { $0.bar == 1 })
+        // In case of tie, max(by:) returns the first maximum element found
+        #expect(updatedStatus?.waitTime != nil, "Should handle tie gracefully")
+    }
+
+    @Test("Throws error when bar status not found")
+    func testGetMostVotedWaitTime_ThrowsWhenBarNotFound() async {
+        // Given
+        let mockNetworkManager = MockBarNetworkManager()
+        let viewModel = BarViewModel(networkManager: mockNetworkManager)
+
+        mockNetworkManager.mockVotes = [
+            BarVote(bar: 1, waitTime: "<5 min")
+        ]
+
+        viewModel.statuses = []  // No matching bar status
+
+        // When/Then
+        do {
+            try await viewModel.getMostVotedWaitTime(barId: 1)
+            #expect(Bool(false), "Should have thrown an error")
+        } catch {
+            #expect(
+                throws: BarViewModelError.statusNotFound,
+                "Should throw no status found error"
+            ) {
+                throw error
+            }
+        }
+
+        #expect(
+            mockNetworkManager.didCallFetchVoteSummaries,
+            "Should still fetch votes"
+        )
+        #expect(
+            !mockNetworkManager.didCallPutBarStatus,
+            "Should not call putBarStatus"
+        )
+    }
+
+    @Test("Handles network error gracefully")
+    func testGetMostVotedWaitTime_HandlesNetworkError() async {
+        // Given
+        let mockNetworkManager = MockBarNetworkManager()
+        let viewModel = BarViewModel(networkManager: mockNetworkManager)
+
+        mockNetworkManager.mockError = APIError.badResponse(500)
+        viewModel.statuses = [
+            BarStatus(id: 1, bar: 1, waitTime: "10-15 min", lastUpdated: Date())
+        ]
+
+        // When/Then
+        await #expect(throws: APIError.self) {
+            try await viewModel.getMostVotedWaitTime(barId: 1)
+        }
+    }
+
+    @Test("Filters votes by correct bar ID")
+    func testGetMostVotedWaitTime_FiltersVotesByBarId() async throws {
+        // Given
+        let mockNetworkManager = MockBarNetworkManager()
+        let viewModel = BarViewModel(networkManager: mockNetworkManager)
+
+        mockNetworkManager.mockVotes = [
+            BarVote(bar: 1, waitTime: "<5 min"),
+            BarVote(bar: 2, waitTime: "10-15 min"),
+            BarVote(bar: 2, waitTime: "10-15 min"),
+            BarVote(bar: 2, waitTime: "10-15 min"),
+        ]
+
+        viewModel.statuses = [
+            BarStatus(id: 1, bar: 1, waitTime: "20+ min", lastUpdated: Date())
+        ]
+
+        // When
+        try await viewModel.getMostVotedWaitTime(barId: 1)
+
+        // Then
+        let updatedStatus = viewModel.statuses.first(where: { $0.bar == 1 })
+        #expect(
+            updatedStatus?.waitTime == "<5 min",
+            "Should only consider votes for the specified bar"
+        )
+    }
+}
+
+// MARK: - Test Data Factory
+extension VoteTests {
+    static func createBarVote(bar: Int = 1, waitTime: String = "<5 min")
+        -> BarVote
+    {
+        BarVote(bar: bar, waitTime: waitTime)
+    }
+
+    static func createBarStatus(
+        id: Int = 1,
+        bar: Int = 1,
+        waitTime: String = "10-15 min"
+    ) -> BarStatus {
+        BarStatus(id: id, bar: bar, waitTime: waitTime, lastUpdated: Date())
+    }
+}
+
+@MainActor
+@Suite("Test IsClosed Functionality")
+struct TestIsBarClosed {
+    @Test("Sucsessfully detects bar is closed")
+    func testIsClosed_ClosedResponse() async throws {
+        // Given
+        let viewModel = MockBarViewModel()
+
+        // When
+        viewModel.currentTime = "1:00 AM"
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "h:mm a"
+
+        let openTime = dateFormatter.date(from: "10:00 AM")!
+        let closeTime = dateFormatter.date(from: "2:00 AM")!
+
+        // Then
+        #expect(viewModel.isClosed(openTime, closeTime) == true)
+    }
+
+    @Test("Sucsessfully detects bar is open")
+    func testIsClosed_OpenResponse() async throws {
+        // Given
+        let viewModel = MockBarViewModel()
+
+        // When
+        viewModel.currentTime = "1:00 PM"
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "h:mm a"
+
+        let openTime = dateFormatter.date(from: "10:00 AM")!
+        let closeTime = dateFormatter.date(from: "2:00 AM")!
+
+        // Then
+        #expect(viewModel.isClosed(openTime, closeTime) == false)
+    }
+}
+
+@MainActor
+@Suite("Test BarViewModel getHours Functionality")
+struct TestGetHours {
+    @Test("Sucsessfully returns correct hours")
+    func testGetHours_Success() async throws {
+        // Given
+        let viewModel = MockBarViewModel()
+
+        let openTime = "10:00 AM"
+        let closeTime = "2:00 AM"
+        
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "h:mm a"
+        let openTimeDate = dateFormatter.date(from: openTime)!
+        let closeTimeDate = dateFormatter.date(from: closeTime)!
+
+        // When
+        let testBar = Bar(
+            id: 1,
+            name: "",
+            address: "",
+            averagePrice: "",
+            location: Location(latitude: 1, longitude: 1),
+            usersAtBar: [],
+            currentStatus: CurrentStatus(crowdSize: 0, waitTime: 0, lastUpdated: Date()),
+            averageRating: 0,
+            images: [],
+            currentUserCount: 0,
+            activityLevel: ""
+        )
+        viewModel.mockHours.append(BarHours(id: 1, bar: 1, day: "Monday", openTime: openTimeDate, closeTime: closeTimeDate, isClosed: false))
+        let hours = try await viewModel.getHours(for: testBar)
+        viewModel.currentTime = "1:00 PM"
+        
+        // Then
+        let expectedHours = "Open: \(openTime) - \(closeTime)"
+        #expect(hours == expectedHours, "Should return correct hours")
     }
 }

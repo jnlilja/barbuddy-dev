@@ -9,7 +9,7 @@ import Foundation
 struct BarStatus: Codable, Equatable, Sendable {
     let id: Int
     let bar: Int
-    var crowdSize: String
     var waitTime: String
     let lastUpdated: Date
 }
+    

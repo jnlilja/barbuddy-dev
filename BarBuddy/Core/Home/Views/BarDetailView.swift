@@ -28,15 +28,15 @@ struct BarDetailView: View {
                 VStack(spacing: 25) {
                     Spacer()
                     // MARK: — Header
-                    VStack {
-                        // Make the bar name adapt to the screen size
-                        Text(bar.name)
-                            .font(.system(size: 40, weight: .bold))
-                            .foregroundColor(Color("DarkPurple"))
-                            .multilineTextAlignment(.center)
-                            .lineLimit(2)
-                            .minimumScaleFactor(0.5)
-                    }
+
+                    // Make the bar name adapt to the screen size
+                    Text(bar.name)
+                        .font(.system(size: 40, weight: .bold))
+                        .foregroundColor(Color("DarkPurple"))
+                        .multilineTextAlignment(.center)
+                        .lineLimit(2)
+                        .minimumScaleFactor(0.5)
+                    
                     // MARK: — Wait time
                     VStack(spacing: 10) {
                         if !waitButtonProperties.didSubmit {
@@ -66,9 +66,6 @@ struct BarDetailView: View {
                                         .scaleEffect(1.5)
                                 case .loaded:
                                     Text(waitTime)
-
-                                case .noWaitTime:
-                                    Text("No wait")
 
                                 case .failed:
                                     Text("Wait time unavailable")
@@ -110,18 +107,24 @@ struct BarDetailView: View {
                                 }
                             }
                             // Disable vote button if bar is closed or wait time could not be fetched
-//                            .disabled(
-//                                loadingState == .closed
-//                                || loadingState == .failed
-//                                || loadingState == .loading
-//                            )
-//                            .opacity(
-//                                loadingState == .closed
-//                                || loadingState == .failed
-//                                || loadingState == .loading ? 0.5 : 1
-//                            )
+                            .disabled(
+                                loadingState == .closed
+                                || loadingState == .failed
+                                || loadingState == .loading
+                            )
+                            .opacity(
+                                loadingState == .closed
+                                || loadingState == .failed
+                                || loadingState == .loading ? 0.5 : 1
+                            )
                             .padding(.top)
-
+                            
+                            Text("Voting has concluded for the night.")
+                                .foregroundColor(.neonPink)
+                                .font(.caption)
+                                .padding(.top, 5)
+                                .opacity(loadingState == .closed ? 1 : 0)
+                            
                         } else {
                             VoteConfirmedView()
                                 .transition(.blurReplace)
@@ -146,25 +149,21 @@ struct BarDetailView: View {
                 .navigationBarTitleDisplayMode(.inline)
             }
             .task {
-                if let hours = await barViewModel.getHours(for: bar) {
-                    loadingState = hours.contains("Closed") ? .closed : .loading
-                } else {
-                    loadingState = .failed
-                    return
-                }
-
+                do {
+                    if let hours = try await barViewModel.getHours(for: bar) {
+                        loadingState = hours.contains("Closed") ? .closed : .loading
+                    } else {
+                        loadingState = .closed
+                        return
+                    }
+                } catch {}
+                
                 do {
                     try await barViewModel.getMostVotedWaitTime(barId: bar.id)
+                    loadingState = .loaded
                 } catch {
                     print("Error calculating votes: \(error)")
-                }
-
-                if barViewModel.statuses.isEmpty {
-                    loadingState = .loading
-                    print("No bar status data available")
-                } else {
-                    // Check if the bar data is available
-                    loadingState = waitTime.isEmpty ? .noWaitTime : .loaded
+                    loadingState = .failed
                 }
             }
             .transition(.blurReplace)

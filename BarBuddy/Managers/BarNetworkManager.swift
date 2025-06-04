@@ -9,13 +9,13 @@
 import Foundation
 @preconcurrency import FirebaseAuth
 
-actor BarNetworkManager {
+actor BarNetworkManager: NetworkMockable {
     static let shared = BarNetworkManager()
     private let session: URLSession
     private let baseURL = ProcessInfo.processInfo.environment["BASE_URL"] ?? ""
     private let (encoder, decoder) = (JSONEncoder(), JSONDecoder())
     
-    private init(session: URLSession = .shared) {
+    internal init(session: URLSession = .shared) {
         self.session = session
         decoder.keyDecodingStrategy = .convertFromSnakeCase
         encoder.keyEncodingStrategy = .convertToSnakeCase
@@ -215,7 +215,6 @@ actor BarNetworkManager {
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue("application/json", forHTTPHeaderField: "Accept")
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         
         let (data, response) = try await session.data(for: request)
@@ -225,7 +224,14 @@ actor BarNetworkManager {
             throw APIError.badResponse(http.statusCode)
         }
         
-        return try decoder.decode([BarHours].self, from: data)
+        // The API returns time as HH:mm:ss, so we need to decode it accordingly
+        let hoursDecoder = JSONDecoder()
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "HH:mm:ss"
+        dateFormatter.locale = Locale(identifier: "en_US_POSIX")
+        hoursDecoder.dateDecodingStrategy = .formatted(dateFormatter)
+        
+        return try hoursDecoder.decode([BarHours].self, from: data)
     }
     
     func barHoursBulkUpdate(hour: BarHours) async throws {
@@ -311,6 +317,13 @@ actor BarNetworkManager {
         if let httpResponse = response as? HTTPURLResponse, !(200...299).contains(httpResponse.statusCode) {
             throw APIError.badResponse(httpResponse.statusCode)
         }
+        
+        // Since this data contains microseconds in the date, we need a custom decoder
+        let customDecoder = JSONDecoder()
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSSSSZ"
+        customDecoder.dateDecodingStrategy = .formatted(formatter)
         return try decoder.decode([BarStatus].self, from: data)
     }
     
@@ -384,7 +397,7 @@ actor BarNetworkManager {
     
     func patchBarStatus(statusID: Int, status: BarStatus) async throws {
         struct patchStruct: Encodable {
-            let crowdSize: String?
+            //let crowdSize: String?
             let waitTime: String?
         }
 
@@ -401,7 +414,7 @@ actor BarNetworkManager {
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         
-        let patch = patchStruct(crowdSize: status.crowdSize, waitTime: status.waitTime)
+        let patch = patchStruct(waitTime: status.waitTime)
         request.httpBody = try encoder.encode(patch)
         
         let (_, response) = try await session.data(for: request)

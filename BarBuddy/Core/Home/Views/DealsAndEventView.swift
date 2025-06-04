@@ -27,9 +27,9 @@ struct DealsAndEventsView: View {
         return df.string(from: serverDate)
     }
 
-    private var filteredEvents: [Event] {
-        barViewModel.events.filter { event in
-            event.isToday.contains(todayName)
+    private var filteredEvents: [BarEvent] {
+        BarEvent.allEvents.filter { event in
+            event.day.contains(todayName)
                 && event.matchesSearch(query: searchText)
         }
     }
@@ -61,10 +61,10 @@ struct DealsAndEventsView: View {
 
                                 ForEach(filteredEvents) { event in
                                     DetailsCardView(
-                                        title: event.eventName,
-                                        location: event.barName,
-                                        time: event.formattedTime,
-                                        description: event.eventDescription
+                                        title: event.title,
+                                        location: event.location,
+                                        time: event.timeDescription,
+                                        description: event.description
                                     )
                                 }
                             }

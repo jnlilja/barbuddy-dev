@@ -5,6 +5,13 @@
 //  Created by Andrew Betancourt on 3/20/25.
 //
 
+// TODO: Refactor Bar model to remove unnecessary properties
+// Remove averagePrices
+// Remove address
+// Remove usersAtBar
+// Remove currentUserCount
+// Remove Location (as a separate struct)
+
 import CoreLocation
 
 typealias Bars = [Bar]
@@ -22,7 +29,7 @@ struct Bar: Codable, Identifiable, Hashable {
     let currentUserCount: Int
     let activityLevel: String
     
-    // To easier pin location on map, swift's codable protocol ignores computed properties when encoding/decoding
+    // To easier pin location on map, swift's codable protocol ignores this computed property when encoding/decoding
     var coordinate: CLLocationCoordinate2D {
         CLLocationCoordinate2D(latitude: location.latitude, longitude: location.longitude)
     }
