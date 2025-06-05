@@ -281,6 +281,7 @@ class BarHours(models.Model):
     open_time = models.TimeField(null=True, blank=True)
     close_time = models.TimeField(null=True, blank=True)
     is_closed = models.BooleanField(default=False)
+    
 
     class Meta:
         unique_together = ('bar', 'day')

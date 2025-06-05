@@ -2,6 +2,7 @@ from rest_framework import serializers
 from django.contrib.gis.geos import Point
 from django.db.models import Avg
 from django.contrib.auth import get_user_model
+from django.utils import timezone
 
 from .models import Bar, BarStatus, BarRating, BarVote, BarImage, BarHours, BarCrowdSize
 
@@ -189,10 +190,46 @@ class BarCrowdSizeSerializer(serializers.ModelSerializer):
         return data
 
 class BarHoursSerializer(serializers.ModelSerializer):
+    # Rename to SerializerMethodField to dynamically calculate
+    isClosed = serializers.SerializerMethodField()
+
     class Meta:
         model = BarHours
-        fields = ['id', 'bar', 'day', 'open_time', 'close_time', 'is_closed']
+        fields = ['id', 'bar', 'day', 'open_time', 'close_time', 'isClosed']
         read_only_fields = ['id']
+
+    def get_isClosed(self, obj):
+        """
+        Dynamically determine if the bar is closed right now.
+        This is the inverse of is_currently_open() but specific to this day's hours.
+        """
+        # If marked as closed for the day, it's closed
+        if obj.is_closed:
+            return True
+            
+        # Get current time to compare with this record's hours
+        current_time = timezone.localtime()
+        today_name = current_time.strftime('%A').lower()  # e.g. 'monday'
+        
+        # Only check if this record is for today
+        if obj.day != today_name:
+            # For other days, return the static is_closed value
+            return obj.is_closed
+            
+        # Check if current time is within open and close times
+        current_time_only = current_time.time()
+        
+        # Handle overnight hours (e.g. 10pm-2am)
+        if obj.close_time < obj.open_time:
+            # Bar closes after midnight
+            is_open = (current_time_only >= obj.open_time or 
+                      current_time_only <= obj.close_time)
+        else:
+            # Regular hours (e.g. 11am-11pm)
+            is_open = obj.open_time <= current_time_only <= obj.close_time
+                
+        # Return the inverse of is_open to get isClosed
+        return not is_open
 
     def validate(self, data):
         # Remove the validation that prevents close time from being before open time
