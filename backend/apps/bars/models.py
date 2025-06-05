@@ -83,6 +83,34 @@ class Bar(models.Model):
         else:
             return "Buzzing"
 
+    def is_currently_open(self):
+        """Check if the bar is currently open based on day and time"""
+        current_time = timezone.localtime()
+        today_name = current_time.strftime('%A').lower()  # e.g. 'monday'
+        
+        try:
+            hours = self.hours.get(day=today_name)
+            
+            # If marked as closed for the day, return False
+            if hours.is_closed:
+                return False
+                
+            # Check if current time is within open and close times
+            current_time_only = current_time.time()
+            
+            # Handle overnight hours (e.g. 10pm-2am)
+            if hours.close_time < hours.open_time:
+                # Bar closes after midnight
+                return (current_time_only >= hours.open_time or 
+                       current_time_only <= hours.close_time)
+            else:
+                # Regular hours (e.g. 11am-11pm)
+                return hours.open_time <= current_time_only <= hours.close_time
+                
+        except BarHours.DoesNotExist:
+            # If no hours set for today, assume closed
+            return False
+
     def __str__(self):
         return self.name
 

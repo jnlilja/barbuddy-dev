@@ -56,6 +56,7 @@ class BarSerializer(serializers.ModelSerializer):
     images = BarImageSerializer(many=True, read_only=True)
     current_user_count = serializers.SerializerMethodField()
     activity_level = serializers.SerializerMethodField()
+    is_currently_open = serializers.SerializerMethodField()
 
     class Meta:
         model = Bar
@@ -65,7 +66,8 @@ class BarSerializer(serializers.ModelSerializer):
             'users_at_bar', 'current_status',
             'average_rating', 'images',
             'current_user_count',
-            'activity_level'
+            'activity_level',
+            'is_currently_open'
         ]
     
     def get_current_status(self, obj):
@@ -101,6 +103,9 @@ class BarSerializer(serializers.ModelSerializer):
 
     def get_activity_level(self, obj):
         return obj.get_activity_level()
+
+    def get_is_currently_open(self, obj):
+        return obj.is_currently_open()
 
     def validate_users_at_bar(self, value):
         return value  # front‑end managed
