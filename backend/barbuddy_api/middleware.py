@@ -34,3 +34,14 @@ class RequestLoggingMiddleware(MiddlewareMixin):
         # Log other important request details
         logger.info(f"Request path: {request.path}, Method: {request.method}")
         return None
+
+# Add this to middleware.py to capture ALL requests, authenticated or not
+# filepath: /Users/brandon/Programming Projects./barbuddy-dev/backend/barbuddy_api/middleware.py
+
+class RequestDebugMiddleware(MiddlewareMixin):
+    def process_request(self, request):
+        logger = logging.getLogger('barbuddy')
+        logger.info(f"REQUEST RECEIVED: {request.method} {request.path}")
+        logger.info(f"Headers: {dict(request.headers)}")
+        # Don't log body for security reasons
+        return None
