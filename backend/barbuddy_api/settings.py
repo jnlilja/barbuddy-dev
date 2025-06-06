@@ -97,6 +97,8 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "barbuddy_api.middleware.RequestLoggingMiddleware",
+    "barbuddy_api.middleware.RequestDebugMiddleware",
 ]
 
 ROOT_URLCONF = "barbuddy_api.urls"
@@ -313,7 +315,7 @@ STORAGES = {
 MEDIA_URL = f"https://storage.googleapis.com/{GS_BUCKET_NAME}/"
 
 # CORS settings
-CORS_ALLOW_ALL_ORIGINS = True  # For development only; restrict in production
+CORS_ALLOW_ALL_ORIGINS = True  # For development only
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_HEADERS = [
     'accept',

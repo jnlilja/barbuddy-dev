@@ -2,6 +2,7 @@ from rest_framework import serializers
 from django.contrib.gis.geos import Point
 from django.db.models import Avg
 from django.contrib.auth import get_user_model
+from django.utils import timezone
 
 from .models import Bar, BarStatus, BarRating, BarVote, BarImage, BarHours, BarCrowdSize
 
@@ -13,6 +14,35 @@ class BarImageSerializer(serializers.ModelSerializer):
         fields = ['id', 'image', 'caption', 'uploaded_at']
 
 
+# First, create a serializer for the status object 
+class BarStatusSerializer(serializers.ModelSerializer):
+    # Add a numeric representation of crowd_size
+    
+    class Meta:
+        model = BarStatus
+        fields = ['id', 'bar', 'crowd_size',  'wait_time', 'last_updated']
+    
+    def get_crowd_size_value(self, obj):
+        """Convert string crowd_size to integer for mobile clients"""
+        crowd_size_map = {
+            'empty': 0,
+            'light': 1,
+            'moderate': 2,
+            'busy': 3,
+            'packed': 4
+        }
+        
+        if obj.crowd_size:
+            return crowd_size_map.get(obj.crowd_size.lower(), 2)  # default to moderate (2) if unknown value
+        return None
+
+
+# Create a separate serializer specifically for nested use in BarSerializer
+class BarStatusInfoSerializer(serializers.Serializer):
+    crowd_size = serializers.CharField(allow_null=True)
+    wait_time = serializers.CharField(allow_null=True)
+    last_updated = serializers.DateTimeField(allow_null=True)
+        
 class BarSerializer(serializers.ModelSerializer):
     # Add latitude/longitude fields to the serializer
     latitude = serializers.FloatField(write_only=True)
@@ -21,11 +51,13 @@ class BarSerializer(serializers.ModelSerializer):
     users_at_bar = serializers.PrimaryKeyRelatedField(
         many=True, queryset=User.objects.all(), required=False
     )
+    # Use the new info serializer that explicitly defines fields for better Swagger documentation
     current_status = serializers.SerializerMethodField()
     average_rating = serializers.SerializerMethodField()
     images = BarImageSerializer(many=True, read_only=True)
     current_user_count = serializers.SerializerMethodField()
     activity_level = serializers.SerializerMethodField()
+    is_currently_open = serializers.SerializerMethodField()
 
     class Meta:
         model = Bar
@@ -35,8 +67,25 @@ class BarSerializer(serializers.ModelSerializer):
             'users_at_bar', 'current_status',
             'average_rating', 'images',
             'current_user_count',
-            'activity_level'
+            'activity_level',
+            'is_currently_open'
         ]
+    
+    def get_current_status(self, obj):
+        status = obj.get_latest_status()
+        if not status:
+            return {
+                "crowd_size": None,
+                "crowd_size_value": None,
+                "wait_time": None,
+                "last_updated": None
+            }
+        
+        return {
+            "crowd_size": status.get('crowd_size'),
+            "wait_time": status.get('wait_time'),
+            "last_updated": status.get('last_updated')
+        }
 
     def get_location(self, obj):
         if not obj.location:
@@ -45,9 +94,6 @@ class BarSerializer(serializers.ModelSerializer):
             "latitude": obj.location.y,
             "longitude": obj.location.x
         }
-
-    def get_current_status(self, obj):
-        return obj.get_latest_status()
 
     def get_average_rating(self, obj):
         avg = obj.ratings.aggregate(Avg("rating"))["rating__avg"]
@@ -58,6 +104,9 @@ class BarSerializer(serializers.ModelSerializer):
 
     def get_activity_level(self, obj):
         return obj.get_activity_level()
+
+    def get_is_currently_open(self, obj):
+        return obj.is_currently_open()
 
     def validate_users_at_bar(self, value):
         return value  # front‑end managed
@@ -100,10 +149,7 @@ class BarSerializer(serializers.ModelSerializer):
         return instance
 
 
-class BarStatusSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = BarStatus
-        fields = ['id', 'bar', 'crowd_size', 'wait_time', 'last_updated']
+
 
 class BarRatingSerializer(serializers.ModelSerializer):
     class Meta:
@@ -144,10 +190,46 @@ class BarCrowdSizeSerializer(serializers.ModelSerializer):
         return data
 
 class BarHoursSerializer(serializers.ModelSerializer):
+    # Rename to SerializerMethodField to dynamically calculate
+    isClosed = serializers.SerializerMethodField()
+
     class Meta:
         model = BarHours
-        fields = ['id', 'bar', 'day', 'open_time', 'close_time', 'is_closed']
+        fields = ['id', 'bar', 'day', 'open_time', 'close_time', 'isClosed']
         read_only_fields = ['id']
+
+    def get_isClosed(self, obj):
+        """
+        Dynamically determine if the bar is closed right now.
+        This is the inverse of is_currently_open() but specific to this day's hours.
+        """
+        # If marked as closed for the day, it's closed
+        if obj.is_closed:
+            return True
+            
+        # Get current time to compare with this record's hours
+        current_time = timezone.localtime()
+        today_name = current_time.strftime('%A').lower()  # e.g. 'monday'
+        
+        # Only check if this record is for today
+        if obj.day != today_name:
+            # For other days, return the static is_closed value
+            return obj.is_closed
+            
+        # Check if current time is within open and close times
+        current_time_only = current_time.time()
+        
+        # Handle overnight hours (e.g. 10pm-2am)
+        if obj.close_time < obj.open_time:
+            # Bar closes after midnight
+            is_open = (current_time_only >= obj.open_time or 
+                      current_time_only <= obj.close_time)
+        else:
+            # Regular hours (e.g. 11am-11pm)
+            is_open = obj.open_time <= current_time_only <= obj.close_time
+                
+        # Return the inverse of is_open to get isClosed
+        return not is_open
 
     def validate(self, data):
         # Remove the validation that prevents close time from being before open time
