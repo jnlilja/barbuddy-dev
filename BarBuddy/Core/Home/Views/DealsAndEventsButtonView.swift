@@ -8,9 +8,10 @@
 import SwiftUI
 
 struct DealsAndEventsButtonView: View {
+    @Environment(\.colorScheme) var colorScheme
     var body: some View {
         ZStack {
-            Color(.systemBackground)
+            Color(.secondarySystemBackground)
                 .cornerRadius(8)
                 .shadow(radius: 3)
             
@@ -18,7 +19,7 @@ struct DealsAndEventsButtonView: View {
                 Text("Deals and Events")
                     .font(.system(size: 30))
                     .fontWeight(.medium)
-                    .foregroundColor(Color("DarkBlue"))
+                    .foregroundColor(colorScheme == .dark ? .white : .darkBlue)
                     .multilineTextAlignment(.center)
                 
                 HStack(spacing: 3.0) {

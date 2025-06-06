@@ -10,8 +10,8 @@ import Foundation
 extension Bar {
     static let sampleBar = Bar(
         id: 1,
-        name: "Firehouse American Eatery & Lounge",
-        address: "123 Main Street, Austin, TX 78701",
+        name: "The Drunken Clam",
+        address: "",
         averagePrice: "$$",
         location: Location(latitude: 30.267153, longitude: -97.743057),
         usersAtBar: [101, 102, 103],
@@ -25,7 +25,7 @@ extension Bar {
             BarImage(
                 id: 1,
                 image:
-                    "https://images.unsplash.com/photo-1514933651103-005eec06c04b?q=80&w=1974&auto=format&fit=crop",
+                    "https://static.wikia.nocookie.net/familyguyfanon/images/5/59/The_Drunken_Clam.png/revision/latest?cb=20230304173531",
                 caption: "Test"
             ),
             BarImage(

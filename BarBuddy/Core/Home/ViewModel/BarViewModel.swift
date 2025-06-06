@@ -66,29 +66,50 @@ final class BarViewModel: Mockable {
             throw BarViewModelError.statusNotFound
         }
 
-        // 1. Check if we have a valid cached waitTime
         let cacheDate = UserDefaults.standard.object(forKey: "barVotes_cache_timestamp") as? Date
         let isCacheValid = cacheDate.map { Date().timeIntervalSince($0) < voteCacheExpiration } ?? false
 
-        if isCacheValid && !statuses[index].waitTime.isEmpty {
-            print("Using in-memory cached wait time: \(statuses[index].waitTime)")
-            return
+        // Try loading wait time from UserDefaults cache if valid
+        if isCacheValid {
+            if let waitTimeCache = UserDefaults.standard.dictionary(forKey: "barVotes_wait_time_cache") as? [String: String],
+               let cachedTime = waitTimeCache["\(barId)"], !cachedTime.isEmpty {
+                statuses[index].waitTime = cachedTime
+                print("Loaded cached wait time from UserDefaults: \(cachedTime)")
+                return
+            }
         }
 
-        // 2. Otherwise clear any stale value and fetch anew
+        // Clear stale in-memory value before fetching
         statuses[index].waitTime = ""
-        print("Fetching new wait time from server…")
+        print("Fetching new wait time from server...")
+
         let votes = try await networkManager.fetchAllVotes().filter { $0.bar == barId }
 
-        // aggregate votes
+        // Aggregate to find most voted wait time
         var countMap: [String: Int] = [:]
         votes.forEach { countMap[$0.waitTime, default: 0] += 1 }
         let mostVotedTime = countMap.max { $0.value < $1.value }?.key ?? "<5 min"
-        statuses[index].waitTime = mostVotedTime
 
-        // 3. Push update back to server (will also update URLCache + timestamp)
-        try await networkManager.putBarStatus(statuses[index])
+        // Cache the aggregated result
+        statuses[index].waitTime = mostVotedTime
+        cacheWaitTime(mostVotedTime, for: barId)
+
+        // Only send to server if new value is different than the old one
+        let previousServerStatus = try? await networkManager.fetchBarStatus(statusId: barId)
+        if previousServerStatus?.waitTime != mostVotedTime {
+            try await networkManager.putBarStatus(statuses[index])
+            print("Updated server with new most voted wait time: \(mostVotedTime)")
+        } else {
+            print("Server already has most voted time, skipping update.")
+        }
     }
+    
+    private func cacheWaitTime(_ time: String, for barId: Int) {
+        var waitTimeCache = UserDefaults.standard.dictionary(forKey: "barVotes_wait_time_cache") as? [String: String] ?? [:]
+        waitTimeCache["\(barId)"] = time
+        UserDefaults.standard.set(waitTimeCache, forKey: "barVotes_wait_time_cache")
+    }
+
     
     func hasCachedWaitTime(for barId: Int) -> Bool {
         statuses.contains(where: { $0.bar == barId })
@@ -149,7 +170,6 @@ final class BarViewModel: Mockable {
         
         return now < openDate || now >= closeDate
     }
-
     
     // MARK: - Error Handling
 

@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1B3A00D92DF31C3F00BB5B68 /* Shimmer in Frameworks */ = {isa = PBXBuildFile; productRef = 1B3A00D82DF31C3F00BB5B68 /* Shimmer */; };
 		1BBB5B712D979D0400A5E2E8 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 1BBB5B702D979D0400A5E2E8 /* FirebaseAuth */; };
 		1BEC0A212DB0825F00ED74F0 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 1BEC0A202DB0825F00ED74F0 /* FirebaseFirestore */; };
 		1BF7EF472D79161D001786D8 /* BottomSheet in Frameworks */ = {isa = PBXBuildFile; productRef = 1BF7EF462D79161D001786D8 /* BottomSheet */; };
@@ -73,6 +74,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1B3A00D92DF31C3F00BB5B68 /* Shimmer in Frameworks */,
 				1BFF2B772DB6C73900D160AB /* SDWebImageSwiftUI in Frameworks */,
 				1BF7EF472D79161D001786D8 /* BottomSheet in Frameworks */,
 				1BBB5B712D979D0400A5E2E8 /* FirebaseAuth in Frameworks */,
@@ -143,6 +145,7 @@
 				1BEC0A202DB0825F00ED74F0 /* FirebaseFirestore */,
 				1BFF2B732DB6C59400D160AB /* PusherSwift */,
 				1BFF2B762DB6C73900D160AB /* SDWebImageSwiftUI */,
+				1B3A00D82DF31C3F00BB5B68 /* Shimmer */,
 			);
 			productName = BarBuddy;
 			productReference = 599153B12D540523004B2832 /* BarBuddy.app */;
@@ -231,6 +234,7 @@
 				1BBB5B6F2D979D0400A5E2E8 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 				1BFF2B722DB6C59400D160AB /* XCRemoteSwiftPackageReference "pusher-websocket-swift" */,
 				1BFF2B752DB6C73900D160AB /* XCRemoteSwiftPackageReference "SDWebImageSwiftUI" */,
+				1B3A00D72DF31C3F00BB5B68 /* XCRemoteSwiftPackageReference "SwiftUI-Shimmer" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 599153B22D540523004B2832 /* Products */;
@@ -619,6 +623,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		1B3A00D72DF31C3F00BB5B68 /* XCRemoteSwiftPackageReference "SwiftUI-Shimmer" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/markiv/SwiftUI-Shimmer.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.5.1;
+			};
+		};
 		1BBB5B6F2D979D0400A5E2E8 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
@@ -654,6 +666,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		1B3A00D82DF31C3F00BB5B68 /* Shimmer */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 1B3A00D72DF31C3F00BB5B68 /* XCRemoteSwiftPackageReference "SwiftUI-Shimmer" */;
+			productName = Shimmer;
+		};
 		1BBB5B702D979D0400A5E2E8 /* FirebaseAuth */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 1BBB5B6F2D979D0400A5E2E8 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;

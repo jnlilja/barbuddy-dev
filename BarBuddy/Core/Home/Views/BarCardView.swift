@@ -38,11 +38,11 @@ struct BarCardView: View {
                 .minimumScaleFactor(0.5)
                 .lineLimit(1)
                 .font(.system(size: 32, weight: .bold))
-                .foregroundColor(colorScheme == .dark ? .neonPink : .darkBlue)
+                .foregroundColor(colorScheme == .dark ? .white : .darkBlue)
             
             // Open Hours
             Text(hours ?? "Hours unavailable")
-                .foregroundColor(colorScheme == .dark ? .nude : .darkPurple)
+                .foregroundColor(colorScheme == .dark ? .salmon : .darkPurple)
             // Image placeholder
             if let barImageURL = bar.images.first?.image {
                 WebImage(url: URL(string: barImageURL))
@@ -79,6 +79,7 @@ struct BarCardView: View {
                                     Text("Unavailable")
                                 }
                             }
+                            .foregroundStyle(colorScheme == .dark ? .nude : .white)
                             .font(.title)
                             .bold()
                         }

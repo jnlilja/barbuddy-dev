@@ -152,13 +152,10 @@ struct MainFeedView: View {
             }
             .buttonStyle(PlainButtonStyle())
             if isLoading {
-                Text("Loading bars...")
-                    .foregroundColor(.white)
-                    .font(.title3)
-                    .padding(.top, 20)
-                ProgressView()
-                    .progressViewStyle(CircularProgressViewStyle(tint: .salmon))
-                    .padding(.top, 20)
+                ForEach(0..<3) { _ in
+                    SkeletonBarCardView()
+                }
+                    .padding([.horizontal, .bottom])
             } else {
                 if toggleBarError || isErrorPresented {
                     Button {

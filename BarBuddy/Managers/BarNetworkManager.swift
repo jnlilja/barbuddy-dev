@@ -15,14 +15,12 @@ actor BarNetworkManager: NetworkTestable {
     private let baseURL = AppConfig.baseURL
     private let encoder: JSONEncoder
     private let decoder: JSONDecoder
-    private let timeDecoder: JSONDecoder
     private let timeStampDecoder: JSONDecoder
                 
     internal init(session: URLSession = .shared) {
         self.session = session
         self.encoder = JSONEncoder()
-        self.decoder = JSONDecoder.default
-        self.timeDecoder = JSONDecoder.timeOnly.copy()
+        self.decoder = JSONDecoder.timeOnly
         self.timeStampDecoder = JSONDecoder.microseconds.copy()
         
         encoder.keyEncodingStrategy = .convertToSnakeCase
@@ -259,7 +257,7 @@ actor BarNetworkManager: NetworkTestable {
             let isExpired = Date().timeIntervalSince(cacheDate) > barHoursCacheExpiration
             if !isExpired {
                 print("Using cached bar hours data (valid)")
-                return try self.timeDecoder.decode([BarHours].self, from: cachedResponse.data)
+                return try self.decoder.decode([BarHours].self, from: cachedResponse.data)
             } else {
                 print("Cache expired. Fetching new bar hours data.")
                 URLCache.shared.removeCachedResponse(for: request)
@@ -284,7 +282,7 @@ actor BarNetworkManager: NetworkTestable {
             UserDefaults.standard.set(Date(), forKey: "barHours_cache_timestamp")
         }
         
-        return try self.timeDecoder.decode([BarHours].self, from: data)
+        return try self.decoder.decode([BarHours].self, from: data)
     }
     
     func barHoursBulkUpdate(hour: BarHours) async throws {
@@ -387,8 +385,8 @@ actor BarNetworkManager: NetworkTestable {
         return try timeStampDecoder.decode([BarStatus].self, from: data)
     }
     
-    func fetchBarStatus(statusID: Int) async throws -> BarStatus {
-        let endpoint = baseURL + "bar-status/\(statusID)/"
+    func fetchBarStatus(statusId: Int) async throws -> BarStatus {
+        let endpoint = baseURL + "bar-status/\(statusId)/"
         guard let url = URL(string: endpoint) else {
             throw APIError.invalidURL(url: endpoint)
         }
@@ -399,7 +397,6 @@ actor BarNetworkManager: NetworkTestable {
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue("application/json", forHTTPHeaderField: "Accept")
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         
         let (data, response) = try await URLSession.shared.data(for: request)
@@ -448,54 +445,6 @@ actor BarNetworkManager: NetworkTestable {
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         request.httpBody = try encoder.encode(status)
-        
-        let (_, response) = try await session.data(for: request)
-        if let response = response as? HTTPURLResponse, !(200...299).contains(response.statusCode)  {
-            throw APIError.statusCode(response.statusCode)
-        }
-    }
-    
-    func patchBarStatus(statusID: Int, status: BarStatus) async throws {
-        struct patchStruct: Encodable {
-            //let crowdSize: String?
-            let waitTime: String?
-        }
-
-        let endpoint = baseURL + "bar-status/\(statusID)/"
-        guard let url = URL(string: endpoint) else {
-            throw APIError.invalidURL(url: endpoint)
-        }
-        guard let token = try await Auth.auth().currentUser?.getIDToken() else {
-            throw APIError.noToken
-        }
-        
-        var request = URLRequest(url: url)
-        request.httpMethod = "PATCH"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        
-        let patch = patchStruct(waitTime: status.waitTime)
-        request.httpBody = try encoder.encode(patch)
-        
-        let (_, response) = try await session.data(for: request)
-        if let response = response as? HTTPURLResponse, !(200...299).contains(response.statusCode)  {
-            throw APIError.statusCode(response.statusCode)
-        }
-    }
-    
-    func deleteBarStatus(statusID: Int) async throws {
-        let endpoint = baseURL + "bar-status/\(statusID)/"
-        guard let url = URL(string: endpoint) else {
-            throw APIError.invalidURL(url: endpoint)
-        }
-        guard let token = try await Auth.auth().currentUser?.getIDToken() else {
-            throw APIError.noToken
-        }
-        
-        var request = URLRequest(url: url)
-        request.httpMethod = "DELETE"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         
         let (_, response) = try await session.data(for: request)
         if let response = response as? HTTPURLResponse, !(200...299).contains(response.statusCode)  {
@@ -585,28 +534,6 @@ actor BarNetworkManager: NetworkTestable {
         if let response = response as? HTTPURLResponse, !(200...299).contains(response.statusCode) {
             throw APIError.statusCode(response.statusCode)
         }
-    }
-    
-    func getBarAggretedVote(id: Int) async throws -> Bar {
-        let endpoint = baseURL + "bars/\(id)/aggregated-vote/"
-        guard let url = URL(string: endpoint) else {
-            throw APIError.invalidURL(url: endpoint)
-        }
-        guard let token = try await Auth.auth().currentUser?.getIDToken() else {
-            throw APIError.noToken
-        }
-        
-        var request = URLRequest(url: url)
-        request.httpMethod = "GET"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue("application/json", forHTTPHeaderField: "Accept")
-        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        
-        let (data, response) = try await session.data(for: request)
-        if let response = response as? HTTPURLResponse, !(200...299).contains(response.statusCode)  {
-            throw APIError.statusCode(response.statusCode)
-        }
-        return try decoder.decode(Bar.self, from: data)
     }
     
     func fetchAllBars() async throws -> [Bar] {

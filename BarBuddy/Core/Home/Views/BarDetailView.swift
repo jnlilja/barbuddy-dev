@@ -9,6 +9,7 @@ import SDWebImageSwiftUI
 struct BarDetailView: View {
     @Environment(MapViewModel.self) var viewModel
     @Environment(BarViewModel.self) var barViewModel
+    @Environment(\.colorScheme) var colorScheme
     @State var bar: Bar
     @State private var loadingState: HoursLoadingState = .loading
     @State private var waitButtonProperties = ButtonProperties(type: "wait")
@@ -17,8 +18,8 @@ struct BarDetailView: View {
         barViewModel.statuses.first(where: { $0.bar == bar.id })?.waitTime ?? "No votes"
     }
     
-    private var isClosed: Bool {
-        barViewModel.hours.first(where: { $0.bar == bar.id })?.isClosed ?? true
+    private var isClosed: Bool? {
+        barViewModel.hours.first(where: { $0.bar == bar.id })?.isClosed
     }
 
     var body: some View {
@@ -35,7 +36,7 @@ struct BarDetailView: View {
                     // Make the bar name adapt to the screen size
                     Text(bar.name)
                         .font(.system(size: 40, weight: .bold))
-                        .foregroundColor(Color("DarkPurple"))
+                        .foregroundColor(colorScheme == .dark ? .salmon : .darkPurple)
                         .multilineTextAlignment(.center)
                         .lineLimit(2)
                         .minimumScaleFactor(0.5)
@@ -47,25 +48,36 @@ struct BarDetailView: View {
                                 Image(systemName: "clock.fill")
                                 Text("Wait Time")
                             }
-                            .foregroundColor(Color("DarkPurple"))
+                            .foregroundColor(colorScheme == .dark ? .nude : .darkPurple)
                             .font(.title2)
                             .bold()
 
                             ZStack {
-                                RoundedRectangle(cornerRadius: 15)
-                                    .stroke(style: StrokeStyle(lineWidth: 2))
-                                    .foregroundStyle(.neonPink.opacity(0.5))
-                                    .frame(width: 180, height: 130)
-                                    .background(.salmon.opacity(0.2))
-                                    .cornerRadius(15)
-                                    .shadow(radius: 10)
+                                if colorScheme == .dark {
+                                    RoundedRectangle(cornerRadius: 15)
+                                        .stroke(style: StrokeStyle(lineWidth: 2))
+                                        .foregroundStyle(.nude.opacity(0.5))
+                                        .frame(width: 180, height: 130)
+                                        .background(.clear)
+                                        .cornerRadius(15)
+                                        .shadow(radius: 10)
+                                } else {
+                                    // For light mode
+                                    RoundedRectangle(cornerRadius: 15)
+                                        .stroke(style: StrokeStyle(lineWidth: 2))
+                                        .foregroundStyle(.neonPink.opacity(0.5))
+                                        .frame(width: 180, height: 130)
+                                        .background(.salmon.opacity(0.2))
+                                        .cornerRadius(15)
+                                        .shadow(radius: 10)
+                                }
 
                                 // MARK: — Loading state
 
                                 switch loadingState {
                                 case .loading:
                                     ProgressView()
-                                        .tint(.darkPurple)
+                                        .tint(colorScheme == .dark ? .salmon :.darkPurple)
                                         .scaleEffect(1.5)
                                 case .loaded:
                                     Text(waitTime)
@@ -79,7 +91,7 @@ struct BarDetailView: View {
                                 }
                             }
                             .font(.title)
-                            .foregroundColor(.darkPurple)
+                            .foregroundColor(colorScheme == .dark ? .nude : .darkPurple)
                             .bold()
 
                             Button {
@@ -90,11 +102,20 @@ struct BarDetailView: View {
                                 }
                             } label: {
                                 ZStack {
-                                    RoundedRectangle(cornerRadius: 15)
-                                        .foregroundStyle(.darkPurple)
-                                        .frame(width: 180, height: 120)
-                                        .cornerRadius(15)
-                                        .shadow(radius: 20)
+                                    if colorScheme == .dark {
+                                        RoundedRectangle(cornerRadius: 15)
+                                            .foregroundStyle(.nude)
+                                            .frame(width: 180, height: 120)
+                                            .cornerRadius(15)
+                                            .shadow(radius: 20)
+                                    } else {
+                                        // For light mode
+                                        RoundedRectangle(cornerRadius: 15)
+                                            .foregroundStyle(.darkPurple)
+                                            .frame(width: 180, height: 120)
+                                            .cornerRadius(15)
+                                            .shadow(radius: 20)
+                                    }
 
                                     VStack {
                                         Text("Vote Wait Time!")
@@ -103,10 +124,8 @@ struct BarDetailView: View {
                                             .bold()
 
                                         Image(systemName: "arrow.right")
-                                            .foregroundStyle(.white)
-
                                     }
-                                    .foregroundStyle(.white)
+                                    .foregroundStyle(colorScheme == .dark ? .darkBlue : .nude)
                                 }
                             }
                             // Disable vote button if bar is closed or wait time could not be fetched
@@ -137,12 +156,12 @@ struct BarDetailView: View {
                     VStack {
                         Text("Enjoying BarBuddy?")
                             .font(.title3)
-                            .foregroundColor(Color("DarkPurple"))
+                            .foregroundColor(colorScheme == .dark ? .neonPink : .darkPurple)
                         Group {
                             Text("Follow us on IG for events and updates!")
                             Text("@barbuddy.pb")
                         }
-                        .foregroundStyle(.darkBlue)
+                        .foregroundStyle(colorScheme == .dark ? .nude : .darkBlue)
                         .font(.callout)
                         .bold()
                     }
@@ -151,8 +170,11 @@ struct BarDetailView: View {
                 .navigationBarTitleDisplayMode(.inline)
             }
             .task {
-                if isClosed {
+                print("Currently viewing Bar ID: \(bar.id)")
+                if isClosed != nil {
                     loadingState = .closed; return
+                } else {
+                    loadingState = .failed
                 }
                 
                 let cacheDate = UserDefaults.standard.object(forKey: "barVotes_cache_timestamp") as? Date

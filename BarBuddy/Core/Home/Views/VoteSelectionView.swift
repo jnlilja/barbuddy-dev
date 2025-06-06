@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct VoteSelectionView: View {
+    @Environment(\.colorScheme) var colorScheme
     @Binding var properties: ButtonProperties
     @Binding var bar: Bar
     @State private var selectedOption: String?
@@ -17,12 +18,12 @@ struct VoteSelectionView: View {
             Spacer()
             Text("How long is the wait?")
                 .font(.system(size: 24, weight: .bold, design: .rounded))
-                .foregroundColor(.darkBlue)
+                .foregroundColor(colorScheme == .dark ? .salmon : .darkBlue)
                 .padding(.top)
             
             Text("Select a time below")
                 .font(.system(size: 16, weight: .regular, design: .rounded))
-                .foregroundColor(.darkPurple)
+                .foregroundColor(colorScheme == .dark ? .white :.darkPurple)
                 .padding(.bottom, 20)
             
             LazyVGrid(columns: [
@@ -93,7 +94,11 @@ struct VoteSelectionView: View {
                             .frame(width: 100)
                             .font(.system(size: 16, weight: .bold, design: .rounded))
                             .padding()
-                            .background(Gradient(colors: [.darkBlue, .darkPurple]))
+                            .background(
+                                colorScheme == .dark
+                                    ? Gradient(colors: [.darkPurple, .salmon])
+                                    : Gradient(colors: [.darkBlue, .darkPurple])
+                            )
                             .foregroundColor(.nude)
                             .cornerRadius(15)
                             .padding(.bottom, 30)

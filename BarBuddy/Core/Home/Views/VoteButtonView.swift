@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct VoteButtonView: View {
+    @Environment(\.colorScheme) var colorScheme
     let text: String
     let opacity: Double
     @Binding var properties: ButtonProperties
@@ -20,17 +21,31 @@ struct VoteButtonView: View {
             }
         } label: {
             ZStack {
-                RoundedRectangle(cornerRadius: 15)
-                    .frame(width: 120, height: 120)
-                    .foregroundStyle(selectedOption == text ? .darkBlue : .salmon)
-                    .cornerRadius(15)
-                    .opacity(opacity)
-
-                Text(text)
-                    .font(.headline)
-                    .fontDesign(.rounded)
-                    .fontWeight(.semibold)
-                    .foregroundColor(selectedOption == text ? .darkPurple : .darkBlue)
+                if colorScheme == .dark {
+                    RoundedRectangle(cornerRadius: 15)
+                        .frame(width: 120, height: 120)
+                        .foregroundStyle(selectedOption == text ? .neonPink : .nude)
+                        .cornerRadius(15)
+                        .opacity(opacity)
+                    
+                    Text(text)
+                        .font(.headline)
+                        .fontDesign(.rounded)
+                        .fontWeight(.semibold)
+                        .foregroundColor(selectedOption == text ? .salmon : .nude)
+                } else {
+                    RoundedRectangle(cornerRadius: 15)
+                        .frame(width: 120, height: 120)
+                        .foregroundStyle(selectedOption == text ? .darkBlue : .salmon)
+                        .cornerRadius(15)
+                        .opacity(opacity)
+                    
+                    Text(text)
+                        .font(.headline)
+                        .fontDesign(.rounded)
+                        .fontWeight(.semibold)
+                        .foregroundColor(selectedOption == text ? .darkPurple : .darkBlue)
+                }
             }
             .padding(.vertical, 5)
         }
