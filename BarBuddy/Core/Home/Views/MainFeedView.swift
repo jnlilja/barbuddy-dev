@@ -10,14 +10,18 @@ import SwiftUI
 struct MainFeedView: View {
     @Environment(MapViewModel.self) var viewModel
     @Environment(BarViewModel.self) var barViewModel
-    @State private var bottomSheetPosition: BottomSheetPosition = .relative(
-        0.86
-    )
+    @Environment(\.colorScheme) var colorScheme
+    
+    @State private var bottomSheetPosition: BottomSheetPosition = .relative(0.86)
     @State private var searchText = ""
     @State private var hours: String?
-    @Environment(\.colorScheme) var colorScheme
-    let locationViewModel = LocationManager()
+    
     @State private var selectedBar: Bar?
+    @State private var isLoading = true
+    @State private var isErrorPresented = false
+    @State private var toggleBarError = false
+    
+    let locationViewModel = LocationManager()
     
     private var filteredBars: [Bar] {
         barViewModel.bars.filter {
@@ -47,13 +51,41 @@ struct MainFeedView: View {
                 )
                 .enableContentDrag()
                 .enableAppleScrollBehavior()
-                .customAnimation(.snappy)
+                .isResizable()
                 .ignoresSafeArea(.keyboard)
         }
         .task {
-            await barViewModel.loadBarData()
+            if barViewModel.bars.isEmpty {
+                do {
+                    try await barViewModel.loadBarData()
+                    isLoading = false
+                } catch {
+                    print("Error loading bar data: \(error)")
+                    isErrorPresented = true
+                }
+            }
+            isLoading = false
         }
         .environment(viewModel)
+        .alert("Error Loading Data", isPresented: $isErrorPresented) {
+            Button("Retry") {
+                isLoading = true
+                Task {
+                    do {
+                        try await barViewModel.loadBarData()
+                        toggleBarError = false
+                    } catch {
+                        print("Error loading bar data: \(error)")
+                    }
+                    isLoading = false
+                }
+            }
+            Button("Cancel", role: .cancel) {
+                toggleBarError = true
+            }
+        } message: {
+            Text("There was an error loading the bar data. Please try again.")
+        }
     }
     // MARK: — Map Layer
     private var mapLayer: some View {
@@ -119,21 +151,50 @@ struct MainFeedView: View {
                     .padding([.horizontal, .bottom])
             }
             .buttonStyle(PlainButtonStyle())
-            if filteredBars.isEmpty {
-                Text("No results found")
+            if isLoading {
+                Text("Loading bars...")
                     .foregroundColor(.white)
                     .font(.title3)
+                    .padding(.top, 20)
+                ProgressView()
+                    .progressViewStyle(CircularProgressViewStyle(tint: .salmon))
+                    .padding(.top, 20)
             } else {
-                ForEach(filteredBars) { bar in
-                    BarCardView(bar: bar)
-                        .environment(viewModel)
-                        .padding([.horizontal, .bottom])
+                if toggleBarError || isErrorPresented {
+                    Button {
+                        isLoading = true
+                        Task {
+                            do {
+                                try await barViewModel.loadBarData()
+                                isLoading = false
+                                toggleBarError = false
+                            } catch {
+                                print("Error loading bar data: \(error)")
+                                isLoading = false
+                            }
+                        }
+                    } label: {
+                        Text("Could not load bars. Please try again.")
+                            .foregroundColor(.neonPink)
+                            .bold()
+                            .padding(.top, 20)
+                    }
+                } else if filteredBars.isEmpty {
+                    Text("No results found")
+                        .foregroundColor(.white)
+                        .font(.title3)
+                } else {
+                    ForEach(filteredBars) { bar in
+                        BarCardView(bar: bar)
+                            .environment(viewModel)
+                            .padding([.horizontal, .bottom])
+                            .transition(.opacity.combined(with: .move(edge: .bottom)))
+                    }
                 }
-                .transition(.opacity)
-                .animation(.easeInOut, value: searchText)
-                
             }
         }
+        .animation(.easeInOut(duration: 0.4), value: isLoading)
+        .animation(.easeInOut(duration: 0.3), value: searchText)
     }
     // MARK: — Toolbar
     private var toolbarContent: some ToolbarContent {
@@ -154,5 +215,5 @@ struct MainFeedView: View {
 #Preview {
     MainFeedView()
         .environment(MapViewModel())
-        .environment(BarViewModel.PREVIEW)
+        .environment(BarViewModel.preview)
 }

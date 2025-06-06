@@ -7,6 +7,9 @@
 
 import Foundation
 
+let barHoursCacheExpiration: TimeInterval = 60 * 5 // 5 minutes
+let voteCacheExpiration: TimeInterval = 60 // 1 minute
+
 // May keep this for now till I start implementing URL response caching
 actor BarHoursCache {
     

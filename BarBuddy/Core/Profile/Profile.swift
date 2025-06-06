@@ -293,6 +293,7 @@ struct ProfileView: View {
             Button("Cancel", role: .cancel) {}
             Button("Sign Out") {
                 authVM.signOut()
+                URLCache.shared.removeAllCachedResponses()
             }
         } message: {
             Text("Are you sure you want to sign out?")

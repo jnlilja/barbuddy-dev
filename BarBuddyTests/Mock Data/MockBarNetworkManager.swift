@@ -10,7 +10,7 @@ import Foundation
 
 @MainActor
 // MARK: - Mock Network Manager
-final class MockBarNetworkManager: NetworkMockable {
+final class MockBarNetworkManager: NetworkTestable {
     // MARK: - Test Data Storage
     var mockVotes: [BarVote] = []
     var mockBarStatus: BarStatus?
@@ -24,7 +24,7 @@ final class MockBarNetworkManager: NetworkMockable {
     var putBarStatusCallCount = 0
     
     // MARK: - Protocol Implementation
-    func fetchVoteSummaries() async throws -> [BarVote] {
+    func fetchAllVotes() async throws -> [BarVote] {
         didCallFetchVoteSummaries = true
         fetchVoteSummariesCallCount += 1
         

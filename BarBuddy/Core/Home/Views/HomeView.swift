@@ -36,7 +36,6 @@ struct HomeView: View {
                         Image(systemName: "map.fill")
                         Text("Map")
                     }
-                    .tint(.salmon)
                     .tag(0)
                 
                 ProfileView()
@@ -49,7 +48,8 @@ struct HomeView: View {
             .toolbar(.visible, for: .tabBar)
             .toolbarBackground(.darkBlue, for: .tabBar)
         }
-        .accentColor(Color("Salmon"))
+        .sensoryFeedback(.selection, trigger: selectedTab)
+        .tint(.salmon)
     }
 }
 
@@ -57,4 +57,5 @@ struct HomeView: View {
     HomeView()
         .environment(MapViewModel())
         .environmentObject(AuthViewModel())
+        .environment(BarViewModel.preview)
 }

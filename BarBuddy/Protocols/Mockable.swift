@@ -9,6 +9,6 @@ import Foundation
 
 @MainActor
 protocol Mockable {
-    func getHours(for bar: Bar) async throws -> String?
+    
     func isClosed(_ openTime: Date, _ closeTime: Date) -> Bool
 }

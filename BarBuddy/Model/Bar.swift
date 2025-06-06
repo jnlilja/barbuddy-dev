@@ -24,7 +24,7 @@ struct Bar: Codable, Identifiable, Hashable {
     let location: Location
     let usersAtBar: [Int]
     let currentStatus: CurrentStatus
-    let averageRating: Double?
+    let averageRating: Int?
     let images: [BarImage]
     let currentUserCount: Int
     let activityLevel: String
@@ -40,7 +40,7 @@ struct Location: Codable, Hashable {
 }
 
 struct CurrentStatus: Codable, Hashable {
-    let crowdSize: Int?
-    let waitTime: Int?
+    let crowdSize: String?
+    let waitTime: String?
     let lastUpdated: Date?
 }

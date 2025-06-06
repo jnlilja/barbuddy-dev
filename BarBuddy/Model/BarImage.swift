@@ -9,7 +9,6 @@ import Foundation
 
 struct BarImage: Codable, Identifiable, Hashable {
     var id: Int?
-    let bar: Int
     let image: String
     let caption: String?
     var uploadedAt: Date?

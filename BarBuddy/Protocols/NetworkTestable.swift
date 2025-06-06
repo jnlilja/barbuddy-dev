@@ -11,10 +11,10 @@ import Foundation
    This allows us to create a mock network manager that conforms to this protocol
    and return mock data for testing purposes.
 */
-protocol NetworkMockable: Sendable {
-    func fetchVoteSummaries() async throws -> [BarVote]
+protocol NetworkTestable: Sendable {
+    func fetchAllVotes() async throws -> [BarVote]
     func putBarStatus(_ status: BarStatus) async throws
-    func patchBarHours(id: Int) async throws
+    func patchBarHours(id: Int, hour: BarHours) async throws
     func fetchAllBarHours() async throws -> [BarHours]
     func fetchAllBars() async throws -> Bars
     func fetchStatuses() async throws -> [BarStatus]

@@ -143,7 +143,7 @@ struct VoteTests {
         let mockNetworkManager = MockBarNetworkManager()
         let viewModel = BarViewModel(networkManager: mockNetworkManager)
 
-        mockNetworkManager.mockError = APIError.badResponse(500)
+        mockNetworkManager.mockError = APIError.statusCode(500)
         viewModel.statuses = [
             BarStatus(id: 1, bar: 1, waitTime: "10-15 min", lastUpdated: Date())
         ]

@@ -7,7 +7,6 @@ import SwiftUI
 import SDWebImageSwiftUI
 
 struct BarDetailView: View {
-    @Environment(\.dismiss) var dismiss
     @Environment(MapViewModel.self) var viewModel
     @Environment(BarViewModel.self) var barViewModel
     @State var bar: Bar
@@ -15,7 +14,11 @@ struct BarDetailView: View {
     @State private var waitButtonProperties = ButtonProperties(type: "wait")
 
     private var waitTime: String {
-        barViewModel.statuses.first(where: { $0.bar == bar.id })?.waitTime ?? "<5 min"
+        barViewModel.statuses.first(where: { $0.bar == bar.id })?.waitTime ?? "No votes"
+    }
+    
+    private var isClosed: Bool {
+        barViewModel.hours.first(where: { $0.bar == bar.id })?.isClosed ?? true
     }
 
     var body: some View {
@@ -119,7 +122,7 @@ struct BarDetailView: View {
                             )
                             .padding(.top)
                             
-                            Text("Voting has concluded for the night.")
+                            Text("Voting has concluded for this bar.")
                                 .foregroundColor(.neonPink)
                                 .font(.caption)
                                 .padding(.top, 5)
@@ -149,20 +152,33 @@ struct BarDetailView: View {
                 .navigationBarTitleDisplayMode(.inline)
             }
             .task {
-                do {
-                    if let hours = try await barViewModel.getHours(for: bar) {
-                        loadingState = hours.contains("Closed") ? .closed : .loading
-                    } else {
-                        loadingState = .closed
-                        return
-                    }
-                } catch {}
+                if isClosed {
+                    loadingState = .closed; return
+                }
                 
+                let cacheDate = UserDefaults.standard.object(forKey: "barVotes_cache_timestamp") as? Date
+                let isCacheValid = cacheDate.map { Date().timeIntervalSince($0) < voteCacheExpiration } ?? false
+                
+                if let cachedStatus = barViewModel.statuses.first(where: { $0.bar == bar.id }), isCacheValid {
+                    loadingState = .loaded
+                    print("Using cached wait time: \(cachedStatus.waitTime)")
+                    return
+                }
+                if cacheDate == nil {
+                    print("No cached vote found, fetching new data...")
+                } else {
+                    print("Bar Vote Cache Expired, fetching new data...")
+                }
+                
+                loadingState = .loading
                 do {
                     try await barViewModel.getMostVotedWaitTime(barId: bar.id)
                     loadingState = .loaded
+                    print("Most voted wait time fetched successfully.")
+                    print("Wait time: \(waitTime)")
+                    
                 } catch {
-                    print("Error calculating votes: \(error)")
+                    print("Error fetching most voted wait time: \(error)")
                     loadingState = .failed
                 }
             }
@@ -170,10 +186,18 @@ struct BarDetailView: View {
         }
     }
 }
-#Preview(traits: .sizeThatFitsLayout) {
+#Preview("Bar is Open", traits: .sizeThatFitsLayout) {
     BarDetailView(
         bar: Bar.sampleBar
     )
     .environment(MapViewModel())
-    .environment(BarViewModel())
+    .environment(BarViewModel.preview)
+}
+
+#Preview("Bar is Closed", traits: .sizeThatFitsLayout) {
+    BarDetailView(
+        bar: Bar.sampleBar
+    )
+    .environment(MapViewModel())
+    .environment(BarViewModel.preview)
 }

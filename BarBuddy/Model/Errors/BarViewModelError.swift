@@ -13,6 +13,7 @@ enum BarViewModelError: Error, LocalizedError, Equatable {
     case networkError(String)
     case hoursAreNil
     case statusNotFound
+    case hoursNotFound
 }
 
 // MARK: - LocalizedError Conformance
@@ -29,6 +30,8 @@ extension BarViewModelError {
             return "Bar hours data is unavailable."
         case .statusNotFound:
             return "Bar status could not be found."
+        case .hoursNotFound:
+            return "Bar hours could not be retrieved."
         }
     }
 }

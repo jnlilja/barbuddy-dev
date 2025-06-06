@@ -17,7 +17,11 @@ struct BarCardView: View {
     @State private var loading = true
     
     private var waitTime: String? {
-        barViewModel.statuses.first(where: { $0.bar == bar.id })?.waitTime ?? ""
+        barViewModel.statuses.first(where: { $0.bar == bar.id })?
+            .waitTime
+            .replacingOccurrences(of: "-", with: " - ")
+            .replacingOccurrences(of: "<", with: "< ")
+            ?? ""
     }
     
     private var screenWidth: CGFloat {
@@ -32,12 +36,13 @@ struct BarCardView: View {
             // Bar Header
             Text(bar.name)
                 .minimumScaleFactor(0.5)
+                .lineLimit(1)
                 .font(.system(size: 32, weight: .bold))
                 .foregroundColor(colorScheme == .dark ? .neonPink : Color("DarkBlue"))
             
             // Open Hours
             Text(hours ?? "Hours unavailable")
-                .foregroundColor(colorScheme == .dark ? .nude : Color("DarkPurple"))
+                .foregroundColor(colorScheme == .dark ? .nude : .darkPurple)
             // Image placeholder
             if let barImageURL = bar.images.first?.image {
                 WebImage(url: URL(string: barImageURL))
@@ -73,7 +78,7 @@ struct BarCardView: View {
                                 } else if let waitTime, !waitTime.isEmpty {
                                     Text(waitTime)
                                 } else {
-                                    Text("No votes yet")
+                                    Text("< 5 min")
                                 }
                             }
                             .font(.title)
@@ -105,11 +110,11 @@ struct BarCardView: View {
             }
         }
         .onAppear {
-            guard var currentHours = barViewModel.hours.first(where: { $0.bar == bar.id }) else {
+            guard let index = barViewModel.hours.firstIndex(where: { $0.bar == bar.id }) else {
                 loading = false
                 return
             }
-            hours = barViewModel.formatBarHours(hours: &currentHours)
+            hours = barViewModel.formatBarHours(hours: &barViewModel.hours[index])
             loading = false
         }
         .padding()
@@ -123,7 +128,7 @@ struct BarCardView: View {
     NavigationStack {
         BarCardView(bar: Bar.sampleBar)
             .environment(MapViewModel())
-            .environment(BarViewModel())
+            .environment(BarViewModel.preview)
             .padding()
     }
 }

@@ -96,16 +96,7 @@ struct RequestsView: View {
                         .foregroundColor(.white)
                 }
             }
-            .task {
-                await friendService.loadFriendRequests()
-                let result = await GetUserAPIService.shared.fetchUsers()
-                switch result {
-                case .success(let success):
-                    allUsers = success
-                case .failure(_):
-                    print("failed to get users")
-                }
-            }
+            
         }
     }
 }

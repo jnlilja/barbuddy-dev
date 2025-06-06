@@ -12,145 +12,37 @@ final class BarViewModel: Mockable {
     var bars: Bars = []
     var statuses: [BarStatus] = []
     var hours: [BarHours] = []
-    var networkManager: NetworkMockable
+    var networkManager: NetworkTestable
     
-    init(networkManager: NetworkMockable = BarNetworkManager.shared) {
+    init(networkManager: NetworkTestable = BarNetworkManager.shared) {
         self.networkManager = networkManager
     }
     
-    func loadBarData() async {
+    private let voteCacheExpiration: TimeInterval = 60
+    
+    // MARK: - Load Data
+    
+    func loadBarData() async throws {
         async let fetchedStatuses = networkManager.fetchStatuses()
         async let fetchedBars = networkManager.fetchAllBars()
         async let fetchedHours = networkManager.fetchAllBarHours()
 
         do {
-            self.statuses = try await fetchedStatuses
+            // Wait for all results concurrently
+            let (statuses, bars, hours) = try await (fetchedStatuses, fetchedBars, fetchedHours)
+            self.statuses = statuses
+            self.bars = bars
+            self.hours = hours
         } catch let error as NSError where error.domain == NSURLErrorDomain {
-            handleNetworkError(error, context: "Bar Status GET")
+            handleNetworkError(error, context: "Load Bar Data")
+            throw error
         } catch let apiError as APIError {
-            handleAPIError(apiError, context: "Bar Status GET")
+            handleAPIError(apiError, context: "Load Bar Data")
+            throw apiError
         } catch {
-            print("Bar Status GET ERROR - \(error)")
+            print("Load Bar Data ERROR - \(error)")
+            throw error
         }
-        
-        do {
-            self.bars = try await fetchedBars
-        } catch let error as NSError where error.domain == NSURLErrorDomain {
-            handleNetworkError(error, context: "Bar GET")
-        } catch let apiError as APIError {
-            handleAPIError(apiError, context: "Bar GET")
-        } catch {
-            print("Bar GET ERROR - \(error)")
-        }
-        
-        do {
-            self.hours = try await fetchedHours
-        } catch let error as NSError where error.domain == NSURLErrorDomain {
-            handleNetworkError(error, context: "Bar Hours GET")
-        } catch let apiError as APIError {
-            handleAPIError(apiError, context: "Bar Hours GET")
-        } catch {
-            print("Bar Hours GET ERROR - \(error)")
-        }
-    }
-    
-    // Function to fetch the bar's hours
-    func getHours(for bar: Bar) async throws -> String? {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "h:mm a"
-        // Try to get from cache
-        if var cached = await BarHoursCache.shared.get(for: bar.id) {
-            guard
-                let openTime = cached.openTime,
-                let closeTime = cached.closeTime
-            else {
-                print("One of the opening/closing times for bar \(bar.name) is missing.")
-                throw BarViewModelError.hoursAreNil
-            }
-                
-            // Get last cached status and check if it needs to be updated
-            let previousClosedStatus = cached.isClosed
-            let isCurrentlyClosed = isClosed(openTime, closeTime)
-            
-            // If the status has not changed, do not update
-            guard previousClosedStatus != isCurrentlyClosed else {
-                return "\(isCurrentlyClosed ? "Closed" : "Open"): \(formatter.string(from: openTime)) - \(formatter.string(from: closeTime))"
-            }
-            cached.isClosed = isCurrentlyClosed
-            
-            // Patch hours and update cache
-            do {
-                try await BarNetworkManager.shared.patchBarHours(id: cached.id)
-                await BarHoursCache.shared.set(value: cached, forKey: cached.id)
-            } catch {
-                switch error {
-                case BarHoursError.doesNotExist(error: let error):
-                    print("patchHours error: \(error)")
-                case APIError.noToken:
-                    print("patchHours error: No token. Please log in.")
-                case APIError.badResponse:
-                    print("patchHours error: Bad request")
-                case APIError.badURL:
-                    print("patchHours error: URL is not valid.")
-                default:
-                    print("Pathing hours failed with error - \(error.localizedDescription)")
-                }
-                return nil
-            }
-            return "\(isCurrentlyClosed ? "Closed" : "Open"): \(formatter.string(from: openTime)) - \(formatter.string(from: closeTime))"
-        }
-        // Fetch all hours if not in cache
-        do {
-            let allHours = try await networkManager.fetchAllBarHours()
-            guard var hours = allHours.first(where: { $0.bar == bar.id }) else { return nil }
-            
-            guard
-                let openTime = hours.openTime,
-                let closeTime = hours.closeTime
-            else {
-                print("One of the times for \(bar.name) is nil.")
-                throw BarViewModelError.hoursAreNil
-            }
-            
-            // Cache all fetched hours
-            for h in allHours {
-                await BarHoursCache.shared.set(value: h, forKey: h.id)
-            }
-        
-            let closed = isClosed(openTime, closeTime)
-            hours.isClosed = closed
-            
-            // Patch hours and update cache
-            do {
-                try await networkManager.patchBarHours(id: hours.id)
-                await BarHoursCache.shared.set(value: hours, forKey: hours.id)
-            } catch {
-                switch error {
-                case BarHoursError.doesNotExist(error: let error):
-                    print("patchHours error: \(error)")
-                case APIError.noToken:
-                    print("patchHours error: No token. Please log in.")
-                case APIError.badResponse:
-                    print("patchHours error: Bad request")
-                case APIError.badURL:
-                    print("patchHours error: URL is not valid.")
-                default:
-                    print("Pathing hours failed with error - \(error.localizedDescription)")
-                }
-                return nil
-            }
-            return "\(closed ? "Closed" : "Open"): \(formatter.string(from:openTime)) - \(formatter.string(from: closeTime))"
-            
-        } catch APIError.badResponse {
-            print("Could not fetch hours")
-        } catch APIError.noToken {
-            print("Could not fetch hours. No token.")
-        } catch APIError.badURL {
-            print("Could not fetch hours. URL is not valid.")
-        } catch {
-            print("Could not fetch hours - \(error.localizedDescription)")
-        }
-        return nil
     }
     
     func formatBarHours(hours: inout BarHours) -> String? {
@@ -168,23 +60,39 @@ final class BarViewModel: Mockable {
         return "\(closed ? "Closed" : "Open"): \(formatter.string(from: open)) - \(formatter.string(from: close))"
     }
     
+    @MainActor
     func getMostVotedWaitTime(barId: Int) async throws {
-        let votes = try await networkManager.fetchVoteSummaries().filter { $0.bar == barId }
-
-        var countMap: [String: Int] = [:]
-        votes.forEach { vote in
-            countMap[vote.waitTime, default: 0] += 1
-        }
-
-        guard let index = self.statuses.firstIndex(where: { $0.bar == barId }) else {
+        guard let index = statuses.firstIndex(where: { $0.bar == barId }) else {
             print("No status found for bar \(barId)")
             throw BarViewModelError.statusNotFound
         }
 
-        let mostVotedTime = countMap.max(by: { $0.value < $1.value })?.key ?? "<5 min"
-        self.statuses[index].waitTime = mostVotedTime
+        // 1. Check if we have a valid cached waitTime
+        let cacheDate = UserDefaults.standard.object(forKey: "barVotes_cache_timestamp") as? Date
+        let isCacheValid = cacheDate.map { Date().timeIntervalSince($0) < voteCacheExpiration } ?? false
 
-        try await networkManager.putBarStatus(self.statuses[index])
+        if isCacheValid && !statuses[index].waitTime.isEmpty {
+            print("Using in-memory cached wait time: \(statuses[index].waitTime)")
+            return
+        }
+
+        // 2. Otherwise clear any stale value and fetch anew
+        statuses[index].waitTime = ""
+        print("Fetching new wait time from server…")
+        let votes = try await networkManager.fetchAllVotes().filter { $0.bar == barId }
+
+        // aggregate votes
+        var countMap: [String: Int] = [:]
+        votes.forEach { countMap[$0.waitTime, default: 0] += 1 }
+        let mostVotedTime = countMap.max { $0.value < $1.value }?.key ?? "<5 min"
+        statuses[index].waitTime = mostVotedTime
+
+        // 3. Push update back to server (will also update URLCache + timestamp)
+        try await networkManager.putBarStatus(statuses[index])
+    }
+    
+    func hasCachedWaitTime(for barId: Int) -> Bool {
+        statuses.contains(where: { $0.bar == barId })
     }
     
     internal func isClosed(_ openTime: Date, _ closeTime: Date) -> Bool {
@@ -221,26 +129,37 @@ final class BarViewModel: Mockable {
         return now < openDate || now >= closeDate
     }
     
+    // MARK: - Error Handling
+
+    private func handleStatusCodeError(_ statusCode: Int) {
+        print("Encountered an error with status code \(statusCode): ", terminator: "")
+        switch statusCode {
+        case 403:
+            print("Forbidden. You do not have permission to perform this action.")
+        case 404:
+            print("Bar hours not found.")
+        case 400:
+            print("Bad request. Please check the data.")
+        case 500:
+            print("Server error. Please try again later.")
+        default:
+            print("Unexpected status code \(statusCode).")
+        }
+    }
     
     private func handleAPIError(_ error: APIError, context: String) {
-        print("\(context) ERROR:", terminator: " ")
+        print("\(context) ERROR -", terminator: " ")
         switch error {
         case .noToken:
             print("No token available. Please log in.")
-        case .badResponse(let statusCode):
-            print("Bad response from the server. Status code: \(statusCode)")
-        case .badURL:
+        case .statusCode(let statusCode):
+            handleStatusCodeError(statusCode)
+        case .invalidURL:
             print("The URL is not valid.")
-        case .serverError:
-            print("Server error occurred. Please try again later.")
-        case .transport(let transportError):
-            print("Transport error: \(transportError.localizedDescription)")
         case .encoding(let encodingError):
             print("Encoding error: \(encodingError.localizedDescription)")
         case .decoding(let decodingError):
             print("Decoding error: \(decodingError.localizedDescription)")
-        case .noUser:
-            print("No user is currently logged in.")
         }
     }
     
@@ -261,10 +180,15 @@ final class BarViewModel: Mockable {
     }
 }
 
+// MARK: - BarViewModel Preview
+// Indtended only for Xcode previews and testing
 extension BarViewModel {
-    static let PREVIEW: BarViewModel = {
+    static let preview: BarViewModel = {
         let viewModel = BarViewModel()
         viewModel.bars = Bar.sampleBars
+        viewModel.statuses = BarStatus.sampleStatuses
+        viewModel.hours = BarHours.sampleHours
+        
         return viewModel
     }()
 }

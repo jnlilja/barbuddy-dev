@@ -9,31 +9,32 @@ import Foundation
 
 /// All networking / auth‑related failures in one place.
 enum APIError: Error {
-    case badURL
+    case invalidURL(url: String)  // e.g. "https://api.example.com/resource"
     case noToken
-    case noUser
-    case badResponse(Int) // HTTP status code, e.g. 404, 500
-    case serverError
-    case transport(Error)    // URLSession / Auth failures
-    case encoding(Error)     // JSONEncoder / JSONSerialization failed
-    case decoding(Error)     // JSONDecoder failed
-}
+    case statusCode(Int)  // HTTP status code, e.g. 404, 500
+    case encoding(Error)  // JSONEncoder / JSONSerialization failed
+    case decoding(Error)  // JSONDecoder failed
 
-/// Human‑readable error strings (optional but nice for alerts).
-extension APIError: LocalizedError {
+    /// Returns a user-friendly error description for the APIError.
     var errorDescription: String? {
         switch self {
-        case .badURL:            return "Bad URL."
-        case .noToken:           return "No Firebase idToken."
-        case .transport(let e):  return e.localizedDescription
-        case .encoding(let e):   return "Encoding failed: \(e.localizedDescription)"
-        case .decoding(let e):   return "Decoding failed: \(e.localizedDescription)"
-        case .noUser:
-            return "No User"
-        case .badResponse:
-            return "Bad Request"
-        case .serverError:
-            return "Server Error"
+        case .invalidURL(let url):
+            return "\(url) is not a valid URL."
+        case .noToken:
+            return "No Firebase idToken. Please sign in."
+        case .encoding(let e):
+            return "Encoding failed: \(e.localizedDescription)"
+        case .decoding(let e):
+            switch e {
+            case DecodingError.dataCorrupted(let context):
+                return "Decoding failed: \(context.debugDescription)"
+            case DecodingError.typeMismatch(let type, let context):
+                return "Decoding failed: Expected type \(type) but found \(context.debugDescription)."
+            default:
+                return "Decoding failed: \(e.localizedDescription)"
+            }
+        case .statusCode(let code):
+            return "HTTP status code \(code) encountered."
         }
     }
 }
