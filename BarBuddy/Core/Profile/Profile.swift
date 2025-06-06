@@ -292,8 +292,8 @@ struct ProfileView: View {
         .alert("Confirm Sign Out", isPresented: $showSignOutAlert) {
             Button("Cancel", role: .cancel) {}
             Button("Sign Out") {
-                authVM.signOut()
                 URLCache.shared.removeAllCachedResponses()
+                authVM.signOut()
             }
         } message: {
             Text("Are you sure you want to sign out?")

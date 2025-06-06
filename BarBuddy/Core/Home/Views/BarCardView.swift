@@ -21,7 +21,7 @@ struct BarCardView: View {
             .waitTime
             .replacingOccurrences(of: "-", with: " - ")
             .replacingOccurrences(of: "<", with: "< ")
-            ?? ""
+            .replacingOccurrences(of: ">", with: "> ")
     }
     
     private var screenWidth: CGFloat {
@@ -38,7 +38,7 @@ struct BarCardView: View {
                 .minimumScaleFactor(0.5)
                 .lineLimit(1)
                 .font(.system(size: 32, weight: .bold))
-                .foregroundColor(colorScheme == .dark ? .neonPink : Color("DarkBlue"))
+                .foregroundColor(colorScheme == .dark ? .neonPink : .darkBlue)
             
             // Open Hours
             Text(hours ?? "Hours unavailable")
@@ -71,14 +71,12 @@ struct BarCardView: View {
                         }
                         else {
                             Group {
-                                if hours == nil {
-                                    Text("Unavailable")
-                                } else if let hours, hours.contains("Closed") {
+                                if let hours, hours.contains("Closed") {
                                     Text("Closed")
-                                } else if let waitTime, !waitTime.isEmpty {
+                                } else if let waitTime = waitTime {
                                     Text(waitTime)
                                 } else {
-                                    Text("< 5 min")
+                                    Text("Unavailable")
                                 }
                             }
                             .font(.title)

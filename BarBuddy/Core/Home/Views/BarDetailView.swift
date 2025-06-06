@@ -117,8 +117,7 @@ struct BarDetailView: View {
                             )
                             .opacity(
                                 loadingState == .closed
-                                || loadingState == .failed
-                                || loadingState == .loading ? 0.5 : 1
+                                || loadingState == .failed ? 0.5 : 1
                             )
                             .padding(.top)
                             
@@ -186,7 +185,7 @@ struct BarDetailView: View {
         }
     }
 }
-#Preview("Bar is Open", traits: .sizeThatFitsLayout) {
+#Preview("Bar is Open") {
     BarDetailView(
         bar: Bar.sampleBar
     )
@@ -194,7 +193,7 @@ struct BarDetailView: View {
     .environment(BarViewModel.preview)
 }
 
-#Preview("Bar is Closed", traits: .sizeThatFitsLayout) {
+#Preview("Bar is Closed") {
     BarDetailView(
         bar: Bar.sampleBar
     )

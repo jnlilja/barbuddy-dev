@@ -60,7 +60,6 @@ final class BarViewModel: Mockable {
         return "\(closed ? "Closed" : "Open"): \(formatter.string(from: open)) - \(formatter.string(from: close))"
     }
     
-    @MainActor
     func getMostVotedWaitTime(barId: Int) async throws {
         guard let index = statuses.firstIndex(where: { $0.bar == barId }) else {
             print("No status found for bar \(barId)")
@@ -99,35 +98,58 @@ final class BarViewModel: Mockable {
         let calendar = Calendar.current
         let now = Date()
         
-        // Today's date components
-        var openComponents = calendar.dateComponents([.year, .month, .day], from: now)
-        var closeComponents = openComponents
-
-        // Extract open and close time parts
-        let openHour = calendar.component(.hour, from: openTime)
-        let openMinute = calendar.component(.minute, from: openTime)
-        let closeHour = calendar.component(.hour, from: closeTime)
-        let closeMinute = calendar.component(.minute, from: closeTime)
+        // Extract hour and minute components from openTime and closeTime
+        let openComponents = calendar.dateComponents([.hour, .minute], from: openTime)
+        let closeComponents = calendar.dateComponents([.hour, .minute], from: closeTime)
         
-        openComponents.hour = openHour
-        openComponents.minute = openMinute
+        // Get today's date components
+        var todayComponents = calendar.dateComponents([.year, .month, .day], from: now)
         
-        closeComponents.hour = closeHour
-        closeComponents.minute = closeMinute
-
-        guard let openDate = calendar.date(from: openComponents),
-              var closeDate = calendar.date(from: closeComponents) else {
-            return true // Assume closed if dates can't be formed
+        // Construct openDate and closeDate for today
+        todayComponents.hour = openComponents.hour
+        todayComponents.minute = openComponents.minute
+        guard let openDate = calendar.date(from: todayComponents) else {
+            return true // Assume closed if openDate can't be formed
         }
         
-        // If close is earlier than open, assume it spills into next day
+        todayComponents.hour = closeComponents.hour
+        todayComponents.minute = closeComponents.minute
+        guard var closeDate = calendar.date(from: todayComponents) else {
+            return true // Assume closed if closeDate can't be formed
+        }
+        
+        // If closeDate is earlier than or equal to openDate, it means the bar closes the next day
         if closeDate <= openDate {
             closeDate = calendar.date(byAdding: .day, value: 1, to: closeDate)!
         }
         
-        // Return true if now is outside of the open-close window
+        // If current time is earlier than openDate, check if the bar was open the previous day
+        if now < openDate {
+            let yesterday = calendar.date(byAdding: .day, value: -1, to: now)!
+            var yesterdayComponents = calendar.dateComponents([.year, .month, .day], from: yesterday)
+            
+            yesterdayComponents.hour = openComponents.hour
+            yesterdayComponents.minute = openComponents.minute
+            guard let previousOpenDate = calendar.date(from: yesterdayComponents) else {
+                return true // Assume closed if previousOpenDate can't be formed
+            }
+            
+            yesterdayComponents.hour = closeComponents.hour
+            yesterdayComponents.minute = closeComponents.minute
+            guard var previousCloseDate = calendar.date(from: yesterdayComponents) else {
+                return true // Assume closed if previousCloseDate can't be formed
+            }
+            
+            if previousCloseDate <= previousOpenDate {
+                previousCloseDate = calendar.date(byAdding: .day, value: 1, to: previousCloseDate)!
+            }
+            
+            return now < previousOpenDate || now >= previousCloseDate
+        }
+        
         return now < openDate || now >= closeDate
     }
+
     
     // MARK: - Error Handling
 
