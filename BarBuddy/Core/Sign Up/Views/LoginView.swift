@@ -16,6 +16,7 @@ struct LoginView: View {
     @StateObject private var viewModel = SignUpViewModel()
     @State private var path = NavigationPath()
     @EnvironmentObject var authVM: AuthViewModel
+    @Environment(\.colorScheme) var colorScheme
     
     @FocusState private var focusedField: FocusField?
     
@@ -27,41 +28,46 @@ struct LoginView: View {
         NavigationStack(path: $path) {
             ZStack {
                 AnimatedBackgroundView()
-                Circle().scale(1.7).foregroundColor(.nude).opacity(0.15)
-                Circle().scale(1.35).foregroundColor(.nude).opacity(0.9)
+                Circle().scale(1.7).foregroundColor(colorScheme == .dark ? .salmon : .nude).opacity(0.15)
+                Circle().scale(1.35).foregroundColor(colorScheme == .dark ? .darkBlue : .nude).opacity(0.9)
                 
                 VStack(spacing: 15) {
                     Image(systemName: "party.popper.fill")
                         .font(.system(size: 60))
-                        .foregroundColor(Color("DarkPurple"))
+                        .foregroundColor(colorScheme == .dark ? .salmon : .darkPurple)
                         .padding(.bottom, 10)
                     
                     Text("BarBuddy")
                         .font(.largeTitle).bold()
-                        .foregroundColor(Color("DarkPurple"))
+                        .foregroundColor(colorScheme == .dark ? .salmon : .darkPurple)
                     
                     Text("Know Before You Go")
                         .font(.subheadline)
-                        .foregroundColor(Color("DarkPurple"))
+                        .foregroundColor(colorScheme == .dark ? .nude : .darkPurple)
                         .padding(.bottom, 30)
                     
-                    TextField("Email", text: $email)
+                    TextField("", text: $email, prompt: Text("Email")
+                        .foregroundStyle(colorScheme == .dark ? .nude : Color(.systemGray))
+                    )
                         .autocapitalization(.none)
                         .keyboardType(.emailAddress)
                         .padding()
                         .frame(width: 300, height: 50)
-                        .background(Color.white)
+                        .background(colorScheme == .dark ? .darkBlue : .white)
                         .cornerRadius(10)
                         .overlay(RoundedRectangle(cornerRadius: 10)
                             .stroke(Color("DarkPurple"), lineWidth: 1))
                         .focused($focusedField, equals: .email)
                         .submitLabel(.next)
                         .textContentType(.emailAddress)
+                        
                     
-                    SecureField("Password", text: $password)
+                    SecureField("Password", text: $password, prompt: Text("Password")
+                        .foregroundStyle(colorScheme == .dark ? .nude : Color(.systemGray))
+                    )
                         .padding()
                         .frame(width: 300, height: 50)
-                        .background(Color.white)
+                        .background(colorScheme == .dark ? .darkBlue : .white)
                         .cornerRadius(10)
                         .overlay(RoundedRectangle(cornerRadius: 10)
                             .stroke(Color("DarkPurple"), lineWidth: 1))
@@ -79,7 +85,7 @@ struct LoginView: View {
                         Text("Login")
                             .foregroundColor(.white)
                             .frame(width: 300, height: 50)
-                            .background(Color("DarkPurple"))
+                            .background(colorScheme == .dark ? .salmon : .darkPurple)
                             .cornerRadius(10)
                     }
                     .padding(.top, 25)
@@ -88,7 +94,7 @@ struct LoginView: View {
                         path.append(SignUpNavigation.createAccount)
                     }
                     .font(.subheadline)
-                    .foregroundColor(Color("DarkPurple"))
+                    .foregroundColor(colorScheme == .dark ? .nude : .darkPurple)
                 }
             }
             .onSubmit {

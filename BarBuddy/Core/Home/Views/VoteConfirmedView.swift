@@ -8,16 +8,17 @@ import SwiftUI
 
 struct VoteConfirmedView: View {
     @State private var isAnimating = false
+    @Environment(\.colorScheme) private var colorScheme
     var body: some View {
         ZStack {
             RoundedRectangle(cornerRadius: 15)
                 .foregroundStyle(
                     Gradient(colors: [
-                        .neonPink, .darkBlue,
+                        .neonPink, colorScheme == .dark ? .darkPurple : .darkBlue,
                     ]).opacity(0.7)
                 )
                 .frame(width: 300, height: 110)
-
+        
             HStack {
                 Image(systemName: "checkmark.circle.fill")
                     .font(.system(size: 60))

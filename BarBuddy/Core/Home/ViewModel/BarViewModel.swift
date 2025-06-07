@@ -9,13 +9,17 @@ import Foundation
 @MainActor
 @Observable
 final class BarViewModel: Mockable {
-    var bars: Bars = []
-    var statuses: [BarStatus] = []
-    var hours: [BarHours] = []
+    var bars: [Bar]
+    var statuses: [BarStatus]
+    var hours: [BarHours]
     var networkManager: NetworkTestable
+    private var hasFetchedBars = false
     
     init(networkManager: NetworkTestable = BarNetworkManager.shared) {
         self.networkManager = networkManager
+        self.bars = []
+        self.statuses = []
+        self.hours = []
     }
     
     private let voteCacheExpiration: TimeInterval = 60
@@ -44,7 +48,6 @@ final class BarViewModel: Mockable {
             throw error
         }
     }
-    
     func formatBarHours(hours: inout BarHours) -> String? {
         let formatter = DateFormatter()
         formatter.dateFormat = "h:mm a"

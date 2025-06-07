@@ -16,7 +16,7 @@ protocol NetworkTestable: Sendable {
     func putBarStatus(_ status: BarStatus) async throws
     func patchBarHours(id: Int, hour: BarHours) async throws
     func fetchAllBarHours() async throws -> [BarHours]
-    func fetchAllBars() async throws -> Bars
+    func fetchAllBars() async throws -> [Bar]
     func fetchStatuses() async throws -> [BarStatus]
     func fetchBarStatus(statusId: Int) async throws -> BarStatus
 }

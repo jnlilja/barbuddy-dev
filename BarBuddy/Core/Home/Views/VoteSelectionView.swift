@@ -56,7 +56,8 @@ struct VoteSelectionView: View {
                     }
                     .frame(width: 200)
                     .padding()
-                    .background(Color("Salmon").opacity(0.2))
+                    .background(colorScheme == .dark
+                                ? .nude : .salmon.opacity(0.2))
                     .foregroundColor(Color("DarkPurple"))
                     .cornerRadius(15)
                     .padding(.bottom, 30)

@@ -5,31 +5,13 @@
 //  Created by Andrew Betancourt on 2/25/25.
 //
 
-
-
 import SwiftUI
 
 struct HomeView: View {
     @State private var selectedTab = 0
 
     var body: some View {
-        // Coming in future updates
         TabView(selection: $selectedTab) {
-//
-//            SwipeView()
-//                .tabItem {
-//                    Image(systemName: "person.2.fill")
-//                    Text("Swipe")
-//                }
-//                .tag(0)
-//
-//            MessagesView()
-//                .tabItem {
-//                    Image(systemName: "message.fill")
-//                    Text("Messages")
-//                }
-//                .tag(1)
-//
             Group {
                 MainFeedView()
                     .tabItem {
@@ -38,17 +20,18 @@ struct HomeView: View {
                     }
                     .tag(0)
                 
-                ProfileView()
+                EmptyView()
                     .tabItem {
                         Image(systemName: "person.circle")
-                        Text("Profile")
+                        Text("Comming Soon")
                     }
+                    .sensoryFeedback(.selection, trigger: selectedTab)
                     .tag(1)
             }
             .toolbar(.visible, for: .tabBar)
             .toolbarBackground(.darkBlue, for: .tabBar)
         }
-        .sensoryFeedback(.selection, trigger: selectedTab)
+
         .tint(.salmon)
     }
 }

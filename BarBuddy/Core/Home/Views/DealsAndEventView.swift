@@ -100,19 +100,7 @@ struct DealsAndEventsView: View {
                 }
             }
         }
-        .navigationBarBackButtonHidden()
         .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) {
-                Button {
-                    dismiss()
-                } label: {
-                    HStack {
-                        Image(systemName: "chevron.left")
-                        Text("Map")
-                    }
-                    .foregroundColor(Color("Salmon"))
-                }
-            }
             ToolbarItem(placement: .principal) {
                 Text("Deals & Events")
                     .font(.headline)

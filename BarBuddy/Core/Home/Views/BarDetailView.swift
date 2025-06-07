@@ -58,7 +58,7 @@ struct BarDetailView: View {
                                         .stroke(style: StrokeStyle(lineWidth: 2))
                                         .foregroundStyle(.nude.opacity(0.5))
                                         .frame(width: 180, height: 130)
-                                        .background(.clear)
+                                        .background(.nude.opacity(0.15))
                                         .cornerRadius(15)
                                         .shadow(radius: 10)
                                 } else {
@@ -184,7 +184,7 @@ struct BarDetailView: View {
                 .navigationBarTitleDisplayMode(.inline)
             }
             .task {
-                print("Currently viewing Bar ID: \(bar.id)")
+                print("Currently viewing \(bar.name) with ID: \(bar.id)")
                 
                 // Only proceeds if the bar is currently not closed
                 guard let isClosed = isClosed, !isClosed else  {

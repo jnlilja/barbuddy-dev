@@ -6,6 +6,7 @@
 //
 
 import Foundation
+typealias Hours = [BarHours]
 
 struct BarHours: Codable, Identifiable, Hashable {
     let id: Int
