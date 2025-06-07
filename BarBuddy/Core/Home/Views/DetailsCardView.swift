@@ -13,32 +13,34 @@ struct DetailsCardView: View {
     let location: String
     let time: String
     let description: String
+    
+    @Environment(\.colorScheme) var colorScheme
 
     var body: some View {
         VStack(alignment: .center, spacing: 8) {
             Text(title)
                 .font(.system(size: 28, weight: .bold))
-                .foregroundColor(Color("DarkPurple"))
+                .foregroundColor(colorScheme == .dark ? .white : .darkPurple)
                 .multilineTextAlignment(.center)
 
             Text("@ \(location)")
                 .font(.title3)
-                .foregroundColor(Color("DarkPurple"))
+                .foregroundColor(colorScheme == .dark ? .salmon : .darkPurple)
                 .multilineTextAlignment(.center)
 
             Text(description)
                 .font(.subheadline)
-                .foregroundColor(.gray)
+                .foregroundColor(colorScheme == .dark ? .nude : .gray)
                 .multilineTextAlignment(.center)
 
             Text(time)
                 .font(.headline)
-                .foregroundColor(Color("DarkPurple"))
+                .foregroundColor(colorScheme == .dark ? .salmon : .darkPurple)
                 .multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity)
         .padding()
-        .background(Color.white)
+        .background(Color(.secondarySystemBackground))
         .cornerRadius(15)
         .padding(.horizontal)
         .shadow(radius: 2)

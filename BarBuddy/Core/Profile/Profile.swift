@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct ProfileView: View {
+    @Environment(\.colorScheme) var colorScheme
     @EnvironmentObject var authVM: AuthViewModel
     @State private var selectedTab: Int = 0
     @State private var searchText: String = ""
@@ -43,17 +44,17 @@ struct ProfileView: View {
                 Color("DarkBlue")
                     .ignoresSafeArea()
                 // ─── Main profile + tabs + content ───
-                Button {
-                    showSignOutAlert = true
-                } label: {
-                    Text("Log Out")
-                        .font(.headline)
-                        .foregroundColor(.white)
-                        .padding(.vertical, 14)
-                        .padding(.horizontal, 50)
-                        .background(Color("Salmon"))  // same hue as before
-                        .clipShape(Capsule())
-                }
+//                Button {
+//                    showSignOutAlert = true
+//                } label: {
+//                    Text("Log Out")
+//                        .font(.headline)
+//                        .foregroundColor(.white)
+//                        .padding(.vertical, 14)
+//                        .padding(.horizontal, 50)
+//                        .background(Color("Salmon"))  // same hue as before
+//                        .clipShape(Capsule())
+//                }
                 if let user = authVM.currentUser {
                     VStack(spacing: 25) {
                         // Profile header
@@ -288,17 +289,7 @@ struct ProfileView: View {
             //                }
 
         }
-        .tint(Color("Salmon"))
-        .alert("Confirm Sign Out", isPresented: $showSignOutAlert) {
-            Button("Cancel", role: .cancel) {}
-            Button("Sign Out") {
-                URLCache.shared.removeAllCachedResponses()
-                authVM.signOut()
-            }
-        } message: {
-            Text("Are you sure you want to sign out?")
-        }
-        .tint(.darkPurple)
+        .tint(.salmon)
     }
 }
 
@@ -389,13 +380,13 @@ struct InfoItem: Identifiable {
                 let vm = AuthViewModel()
                 vm.currentUser = GetUser(
                     id: 1,
-                    username: "jdoe",
-                    first_name: "John",
-                    last_name: "Doe",
+                    username: "andbet",
+                    first_name: "Andrew",
+                    last_name: "Betancourt",
                     date_of_birth: "1990-01-01",
-                    email: "jdoe@example.com",
+                    email: "andbet@example.com",
                     password: "",
-                    hometown: "Springfield",
+                    hometown: "San Diego",
                     job_or_university: "Example U",
                     favorite_drink: "Coffee",
                     location: "Springfield",

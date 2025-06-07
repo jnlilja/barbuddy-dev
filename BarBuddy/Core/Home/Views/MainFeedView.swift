@@ -11,6 +11,7 @@ struct MainFeedView: View {
     @Environment(MapViewModel.self) var viewModel
     @Environment(BarViewModel.self) var barViewModel
     @Environment(\.colorScheme) var colorScheme
+    @EnvironmentObject var authViewModel: AuthViewModel
     
     @State private var bottomSheetPosition: BottomSheetPosition = .relative(0.86)
     @State private var searchText = ""
@@ -20,6 +21,7 @@ struct MainFeedView: View {
     @State private var isLoading = true
     @State private var isErrorPresented = false
     @State private var toggleBarError = false
+    @State private var showSignOutAlert: Bool = false
     
     let locationViewModel = LocationManager()
     
@@ -35,7 +37,7 @@ struct MainFeedView: View {
             mapLayer
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbarBackgroundVisibility(.hidden, for: .navigationBar)
-                .toolbar { toolbarContent }
+                .toolbar { toolbarContent; logOut }
                 .bottomSheet(
                     bottomSheetPosition: $bottomSheetPosition,
                     switchablePositions: [
@@ -53,6 +55,10 @@ struct MainFeedView: View {
                 .enableAppleScrollBehavior()
                 .isResizable()
                 .ignoresSafeArea(.keyboard)
+                .sensoryFeedback(trigger: showSignOutAlert) {
+                    // Only apply haptics when tapped on logout icon
+                    return $1 ? .selection : .none
+                }
         }
         .task {
             if barViewModel.bars.isEmpty {
@@ -66,6 +72,7 @@ struct MainFeedView: View {
             }
             isLoading = false
         }
+        .tint(.salmon)
         .environment(viewModel)
         .alert("Error Loading Data", isPresented: $isErrorPresented) {
             Button("Retry") {
@@ -86,6 +93,16 @@ struct MainFeedView: View {
         } message: {
             Text("There was an error loading the bar data. Please try again.")
         }
+        .alert("Confirm Sign Out", isPresented: $showSignOutAlert) {
+            Button("Cancel", role: .cancel) {}
+            Button("Sign Out") {
+                URLCache.shared.removeAllCachedResponses()
+                authViewModel.signOut()
+            }
+        } message: {
+            Text("Are you sure you want to sign out?")
+        }
+        .tint(colorScheme == .dark ? .salmon : .darkPurple)
     }
     // MARK: — Map Layer
     private var mapLayer: some View {
@@ -155,7 +172,7 @@ struct MainFeedView: View {
                 ForEach(0..<3) { _ in
                     SkeletonBarCardView()
                 }
-                    .padding([.horizontal, .bottom])
+                .padding([.horizontal, .bottom])
             } else {
                 if toggleBarError || isErrorPresented {
                     Button {
@@ -185,7 +202,9 @@ struct MainFeedView: View {
                         BarCardView(bar: bar)
                             .environment(viewModel)
                             .padding([.horizontal, .bottom])
-                            .transition(.opacity.combined(with: .move(edge: .bottom)))
+                            .transition(
+                                .opacity.combined(with: .move(edge: .bottom))
+                            )
                     }
                 }
             }
@@ -208,9 +227,27 @@ struct MainFeedView: View {
                 .animation(.easeInOut, value: bottomSheetPosition)
         }
     }
+    private var logOut: some ToolbarContent {
+        ToolbarItem(placement: .destructiveAction) {
+            Button {
+                showSignOutAlert = true
+            } label: {
+                Image(systemName: "door.left.hand.open")
+                    .fontDesign(.rounded)
+                    .fontWeight(.heavy)
+                    .foregroundStyle(
+                        (colorScheme == .dark
+                         || bottomSheetPosition == .relativeTop(1))
+                        ? .salmon : .darkBlue
+                    )
+                    .animation(.easeInOut, value: bottomSheetPosition)
+            }
+        }
+    }
 }
 #Preview {
     MainFeedView()
         .environment(MapViewModel())
         .environment(BarViewModel.preview)
+        .environmentObject(AuthViewModel())
 }

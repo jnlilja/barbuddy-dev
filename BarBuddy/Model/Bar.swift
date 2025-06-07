@@ -4,17 +4,7 @@
 //
 //  Created by Andrew Betancourt on 3/20/25.
 //
-
-// TODO: Refactor Bar model to remove unnecessary properties
-// Remove averagePrices
-// Remove address
-// Remove usersAtBar
-// Remove currentUserCount
-// Remove Location (as a separate struct)
-
 import CoreLocation
-
-typealias Bars = [Bar]
 
 struct Bar: Codable, Identifiable, Hashable {
     let id: Int
