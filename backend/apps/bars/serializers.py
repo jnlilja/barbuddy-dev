@@ -3,6 +3,7 @@ from django.contrib.gis.geos import Point
 from django.db.models import Avg
 from django.contrib.auth import get_user_model
 from django.utils import timezone
+from datetime import timedelta
 
 from .models import Bar, BarStatus, BarRating, BarVote, BarImage, BarHours, BarCrowdSize
 
@@ -16,25 +17,22 @@ class BarImageSerializer(serializers.ModelSerializer):
 
 # First, create a serializer for the status object 
 class BarStatusSerializer(serializers.ModelSerializer):
-    # Add a numeric representation of crowd_size
-    
+    crowd_size = serializers.SerializerMethodField()
+    wait_time = serializers.SerializerMethodField()
+
     class Meta:
         model = BarStatus
-        fields = ['id', 'bar', 'crowd_size',  'wait_time', 'last_updated']
-    
-    def get_crowd_size_value(self, obj):
-        """Convert string crowd_size to integer for mobile clients"""
-        crowd_size_map = {
-            'empty': 0,
-            'light': 1,
-            'moderate': 2,
-            'busy': 3,
-            'packed': 4
-        }
-        
-        if obj.crowd_size:
-            return crowd_size_map.get(obj.crowd_size.lower(), 2)  # default to moderate (2) if unknown value
-        return None
+        fields = ['id', 'bar', 'crowd_size', 'wait_time', 'last_updated']
+
+    def get_crowd_size(self, obj):
+        if obj.last_updated and timezone.now() - obj.last_updated > timedelta(hours=5):
+            return "N/A"
+        return obj.crowd_size
+
+    def get_wait_time(self, obj):
+        if obj.last_updated and timezone.now() - obj.last_updated > timedelta(hours=5):
+            return "N/A"
+        return obj.wait_time
 
 
 # Create a separate serializer specifically for nested use in BarSerializer

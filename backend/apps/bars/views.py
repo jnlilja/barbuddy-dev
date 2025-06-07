@@ -226,7 +226,7 @@ class BarRatingViewSet(viewsets.ModelViewSet):
 class BarVoteViewSet(viewsets.ModelViewSet):
     """
     ViewSet for submitting votes on wait time.
-    Enforces one vote per user per 24h window.
+    Enforces one vote per user per 5-minute window.
     """
     serializer_class = BarVoteSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -238,11 +238,9 @@ class BarVoteViewSet(viewsets.ModelViewSet):
             qs = qs.filter(bar__id=bar_id)
         return qs
 
-
-
     def perform_create(self, serializer):
-        # prevent re-vote within 24h
-        cutoff = timezone.now() - timedelta(hours=24)
+        # prevent re-vote within 5 minutes
+        cutoff = timezone.now() - timedelta(minutes=5)
         recent = BarVote.objects.filter(
             bar=serializer.validated_data['bar'],
             user=self.request.user,
@@ -250,7 +248,7 @@ class BarVoteViewSet(viewsets.ModelViewSet):
         ).first()
         if recent:
             raise serializers.ValidationError(
-                "You can only vote once every 24 hours for this bar's wait time."
+                "You can only vote once every 5 minutes for this bar's wait time."
             )
         serializer.save(user=self.request.user)
 
@@ -258,7 +256,7 @@ class BarVoteViewSet(viewsets.ModelViewSet):
 class BarCrowdSizeViewSet(viewsets.ModelViewSet):
     """
     ViewSet for submitting votes on crowd size.
-    Enforces one vote per user per 24h window.
+    Enforces one vote per user per 5-minute window.
     """
     serializer_class = BarCrowdSizeSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -282,8 +280,8 @@ class BarCrowdSizeViewSet(viewsets.ModelViewSet):
         })
 
     def perform_create(self, serializer):
-        # prevent re-vote within 24h
-        cutoff = timezone.now() - timedelta(hours=24)
+        # prevent re-vote within 5 minutes
+        cutoff = timezone.now() - timedelta(minutes=5)
         recent = BarCrowdSize.objects.filter(
             bar=serializer.validated_data['bar'],
             user=self.request.user,
@@ -291,7 +289,7 @@ class BarCrowdSizeViewSet(viewsets.ModelViewSet):
         ).first()
         if recent:
             raise serializers.ValidationError(
-                "You can only vote once every 24 hours for this bar's crowd size."
+                "You can only vote once every 5 minutes for this bar's crowd size."
             )
         serializer.save(user=self.request.user)
 
