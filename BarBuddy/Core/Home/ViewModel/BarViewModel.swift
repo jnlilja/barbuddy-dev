@@ -80,7 +80,6 @@ final class BarViewModel: Mockable {
         }
 
         // Clear stale in-memory value before fetching
-        statuses[index].waitTime = ""
         print("Fetching new wait time from server...")
 
         let votes = try await networkManager.fetchAllVotes().filter { $0.bar == barId }
@@ -95,10 +94,10 @@ final class BarViewModel: Mockable {
         cacheWaitTime(mostVotedTime, for: barId)
 
         // Only send to server if new value is different than the old one
-        let previousServerStatus = try? await networkManager.fetchBarStatus(statusId: barId)
+        let previousServerStatus = try? await networkManager.fetchBarStatus(statusId: statuses[index].id)
         if previousServerStatus?.waitTime != mostVotedTime {
             try await networkManager.putBarStatus(statuses[index])
-            print("Updated server with new most voted wait time: \(mostVotedTime)")
+            print("\nUpdated server with new most voted wait time: \(mostVotedTime)")
         } else {
             print("Server already has most voted time, skipping update.")
         }

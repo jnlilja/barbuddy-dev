@@ -126,9 +126,9 @@ struct MainFeedView: View {
                     .clipShape(Circle())
                     .foregroundStyle(Gradient(colors: [.salmon, .neonPink]))
             }
-            Image(systemName: "wineglass.fill")
-                .font(.headline)
-                .foregroundColor(.white)
+            Image("cocktail")
+                .resizable()
+                .frame(width: 18, height: 18)
         }
     }
     private var headerView: some View {

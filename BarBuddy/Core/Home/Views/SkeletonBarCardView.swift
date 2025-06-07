@@ -25,7 +25,7 @@ struct SkeletonBarCardView: View {
                 .hidden()
             
             Rectangle()
-                .fill(Color("DarkPurple").opacity(0.3))
+                .fill(.darkPurple.opacity(0.3))
                 .frame(height: 200)
                 .cornerRadius(10)
             

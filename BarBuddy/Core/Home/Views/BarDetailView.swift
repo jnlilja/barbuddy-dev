@@ -159,7 +159,21 @@ struct BarDetailView: View {
                             .foregroundColor(colorScheme == .dark ? .neonPink : .darkPurple)
                         Group {
                             Text("Follow us on IG for events and updates!")
-                            Text("@barbuddy.pb")
+                            HStack {
+                                Image("instagram-logo")
+                                Text("@barbuddy.pb")
+                            }
+                            .onTapGesture {
+                                let username = "barbuddy.pb"
+                                    let appURL = URL(string: "instagram://user?username=\(username)")!
+                                    let webURL = URL(string: "https://www.instagram.com/\(username)")!
+
+                                    if UIApplication.shared.canOpenURL(appURL) {
+                                        UIApplication.shared.open(appURL)
+                                    } else {
+                                        UIApplication.shared.open(webURL)
+                                    }
+                            }
                         }
                         .foregroundStyle(colorScheme == .dark ? .nude : .darkBlue)
                         .font(.callout)
@@ -171,12 +185,14 @@ struct BarDetailView: View {
             }
             .task {
                 print("Currently viewing Bar ID: \(bar.id)")
-                if isClosed != nil {
-                    loadingState = .closed; return
-                } else {
-                    loadingState = .failed
+                
+                // Only proceeds if the bar is currently not closed
+                guard let isClosed = isClosed, !isClosed else  {
+                    loadingState = isClosed == nil ? .failed : .closed
+                    return
                 }
                 
+                // Check if votes cache is not expired
                 let cacheDate = UserDefaults.standard.object(forKey: "barVotes_cache_timestamp") as? Date
                 let isCacheValid = cacheDate.map { Date().timeIntervalSince($0) < voteCacheExpiration } ?? false
                 
@@ -191,6 +207,7 @@ struct BarDetailView: View {
                     print("Bar Vote Cache Expired, fetching new data...")
                 }
                 
+                // Get most popular wait time
                 loadingState = .loading
                 do {
                     try await barViewModel.getMostVotedWaitTime(barId: bar.id)
