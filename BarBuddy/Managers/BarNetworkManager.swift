@@ -12,13 +12,17 @@ import Foundation
 actor BarNetworkManager: NetworkTestable {
     static let shared = BarNetworkManager()
     private let session: URLSession
-    private let baseURL = AppConfig.baseURL
+    private let baseURL: String
     private let encoder: JSONEncoder
     private let decoder: JSONDecoder
     private let timeStampDecoder: JSONDecoder
+    
+    private let voteCacheExpiration: TimeInterval = 60
+    private let barHoursCacheExpiration: TimeInterval = 3600 // 1 hour
                 
     internal init(session: URLSession = .shared) {
         self.session = session
+        self.baseURL = AppConfig.baseURL
         self.encoder = JSONEncoder()
         self.decoder = JSONDecoder.timeOnly
         self.timeStampDecoder = JSONDecoder.microseconds.copy()
@@ -179,7 +183,7 @@ actor BarNetworkManager: NetworkTestable {
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         
         let (_, response) = try await session.data(for: request)
-        if let response = response as? HTTPURLResponse, !(200...299).contains(response.statusCode)  {
+        if let response = response as? HTTPURLResponse, !(200...299).contains(response.statusCode) {
             throw APIError.statusCode(response.statusCode)
         }
     }
