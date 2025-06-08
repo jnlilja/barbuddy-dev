@@ -131,11 +131,11 @@ DATABASES = {
         'NAME': env('DB_NAME'),
         'USER': env('DB_USER'),
         'PASSWORD': env('DB_PASSWORD'),
-        'HOST': env('HOST'),
-        'PORT': env('DB_PORT'),
+        'HOST': f"/cloudsql/{env('INSTANCE_CONNECTION_NAME')}",  # Unix socket path
+        'PORT': '',  # Leave empty for socket
         'CONN_MAX_AGE': 60,
         'OPTIONS': {
-            'connect_timeout': 5, # time out if db connection can't be established in 5 seconds
+            'connect_timeout': 5,
         },
     }
 }
