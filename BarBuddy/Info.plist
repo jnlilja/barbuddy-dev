@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>API_BASE_URL</key>
-	<string>https://barbuddy-backend-148659891217.us-west1.run.app/</string>
+	<string>https://barbuddy-backend-148659891217.us-west1.run.app/api/</string>
 	<key>LSApplicationQueriesSchemes</key>
 	<array>
 		<string>instagram</string>
