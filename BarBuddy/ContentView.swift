@@ -10,12 +10,21 @@ import SwiftUI
 struct ContentView: View {
     @State private var barViewModel = BarViewModel()
     @EnvironmentObject var authViewModel: AuthViewModel
+    @Environment(\.scenePhase) var scenePhase
+    
     var body: some View {
-        if authViewModel.authUser != nil {
-            HomeView()
-                .environment(barViewModel)
-        } else {
-            LoginView()
+        Group {
+            if authViewModel.authUser != nil {
+                HomeView()
+                    .environment(barViewModel)
+            } else {
+                LoginView()
+            }
+        }
+        .onChange(of: scenePhase) { _, newPhase in
+            Task {
+                await barViewModel.handleScenePhaseChange(scenePhase)
+            }
         }
     }
 }

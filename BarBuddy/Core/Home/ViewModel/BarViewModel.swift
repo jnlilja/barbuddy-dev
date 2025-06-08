@@ -4,7 +4,9 @@
 //
 //  Created by Andrew Betancourt on 6/1/25.
 //
+
 import Foundation
+import SwiftUI
 
 @MainActor
 @Observable
@@ -12,17 +14,97 @@ final class BarViewModel: Mockable {
     var bars: [Bar]
     var statuses: [BarStatus]
     var hours: [BarHours]
-    var networkManager: NetworkTestable
-    private var hasFetchedBars = false
+    @ObservationIgnored var networkManager: NetworkTestable
+    @ObservationIgnored private var hasFetchedBars = false
+    
+    // Background refresh timers
+    @ObservationIgnored private var statusRefreshTimer: Timer?
+    @ObservationIgnored private let statusRefreshInterval: TimeInterval = 300 // 5 minutes
+    @ObservationIgnored private let voteCacheExpiration: TimeInterval = 600 // 10 minutes
+    
+    // Track last refresh time
+    @ObservationIgnored private var lastRefreshTime: Date = Date()
     
     init(networkManager: NetworkTestable = BarNetworkManager.shared) {
         self.networkManager = networkManager
         self.bars = []
         self.statuses = []
         self.hours = []
+        
+        startStatusRefreshTimer()
     }
     
-    private let voteCacheExpiration: TimeInterval = 60
+    func handleScenePhaseChange(_ scenePhase: ScenePhase) async {
+        switch scenePhase {
+        case .active:
+            print("App is now in the foreground.")
+            let timeSinceLastRefresh = Date().timeIntervalSince(lastRefreshTime)
+            
+            // If more than 5 minutes have passed, refresh immediately
+            if timeSinceLastRefresh >= statusRefreshInterval {
+                print("App became active, refreshing data immediately...")
+                await refreshBarStatuses()
+            }
+            
+            // Restart timer if it's not running
+            if statusRefreshTimer == nil {
+                startStatusRefreshTimer()
+            }
+            
+        case .background:
+            // Stop timer to save battery when in background
+            stopStatusRefreshTimer()
+            
+        case .inactive:
+            // Do nothing for inactive state
+            break
+            
+        @unknown default:
+            break
+        }
+    }
+    
+    // Background refresh methods
+    private func startStatusRefreshTimer() {
+        statusRefreshTimer?.invalidate()
+        statusRefreshTimer = Timer.scheduledTimer(withTimeInterval: statusRefreshInterval, repeats: true) { [weak self] _ in
+            Task { @MainActor in
+                await self?.refreshBarStatuses()
+            }
+        }
+    }
+    
+    private func refreshBarStatuses() async {
+        do {
+            print("Background refresh: Checking cache first...")
+            
+            // Check if we have valid cached data
+            let cacheDate = UserDefaults.standard.object(forKey: "barStatuses_cache_timestamp") as? Date
+            let isCacheValid = cacheDate.map { Date().timeIntervalSince($0) < voteCacheExpiration } ?? false
+            
+            if isCacheValid {
+                print("Background refresh: Cache still valid, skipping network request")
+                return
+            }
+            
+            print("Background refresh: Cache expired, fetching fresh data...")
+            let fetchedStatuses = try await networkManager.fetchStatuses()
+            self.statuses = fetchedStatuses
+            self.lastRefreshTime = Date()
+            
+            // Update cache timestamp
+            UserDefaults.standard.set(Date(), forKey: "barStatuses_cache_timestamp")
+            
+            print("Background refresh: Successfully updated \(fetchedStatuses.count) bar statuses")
+        } catch {
+            print("Background refresh error: \(error)")
+        }
+    }
+    
+    func stopStatusRefreshTimer() {
+        statusRefreshTimer?.invalidate()
+        statusRefreshTimer = nil
+    }
     
     // MARK: - Load Data
     
@@ -32,7 +114,6 @@ final class BarViewModel: Mockable {
         async let fetchedHours = networkManager.fetchAllBarHours()
 
         do {
-            // Wait for all results concurrently
             let (statuses, bars, hours) = try await (fetchedStatuses, fetchedBars, fetchedHours)
             self.statuses = statuses
             self.bars = bars
@@ -48,6 +129,7 @@ final class BarViewModel: Mockable {
             throw error
         }
     }
+    
     func formatBarHours(hours: inout BarHours) -> String? {
         let formatter = DateFormatter()
         formatter.dateFormat = "h:mm a"
@@ -72,7 +154,6 @@ final class BarViewModel: Mockable {
         let cacheDate = UserDefaults.standard.object(forKey: "barVotes_cache_timestamp") as? Date
         let isCacheValid = cacheDate.map { Date().timeIntervalSince($0) < voteCacheExpiration } ?? false
 
-        // Try loading wait time from UserDefaults cache if valid
         if isCacheValid {
             if let waitTimeCache = UserDefaults.standard.dictionary(forKey: "barVotes_wait_time_cache") as? [String: String],
                let cachedTime = waitTimeCache["\(barId)"], !cachedTime.isEmpty {
@@ -82,21 +163,17 @@ final class BarViewModel: Mockable {
             }
         }
 
-        // Clear stale in-memory value before fetching
         print("Fetching new wait time from server...")
 
         let votes = try await networkManager.fetchAllVotes().filter { $0.bar == barId }
 
-        // Aggregate to find most voted wait time
         var countMap: [String: Int] = [:]
         votes.forEach { countMap[$0.waitTime, default: 0] += 1 }
-        let mostVotedTime = countMap.max { $0.value < $1.value }?.key ?? "<5 min"
+        let mostVotedTime = countMap.max { $0.value < $1.value }?.key ?? "< 5 min"
 
-        // Cache the aggregated result
         statuses[index].waitTime = mostVotedTime
         cacheWaitTime(mostVotedTime, for: barId)
 
-        // Only send to server if new value is different than the old one
         let previousServerStatus = try? await networkManager.fetchBarStatus(statusId: statuses[index].id)
         if previousServerStatus?.waitTime != mostVotedTime {
             try await networkManager.putBarStatus(statuses[index])
@@ -121,32 +198,27 @@ final class BarViewModel: Mockable {
         let calendar = Calendar.current
         let now = Date()
         
-        // Extract hour and minute components from openTime and closeTime
         let openComponents = calendar.dateComponents([.hour, .minute], from: openTime)
         let closeComponents = calendar.dateComponents([.hour, .minute], from: closeTime)
         
-        // Get today's date components
         var todayComponents = calendar.dateComponents([.year, .month, .day], from: now)
         
-        // Construct openDate and closeDate for today
         todayComponents.hour = openComponents.hour
         todayComponents.minute = openComponents.minute
         guard let openDate = calendar.date(from: todayComponents) else {
-            return true // Assume closed if openDate can't be formed
+            return true
         }
         
         todayComponents.hour = closeComponents.hour
         todayComponents.minute = closeComponents.minute
         guard var closeDate = calendar.date(from: todayComponents) else {
-            return true // Assume closed if closeDate can't be formed
+            return true
         }
         
-        // If closeDate is earlier than or equal to openDate, it means the bar closes the next day
         if closeDate <= openDate {
             closeDate = calendar.date(byAdding: .day, value: 1, to: closeDate)!
         }
         
-        // If current time is earlier than openDate, check if the bar was open the previous day
         if now < openDate {
             let yesterday = calendar.date(byAdding: .day, value: -1, to: now)!
             var yesterdayComponents = calendar.dateComponents([.year, .month, .day], from: yesterday)
@@ -154,13 +226,13 @@ final class BarViewModel: Mockable {
             yesterdayComponents.hour = openComponents.hour
             yesterdayComponents.minute = openComponents.minute
             guard let previousOpenDate = calendar.date(from: yesterdayComponents) else {
-                return true // Assume closed if previousOpenDate can't be formed
+                return true
             }
             
             yesterdayComponents.hour = closeComponents.hour
             yesterdayComponents.minute = closeComponents.minute
             guard var previousCloseDate = calendar.date(from: yesterdayComponents) else {
-                return true // Assume closed if previousCloseDate can't be formed
+                return true
             }
             
             if previousCloseDate <= previousOpenDate {
@@ -173,8 +245,6 @@ final class BarViewModel: Mockable {
         return now < openDate || now >= closeDate
     }
     
-    // MARK: - Error Handling
-
     private func handleStatusCodeError(_ statusCode: Int) {
         print("Encountered an error with status code \(statusCode): ", terminator: "")
         switch statusCode {

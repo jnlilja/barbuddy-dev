@@ -32,6 +32,7 @@ struct BarBuddyApp: App {
         }
     }
 }
+
 /* Loads the RocketSim Connect framework for debugging purposes. This won't be included in production builds,
     but is a useful debugging tool.
  */
@@ -53,4 +54,3 @@ enum AppConfig {
         return baseURL
     }
 }
-
