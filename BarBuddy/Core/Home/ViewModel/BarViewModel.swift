@@ -290,7 +290,6 @@ extension BarViewModel {
         viewModel.bars = Bar.sampleBars
         viewModel.statuses = BarStatus.sampleStatuses
         viewModel.hours = BarHours.sampleHours
-        viewModel.networkManager = MockBarNetworkManager()
         
         return viewModel
     }()
