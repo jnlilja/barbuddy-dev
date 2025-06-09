@@ -3,6 +3,7 @@
 //
 //  Created by Andrew Betancourt on 2/25/25.
 //
+
 import SwiftUI
 import MapKit
 import SDWebImageSwiftUI
@@ -123,6 +124,7 @@ struct BarCardView: View {
         
     }
 }
+
 #Preview(traits: .sizeThatFitsLayout) {
     NavigationStack {
         BarCardView(bar: Bar.sampleBar)
@@ -131,5 +133,3 @@ struct BarCardView: View {
             .padding()
     }
 }
-
-

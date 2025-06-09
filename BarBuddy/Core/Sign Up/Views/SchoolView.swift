@@ -5,7 +5,6 @@
 //  Created by Andrew Betancourt on 2/25/25.
 //
 
-
 import SwiftUI
 
 struct SchoolView: View {
@@ -14,7 +13,7 @@ struct SchoolView: View {
     @State private var major              = ""
     @State private var showOnProfile      = true
     @Binding var path: NavigationPath
-    @EnvironmentObject var viewModel: SignUpViewModel
+    @Environment(SignUpViewModel.self) var viewModel
 
     var body: some View {
         ZStack {
@@ -84,6 +83,7 @@ struct SchoolView: View {
 }
 
 #Preview("School") {
+    @Previewable @State var signUpViewModel = SignUpViewModel()
     SchoolView(path: .constant(NavigationPath()))
-        .environmentObject(SignUpViewModel())
+        .environment(signUpViewModel)
 }

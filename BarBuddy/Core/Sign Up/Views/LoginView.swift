@@ -13,7 +13,7 @@ struct LoginView: View {
     @State private var password           = ""
     @State private var alertMessage       = ""
     
-    @StateObject private var viewModel = SignUpViewModel()
+    @State private var viewModel = SignUpViewModel()
     @State private var path = NavigationPath()
     @EnvironmentObject var authVM: AuthViewModel
     @Environment(\.colorScheme) var colorScheme
@@ -107,7 +107,7 @@ struct LoginView: View {
             }
             .navigationDestination(for: SignUpNavigation.self) { view in
                 switch view {
-                case .createAccount: SignUpView(path: $path)
+                case .createAccount: SignUpView(path: $path).environment(viewModel)
 //                case .ageVerification: AgeVerificationView(path: $path)
 //                case .nameEntry: NameEntryView(path: $path)
 //                case .location: LocationView(path: $path)
@@ -120,13 +120,11 @@ struct LoginView: View {
                 }
             }
         }
-        .environmentObject(viewModel)
         .tint(.salmon)
     }
 }
 
 #Preview("Login View") {
     LoginView()
-        .environmentObject(SignUpViewModel())
         .environmentObject(AuthViewModel())
 }

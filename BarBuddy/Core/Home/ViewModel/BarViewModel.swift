@@ -8,7 +8,6 @@
 import Foundation
 import SwiftUI
 
-@MainActor
 @Observable
 final class BarViewModel: Mockable {
     var bars: [Bar]
@@ -20,7 +19,6 @@ final class BarViewModel: Mockable {
     // Background refresh timers
     @ObservationIgnored private var statusRefreshTimer: Timer?
     @ObservationIgnored private let statusRefreshInterval: TimeInterval = 300 // 5 minutes
-    @ObservationIgnored private let voteCacheExpiration: TimeInterval = 600 // 10 minutes
     
     // Track last refresh time
     @ObservationIgnored private var lastRefreshTime: Date = Date()
@@ -37,7 +35,6 @@ final class BarViewModel: Mockable {
     func handleScenePhaseChange(_ scenePhase: ScenePhase) async {
         switch scenePhase {
         case .active:
-            print("App is now in the foreground.")
             let timeSinceLastRefresh = Date().timeIntervalSince(lastRefreshTime)
             
             // If more than 5 minutes have passed, refresh immediately
@@ -76,28 +73,13 @@ final class BarViewModel: Mockable {
     
     private func refreshBarStatuses() async {
         do {
-            print("Background refresh: Checking cache first...")
-            
-            // Check if we have valid cached data
-            let cacheDate = UserDefaults.standard.object(forKey: "barStatuses_cache_timestamp") as? Date
-            let isCacheValid = cacheDate.map { Date().timeIntervalSince($0) < voteCacheExpiration } ?? false
-            
-            if isCacheValid {
-                print("Background refresh: Cache still valid, skipping network request")
-                return
-            }
-            
-            print("Background refresh: Cache expired, fetching fresh data...")
+            print("Background refresh: Fetching bar statuses...")
             let fetchedStatuses = try await networkManager.fetchStatuses()
             self.statuses = fetchedStatuses
             self.lastRefreshTime = Date()
             
-            // Update cache timestamp
-            UserDefaults.standard.set(Date(), forKey: "barStatuses_cache_timestamp")
-            
-            print("Background refresh: Successfully updated \(fetchedStatuses.count) bar statuses")
         } catch {
-            print("Background refresh error: \(error)")
+            print("Background refresh error: \(error.localizedDescription)")
         }
     }
     
@@ -109,24 +91,39 @@ final class BarViewModel: Mockable {
     // MARK: - Load Data
     
     func loadBarData() async throws {
-        async let fetchedStatuses = networkManager.fetchStatuses()
-        async let fetchedBars = networkManager.fetchAllBars()
-        async let fetchedHours = networkManager.fetchAllBarHours()
+        var retries = 0
+        let maxRetries = 3
+        let retryDelay: UInt64 = 2_000_000_000 // 2 seconds in nanoseconds
 
-        do {
-            let (statuses, bars, hours) = try await (fetchedStatuses, fetchedBars, fetchedHours)
-            self.statuses = statuses
-            self.bars = bars
-            self.hours = hours
-        } catch let error as NSError where error.domain == NSURLErrorDomain {
-            handleNetworkError(error, context: "Load Bar Data")
-            throw error
-        } catch let apiError as APIError {
-            handleAPIError(apiError, context: "Load Bar Data")
-            throw apiError
-        } catch {
-            print("Load Bar Data ERROR - \(error)")
-            throw error
+        while retries < maxRetries {
+            do {
+                // Attempt to fetch bar data
+                async let fetchedStatuses = networkManager.fetchStatuses()
+                async let fetchedBars = networkManager.fetchAllBars()
+                async let fetchedHours = networkManager.fetchAllBarHours()
+                
+                do {
+                    let (statuses, bars, hours) = try await (fetchedStatuses, fetchedBars, fetchedHours)
+                    self.statuses = statuses
+                    self.bars = bars
+                    self.hours = hours
+                    retries = maxRetries // Exit loop on success
+                } catch let error as NSError where error.domain == NSURLErrorDomain {
+                    handleNetworkError(error, context: "Load Bar Data")
+                    retries += 1
+                    try await Task.sleep(nanoseconds: retryDelay)
+                } catch let apiError as APIError {
+                    handleAPIError(apiError, context: "Load Bar Data")
+                    retries += 1
+                    try await Task.sleep(nanoseconds: retryDelay)
+                } catch {
+                    print("Load Bar Data ERROR - \(error)")
+                    retries += 1
+                    try await Task.sleep(nanoseconds: retryDelay)
+                }
+            } catch {
+                throw BarViewModelError.maxRetriesExceeded
+            }
         }
     }
     
@@ -145,43 +142,33 @@ final class BarViewModel: Mockable {
         return "\(closed ? "Closed" : "Open"): \(formatter.string(from: open)) - \(formatter.string(from: close))"
     }
     
-    func getMostVotedWaitTime(barId: Int) async throws {
-        guard let index = statuses.firstIndex(where: { $0.bar == barId }) else {
-            print("No status found for bar \(barId)")
-            throw BarViewModelError.statusNotFound
-        }
-
-        let cacheDate = UserDefaults.standard.object(forKey: "barVotes_cache_timestamp") as? Date
-        let isCacheValid = cacheDate.map { Date().timeIntervalSince($0) < voteCacheExpiration } ?? false
-
-        if isCacheValid {
-            if let waitTimeCache = UserDefaults.standard.dictionary(forKey: "barVotes_wait_time_cache") as? [String: String],
-               let cachedTime = waitTimeCache["\(barId)"], !cachedTime.isEmpty {
-                statuses[index].waitTime = cachedTime
-                print("Loaded cached wait time from UserDefaults: \(cachedTime)")
-                return
-            }
-        }
-
-        print("Fetching new wait time from server...")
-
-        let votes = try await networkManager.fetchAllVotes().filter { $0.bar == barId }
-
-        var countMap: [String: Int] = [:]
-        votes.forEach { countMap[$0.waitTime, default: 0] += 1 }
-        let mostVotedTime = countMap.max { $0.value < $1.value }?.key ?? "< 5 min"
-
-        statuses[index].waitTime = mostVotedTime
-        cacheWaitTime(mostVotedTime, for: barId)
-
-        let previousServerStatus = try? await networkManager.fetchBarStatus(statusId: statuses[index].id)
-        if previousServerStatus?.waitTime != mostVotedTime {
-            try await networkManager.putBarStatus(statuses[index])
-            print("\nUpdated server with new most voted wait time: \(mostVotedTime)")
-        } else {
-            print("Server already has most voted time, skipping update.")
-        }
-    }
+//    func getMostVotedWaitTime(barId: Int) async throws {
+//        // Check if barId is valid
+//        guard let index = statuses.firstIndex(where: { $0.bar == barId }) else {
+//            print("No status found for bar \(barId)")
+//            throw BarViewModelError.statusNotFound
+//        }
+//        print("Fetching new wait time from server...")
+//
+//        let votes = try await networkManager.fetchAllVotes().filter { $0.bar == barId }
+//
+//        // If no votes found, set default to "N/A"
+//        var countMap: [String: Int] = [:]
+//        votes.forEach { countMap[$0.waitTime, default: 0] += 1 }
+//        let mostVotedTime = countMap.max { $0.value < $1.value }?.key ?? "N/A"
+//
+//        statuses[index].waitTime = mostVotedTime
+//        cacheWaitTime(mostVotedTime, for: barId)
+//
+//        // Update the server with the most voted time if it differs
+//        let previousServerStatus = try? await networkManager.fetchBarStatus(statusId: statuses[index].id)
+//        if previousServerStatus?.waitTime != mostVotedTime {
+//            try await networkManager.putBarStatus(statuses[index])
+//            print("\nUpdated server with new most voted wait time: \(mostVotedTime)")
+//        } else {
+//            print("Server already has most voted time, skipping update.")
+//        }
+//    }
     
     private func cacheWaitTime(_ time: String, for barId: Int) {
         var waitTimeCache = UserDefaults.standard.dictionary(forKey: "barVotes_wait_time_cache") as? [String: String] ?? [:]
@@ -296,13 +283,19 @@ final class BarViewModel: Mockable {
 
 // MARK: - BarViewModel Preview
 // Indtended only for Xcode previews and testing
+#if DEBUG
 extension BarViewModel {
     static let preview: BarViewModel = {
         let viewModel = BarViewModel()
         viewModel.bars = Bar.sampleBars
         viewModel.statuses = BarStatus.sampleStatuses
         viewModel.hours = BarHours.sampleHours
+        viewModel.networkManager = MockBarNetworkManager()
         
         return viewModel
     }()
 }
+#endif
+
+// MARK: - Protocol Conformance
+extension BarViewModel: BarViewModelProtocol {}

@@ -23,7 +23,7 @@ struct HomeView: View {
                 EmptyView()
                     .tabItem {
                         Image(systemName: "person.circle")
-                        Text("Comming Soon")
+                        Text("Coming Soon")
                     }
                     .sensoryFeedback(.selection, trigger: selectedTab)
                     .tag(1)

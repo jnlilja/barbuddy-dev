@@ -45,6 +45,14 @@
 			);
 			target = 599153B02D540523004B2832 /* BarBuddy */;
 		};
+		1BD186532DF5BE660071A101 /* Exceptions for "BarBuddyTests" folder in "BarBuddy" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				"Mock Data/MockBarNetworkManager.swift",
+				"Mock Data/MockBarViewModel.swift",
+			);
+			target = 599153B02D540523004B2832 /* BarBuddy */;
+		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -58,6 +66,9 @@
 		};
 		599153C42D540525004B2832 /* BarBuddyTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				1BD186532DF5BE660071A101 /* Exceptions for "BarBuddyTests" folder in "BarBuddy" target */,
+			);
 			path = BarBuddyTests;
 			sourceTree = "<group>";
 		};

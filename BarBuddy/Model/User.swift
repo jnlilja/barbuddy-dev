@@ -8,19 +8,22 @@
 import Foundation
 
 struct User: Identifiable, Codable, Hashable {
-    let id: String
-    var name: String
-    var age: Int
-    var height: String
+    var id: Int?
+    var username: String
+    var firstName: String
+    var lastName: String
+    let email: String
+    let dateOfBirth: Date
     var hometown: String
-    var school: String
+    var jobOrUniversity: String
     var favoriteDrink: String
-    var preference: String
-    var bio: String
-    var imageNames: [String]
-    var username: String = ""
-    var email: String = ""
+    var location: String
+    var profilePictures: [ProfilePicture]
+    var accountType: String // "user" or "business"
+    var sexualPreference: String // "Straight
+    var phoneNumber: String
     
-    // Indicates if a friend request was sent.
-    var friendRequested: Bool = false
+    var fullName: String {
+        "\(firstName) \(lastName)"
+    }
 }

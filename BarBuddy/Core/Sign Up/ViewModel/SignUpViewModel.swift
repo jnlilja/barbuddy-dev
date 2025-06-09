@@ -6,30 +6,31 @@
 import Foundation
 import FirebaseAuth
 
-@MainActor
-final class SignUpViewModel: ObservableObject {
+@Observable final class SignUpViewModel {
     // ───────── UI‑bound fields ─────────
-    @Published var email            = ""
-    @Published var newUsername      = ""
-    @Published var password         = ""
-    @Published var confirmPassword  = ""
+    var email            = ""
+    var newUsername      = ""
+    var password         = ""
+    var confirmPassword  = ""
 
-    @Published var firstName        = ""
-    @Published var lastName         = ""
-    @Published var dateOfBirth      = ""
-    @Published var gender           = ""          // added for GenderView
-    @Published var hometown         = ""
-    @Published var jobOrUniversity  = ""
-    @Published var favoriteDrink    = ""
-    @Published var doesntDrink      = false       // added for DrinkPreferenceView
-    @Published var sexualPreference = "straight"
+    var firstName        = ""
+    var lastName         = ""
+    var dateOfBirth      = ""
+    var gender           = ""          // added for GenderView
+    var hometown         = ""
+    var jobOrUniversity  = ""
+    var favoriteDrink    = ""
+    var doesntDrink      = false       // added for DrinkPreferenceView
+    var sexualPreference = "straight"
     
     // ───────── Validation state ─────────
-    @Published var isValidEmail     = true
-    @Published var isValidPassword  = true
-    @Published var passwordsMatch   = true
-    @Published var alertMessage     = ""
-    @Published var showingAlert     = false
+    @ObservationIgnored var isValidEmail     = true
+    @ObservationIgnored var isValidPassword  = true
+    @ObservationIgnored var passwordsMatch   = true
+    @ObservationIgnored var alertMessage     = ""
+    @ObservationIgnored var showingAlert     = false
+    
+    typealias ValidationChecks = [(Bool, String)]
     
     func buildProfile() -> SignUpUser {
         SignUpUser(
@@ -49,12 +50,11 @@ final class SignUpViewModel: ObservableObject {
             )
         }
 
-    func validateAndSignUp() -> Bool {
-        let checks: [(Bool, String)] = [
-          (isValidEmailFormat(email),              "Please enter a valid email."),
-          (newUsername.count >= 3,                 "Username must be at least 3 characters."),
-          (isValidPasswordFormat(password),     "Password must be at least 8 characters with a number & special character."),
-          (password == confirmPassword,         "Passwords do not match.")
+    func validate() -> Bool {
+        let checks: ValidationChecks = [
+          (isValidEmailFormat(email),       "Please enter a valid email."),
+          (isValidPasswordFormat(password), "Password must be at least 8 characters with a number & special character."),
+          (password == confirmPassword,     "Passwords do not match.")
         ]
 
         for (passes, message) in checks {

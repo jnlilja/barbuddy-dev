@@ -14,10 +14,8 @@ enum BarViewModelError: Error, LocalizedError, Equatable {
     case hoursAreNil
     case statusNotFound
     case hoursNotFound
-}
-
-// MARK: - LocalizedError Conformance
-extension BarViewModelError {
+    case maxRetriesExceeded
+    
     var errorDescription: String? {
         switch self {
         case .invalidBarID:
@@ -32,6 +30,8 @@ extension BarViewModelError {
             return "Bar status could not be found."
         case .hoursNotFound:
             return "Bar hours could not be retrieved."
+        case .maxRetriesExceeded:
+            return "Maximum retries exceeded while trying to fetch bar data."
         }
     }
 }

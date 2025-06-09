@@ -10,7 +10,7 @@ import SwiftUI
 
 struct PhotoUploadView: View {
     @EnvironmentObject var authViewModel: AuthViewModel
-    @EnvironmentObject var signUpViewModel: SignUpViewModel
+    @Environment(SignUpViewModel.self) var signUpViewModel
     @State private var selectedImages: [UIImage] = []
     @State private var photoPickerItems: [PhotosPickerItem] = []
 
@@ -93,7 +93,8 @@ struct PhotoUploadView: View {
 }
 
 #Preview("Photo Upload") {
+    @Previewable @State var signUpViewModel = SignUpViewModel()
     PhotoUploadView()
-        .environmentObject(SignUpViewModel())
+        .environment(signUpViewModel)
         .environmentObject(AuthViewModel())
 }

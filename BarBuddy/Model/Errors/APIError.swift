@@ -8,7 +8,7 @@
 import Foundation
 
 /// All networking / auth‑related failures in one place.
-enum APIError: Error {
+enum APIError: Error, LocalizedError {
     case invalidURL(url: String)  // e.g. "https://api.example.com/resource"
     case noToken
     case statusCode(Int)  // HTTP status code, e.g. 404, 500

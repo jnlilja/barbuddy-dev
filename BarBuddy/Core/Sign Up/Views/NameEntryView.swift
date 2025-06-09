@@ -5,7 +5,6 @@
 //  Created by Andrew Betancourt on 2/25/25.
 //
 
-
 import SwiftUI
 
 struct NameEntryView: View {
@@ -13,7 +12,7 @@ struct NameEntryView: View {
     @State private var lastName  = ""
     @State private var proceedToLocation = false
     @Binding var path: NavigationPath
-    @EnvironmentObject var viewModel: SignUpViewModel
+    @Environment(SignUpViewModel.self) var viewModel
 
     var body: some View {
         ZStack {
@@ -61,6 +60,7 @@ struct NameEntryView: View {
 }
 
 #Preview("Name") {
+    @Previewable @State var signUpViewModel = SignUpViewModel()
     NameEntryView(path: .constant(NavigationPath()))
-        .environmentObject(SignUpViewModel())
+        .environment(signUpViewModel)
 }

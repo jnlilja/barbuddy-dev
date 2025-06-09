@@ -17,8 +17,9 @@ actor BarNetworkManager: NetworkTestable {
     private let decoder: JSONDecoder
     private let timeStampDecoder: JSONDecoder
     
-    private let voteCacheExpiration: TimeInterval = 60
+    private let voteCacheExpiration: TimeInterval = 300 // 5 minutes
     private let barHoursCacheExpiration: TimeInterval = 3600 // 1 hour
+    private let barStatusCache: TimeInterval = 180 // 3 minutes
                 
     internal init(session: URLSession = .shared) {
         self.session = session
@@ -46,38 +47,11 @@ actor BarNetworkManager: NetworkTestable {
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue("application/json", forHTTPHeaderField: "Accept")
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        request.cachePolicy = .returnCacheDataElseLoad
-        
-        // Check if we have a cached response first
-        if let cachedResponse = URLCache.shared.cachedResponse(for: request) {
-            if let cacheDate = UserDefaults.standard.object(forKey: "barVotes_cache_timestamp") as? Date {
-                let isExpired = Date().timeIntervalSince(cacheDate) > voteCacheExpiration
-                if isExpired {
-                    print("Cache expired. Fetching new bar votes data.")
-                    URLCache.shared.removeCachedResponse(for: request)
-                    UserDefaults.standard.removeObject(forKey: "barVotes_cache_timestamp")
-                } else {
-                    print("Using cached bar votes data (valid)")
-                    return try decoder.decode([BarVote].self, from: cachedResponse.data)
-                }
-            }
-        }
         
         let (data, response) = try await session.data(for: request)
         
         if let response = response as? HTTPURLResponse, !(200...299).contains(response.statusCode)  {
-            if response.statusCode == 400 {
-                throw BarVoteError.alreadyVoted
-            }
             throw APIError.statusCode(response.statusCode)
-        }
-        // Cache the response manually (since Authorization headers prevent auto-caching)
-        if let response = response as? HTTPURLResponse {
-            print("Caching response for bar votes with status code: \(response.statusCode)")
-            let cachedResponse = CachedURLResponse(response: response, data: data)
-            // Set cache expiration
-            UserDefaults.standard.set(Date(), forKey: "barVotes_cache_timestamp")
-            URLCache.shared.storeCachedResponse(cachedResponse, for: request)
         }
         return try decoder.decode([BarVote].self, from: data)
     }
@@ -368,10 +342,19 @@ actor BarNetworkManager: NetworkTestable {
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         request.cachePolicy = .returnCacheDataElseLoad
         
-        // Check if we have a cached response first
-        if let cachedResponse = URLCache.shared.cachedResponse(for: request) {
-            print("Using cached bar statuses data (valid)")
-            return try timeStampDecoder.decode([BarStatus].self, from: cachedResponse.data)
+        // Check if we have a cached response first and if it's still valid
+        if let cachedResponse = URLCache.shared.cachedResponse(for: request),
+           let cacheDate = UserDefaults.standard.object(forKey: "barStatuses_cache_timestamp") as? Date {
+            
+            let isExpired = Date().timeIntervalSince(cacheDate) > barStatusCache
+            if !isExpired {
+                print("Using cached bar statuses data (valid)")
+                return try timeStampDecoder.decode([BarStatus].self, from: cachedResponse.data)
+            } else {
+                print("Cache expired. Fetching new bar statuses data.")
+                URLCache.shared.removeCachedResponse(for: request)
+                UserDefaults.standard.removeObject(forKey: "barStatuses_cache_timestamp")
+            }
         }
         
         let (data, response) = try await session.data(for: request)
@@ -385,6 +368,9 @@ actor BarNetworkManager: NetworkTestable {
             print("Caching response for bar statuses with status code: \(response.statusCode)")
             let cachedResponse = CachedURLResponse(response: response, data: data)
             URLCache.shared.storeCachedResponse(cachedResponse, for: request)
+            
+            // Store timestamp for cache expiration
+            UserDefaults.standard.set(Date(), forKey: "barStatuses_cache_timestamp")
         }
         return try timeStampDecoder.decode([BarStatus].self, from: data)
     }
@@ -405,7 +391,7 @@ actor BarNetworkManager: NetworkTestable {
         
         let (data, response) = try await URLSession.shared.data(for: request)
         
-        if let response = response as? HTTPURLResponse, (200...299).contains(response.statusCode) {
+        if let response = response as? HTTPURLResponse, !(200...299).contains(response.statusCode) {
             throw APIError.statusCode(response.statusCode)
         }
         
@@ -562,10 +548,9 @@ actor BarNetworkManager: NetworkTestable {
             return try timeStampDecoder.decode([Bar].self, from: cachedResponse.data)
         }
         
-        let (data, response) = try await retry { [request] in
-            try await self.session.data(for: request)
-        }
-        if let response = response as? HTTPURLResponse, !(200...299).contains(response.statusCode) {
+        let (data, response) = try await session.data(for: request)
+        
+        if let response = response as? HTTPURLResponse, response.statusCode != 200 {
             throw APIError.statusCode(response.statusCode)
         }
         
