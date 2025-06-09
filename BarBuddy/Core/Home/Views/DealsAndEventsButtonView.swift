@@ -11,7 +11,7 @@ struct DealsAndEventsButtonView: View {
     @Environment(\.colorScheme) var colorScheme
     var body: some View {
         ZStack {
-            Color(.secondarySystemBackground)
+            Color(colorScheme == .dark ? .secondarySystemBackground : .white)
                 .cornerRadius(8)
                 .shadow(radius: 3)
             

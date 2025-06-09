@@ -12,7 +12,7 @@ struct HometownView: View {
     @State private var showOnProfile = true
     @State private var proceedToNextPage = false
     @Binding var path: NavigationPath
-    @EnvironmentObject var viewModel: SignUpViewModel
+    @Environment(SignUpViewModel.self) var viewModel
 
     var body: some View {
         ZStack {
@@ -49,7 +49,7 @@ struct HometownView: View {
 
                     Button(action: {
                         proceedToNextPage = true
-                        // write back into your ObservableObject directly—drop the `$`
+                        // write back into your Observable directly
                         viewModel.hometown = hometown
                         //path.append(SignUpNavigation.school)
                     }) {
@@ -72,7 +72,7 @@ struct HometownView: View {
 }
 
 #Preview("Hometown") {
+    @Previewable @State var signUpViewModel = SignUpViewModel()
     HometownView(path: .constant(NavigationPath()))
-        // inject using environmentObject
-        .environmentObject(SignUpViewModel())
+        .environment(signUpViewModel)
 }

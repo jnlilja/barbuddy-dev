@@ -4,13 +4,24 @@
 //
 //  Created by Andrew Betancourt on 6/4/25.
 //
-
+#if DEBUG
 import Foundation
-@testable import BarBuddy
 
+@Observable
 final class MockBarViewModel: Mockable {
-    var mockHours: [BarHours] = []
-    var currentTime: String = "12:00 PM" // Default time for testing
+    var mockHours: [BarHours]
+    var mockBars: [Bar]
+    var mockStatuses: [BarStatus]
+    var currentTime: String
+    var networkManager: NetworkTestable
+    
+    init(currentTime: String = "12:00 PM") {
+        self.currentTime = currentTime
+        self.mockHours = []
+        self.mockBars = []
+        self.mockStatuses = []
+        self.networkManager = MockBarNetworkManager()
+    }
     
     func getHours(for bar: Bar) async throws -> String? {
         // Mock implementation to return hours as a string
@@ -35,40 +46,56 @@ final class MockBarViewModel: Mockable {
     
     func isClosed(_ openTime: Date, _ closeTime: Date) -> Bool {
         let calendar = Calendar.current
-        
-        // Use the default time for testing purposes
         let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "h:mm a" // Format for open/close times
+        dateFormatter.dateFormat = "h:mm a"
         let now = dateFormatter.date(from: currentTime) ?? Date()
         
-        // Today's date components
-        var openComponents = calendar.dateComponents([.year, .month, .day], from: now)
-        var closeComponents = openComponents
-
-        // Extract open and close time parts
-        let openHour = calendar.component(.hour, from: openTime)
-        let openMinute = calendar.component(.minute, from: openTime)
-        let closeHour = calendar.component(.hour, from: closeTime)
-        let closeMinute = calendar.component(.minute, from: closeTime)
+        let openComponents = calendar.dateComponents([.hour, .minute], from: openTime)
+        let closeComponents = calendar.dateComponents([.hour, .minute], from: closeTime)
         
-        openComponents.hour = openHour
-        openComponents.minute = openMinute
+        var todayComponents = calendar.dateComponents([.year, .month, .day], from: now)
         
-        closeComponents.hour = closeHour
-        closeComponents.minute = closeMinute
-
-        guard let openDate = calendar.date(from: openComponents),
-              var closeDate = calendar.date(from: closeComponents) else {
-            return true // Assume closed if dates can't be formed
+        todayComponents.hour = openComponents.hour
+        todayComponents.minute = openComponents.minute
+        guard let openDate = calendar.date(from: todayComponents) else {
+            return true
         }
         
-        // If close is earlier than open, assume it spills into next day
+        todayComponents.hour = closeComponents.hour
+        todayComponents.minute = closeComponents.minute
+        guard var closeDate = calendar.date(from: todayComponents) else {
+            return true
+        }
+        
         if closeDate <= openDate {
             closeDate = calendar.date(byAdding: .day, value: 1, to: closeDate)!
         }
         
-        // Return true if now is outside of the open-close window
+        if now < openDate {
+            let yesterday = calendar.date(byAdding: .day, value: -1, to: now)!
+            var yesterdayComponents = calendar.dateComponents([.year, .month, .day], from: yesterday)
+            
+            yesterdayComponents.hour = openComponents.hour
+            yesterdayComponents.minute = openComponents.minute
+            guard let previousOpenDate = calendar.date(from: yesterdayComponents) else {
+                return true
+            }
+            
+            yesterdayComponents.hour = closeComponents.hour
+            yesterdayComponents.minute = closeComponents.minute
+            guard var previousCloseDate = calendar.date(from: yesterdayComponents) else {
+                return true
+            }
+            
+            if previousCloseDate <= previousOpenDate {
+                previousCloseDate = calendar.date(byAdding: .day, value: 1, to: previousCloseDate)!
+            }
+            
+            return now < previousOpenDate || now >= previousCloseDate
+        }
+        
         return now < openDate || now >= closeDate
     }
 
 }
+#endif

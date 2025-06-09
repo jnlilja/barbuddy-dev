@@ -3,6 +3,7 @@
 //
 //  Created by Andrew Betancourt on 2/25/25.
 //
+
 import SwiftUI
 import SDWebImageSwiftUI
 
@@ -14,8 +15,11 @@ struct BarDetailView: View {
     @State private var loadingState: HoursLoadingState = .loading
     @State private var waitButtonProperties = ButtonProperties(type: "wait")
 
-    private var waitTime: String {
-        barViewModel.statuses.first(where: { $0.bar == bar.id })?.waitTime ?? "No votes"
+    private var waitTime: String? {
+        barViewModel.statuses.first(where: { $0.bar == bar.id })?.waitTime
+            .replacingOccurrences(of: "<", with: "< ")
+            .replacingOccurrences(of: ">", with: "> ")
+            .replacingOccurrences(of: "-", with: " - ")
     }
     
     private var isClosed: Bool? {
@@ -80,7 +84,7 @@ struct BarDetailView: View {
                                         .tint(colorScheme == .dark ? .salmon :.darkPurple)
                                         .scaleEffect(1.5)
                                 case .loaded:
-                                    Text(waitTime)
+                                    Text(waitTime!)
 
                                 case .failed:
                                     Text("Wait time unavailable")
@@ -165,14 +169,14 @@ struct BarDetailView: View {
                             }
                             .onTapGesture {
                                 let username = "barbuddy.pb"
-                                    let appURL = URL(string: "instagram://user?username=\(username)")!
-                                    let webURL = URL(string: "https://www.instagram.com/\(username)")!
-
-                                    if UIApplication.shared.canOpenURL(appURL) {
-                                        UIApplication.shared.open(appURL)
-                                    } else {
-                                        UIApplication.shared.open(webURL)
-                                    }
+                                let appURL = URL(string: "instagram://user?username=\(username)")!
+                                let webURL = URL(string: "https://www.instagram.com/\(username)")!
+                                
+                                if UIApplication.shared.canOpenURL(appURL) {
+                                    UIApplication.shared.open(appURL)
+                                } else {
+                                    UIApplication.shared.open(webURL)
+                                }
                             }
                         }
                         .foregroundStyle(colorScheme == .dark ? .nude : .darkBlue)
@@ -183,47 +187,31 @@ struct BarDetailView: View {
                 .padding()
                 .navigationBarTitleDisplayMode(.inline)
             }
-            .task {
+            .onAppear {
                 print("Currently viewing \(bar.name) with ID: \(bar.id)")
                 
                 // Only proceeds if the bar is currently not closed
-                guard let isClosed = isClosed, !isClosed else  {
+                guard let isClosed, !isClosed else  {
                     loadingState = isClosed == nil ? .failed : .closed
+                    if isClosed == nil { print("\(bar.name) has no hours data.") }
                     return
                 }
                 
-                // Check if votes cache is not expired
-                let cacheDate = UserDefaults.standard.object(forKey: "barVotes_cache_timestamp") as? Date
-                let isCacheValid = cacheDate.map { Date().timeIntervalSince($0) < voteCacheExpiration } ?? false
-                
-                if let cachedStatus = barViewModel.statuses.first(where: { $0.bar == bar.id }), isCacheValid {
+                if let waitTime {
                     loadingState = .loaded
-                    print("Using cached wait time: \(cachedStatus.waitTime)")
+                    print("Using cached wait time: \(waitTime)")
                     return
                 }
-                if cacheDate == nil {
-                    print("No cached vote found, fetching new data...")
-                } else {
-                    print("Bar Vote Cache Expired, fetching new data...")
-                }
-                
-                // Get most popular wait time
-                loadingState = .loading
-                do {
-                    try await barViewModel.getMostVotedWaitTime(barId: bar.id)
-                    loadingState = .loaded
-                    print("Most voted wait time fetched successfully.")
-                    print("Wait time: \(waitTime)")
-                    
-                } catch {
-                    print("Error fetching most voted wait time: \(error)")
+                else {
                     loadingState = .failed
+                    print("\(bar.name) contains no status data.")
                 }
             }
             .transition(.blurReplace)
         }
     }
 }
+
 #Preview("Bar is Open") {
     BarDetailView(
         bar: Bar.sampleBar

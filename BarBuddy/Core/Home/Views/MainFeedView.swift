@@ -3,6 +3,7 @@
 //
 //  Created by Andrew Betancourt on 2/26/25.
 //
+
 import BottomSheet
 import MapKit
 import SwiftUI
@@ -97,6 +98,8 @@ struct MainFeedView: View {
             Button("Cancel", role: .cancel) {}
             Button("Sign Out") {
                 URLCache.shared.removeAllCachedResponses()
+                UserDefaults.standard.removeObject(forKey: "barStatuses_cache_timestamp")
+                UserDefaults.standard.removeObject(forKey: "barHours_cache_timestamp")
                 authViewModel.signOut()
             }
         } message: {
@@ -105,7 +108,7 @@ struct MainFeedView: View {
         .tint(colorScheme == .dark ? .salmon : .darkPurple)
     }
     // MARK: — Map Layer
-    private var mapLayer: some View {
+    var mapLayer: some View {
         @Bindable var mapVM = viewModel
         return Map(position: $mapVM.cameraPosition, selection: $selectedBar) {
             ForEach(barViewModel.bars) { bar in
@@ -228,18 +231,21 @@ struct MainFeedView: View {
         }
     }
     private var logOut: some ToolbarContent {
-        ToolbarItem(placement: .destructiveAction) {
+        ToolbarItem(placement: .cancellationAction) {
             Button {
                 showSignOutAlert = true
             } label: {
-                Image(systemName: "door.left.hand.open")
-                    .fontDesign(.rounded)
-                    .fontWeight(.heavy)
+                Image(systemName: "rectangle.portrait.and.arrow.forward")
+                    .environment(\.layoutDirection, .rightToLeft)
+                    .font(.callout)
                     .foregroundStyle(
-                        (colorScheme == .dark
-                         || bottomSheetPosition == .relativeTop(1))
-                        ? .salmon : .darkBlue
+                        colorScheme == .dark
+                        ? .salmon : .darkPurple
                     )
+                    .frame(width: 43, height: 43)
+                    .background(Color(.tertiarySystemBackground))
+                    .clipShape(RoundedCorner(radius: 10))
+                    .shadow(radius: 5)
                     .animation(.easeInOut, value: bottomSheetPosition)
             }
         }

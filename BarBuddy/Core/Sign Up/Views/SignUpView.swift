@@ -1,10 +1,17 @@
-import FirebaseAuth
+//
+//  SignUpView.swift
+//  BarBuddy
+//
+//  Created by Andrew Betancourt on 2/25/25.
+//
+
 import SwiftUI
+import FirebaseAuth
 
 struct SignUpView: View {
+    @Environment(SignUpViewModel.self) private var viewModel
+    @EnvironmentObject var authVM: AuthViewModel
     @Binding var path: NavigationPath
-    @EnvironmentObject private var viewModel: SignUpViewModel
-    @EnvironmentObject private var authVM: AuthViewModel
     @FocusState private var focusedField: FocusField?
     
     enum FocusField {
@@ -12,17 +19,19 @@ struct SignUpView: View {
     }
 
     var body: some View {
+        @Bindable var bindableViewModel = viewModel
+        
         ZStack {
             Color("DarkBlue").ignoresSafeArea()
 
-            VStack(spacing: 20) {
-                Text("Create Account")
+            VStack(spacing: 25) {
+                Text("Create an Account")
                     .font(.largeTitle).bold()
                     .foregroundColor(.white)
                     .padding(.bottom, 30)
 
                 // ───────── Email
-                TextField("Email", text: $viewModel.email)
+                TextField("Email", text: $bindableViewModel.email)
                     .textFieldStyle(CustomTextFieldStyle())
                     .overlay(
                         RoundedRectangle(cornerRadius: 10)
@@ -37,13 +46,8 @@ struct SignUpView: View {
                     .focused($focusedField, equals: .email)
                     .submitLabel(.next)
 
-                // ───────── Username
-//                TextField("Username", text: $viewModel.newUsername)
-//                    .textFieldStyle(CustomTextFieldStyle())
-//                    .autocapitalization(.none)
-
                 // ───────── Password
-                SecureField("Password", text: $viewModel.password)
+                SecureField("Password", text: $bindableViewModel.password)
                     .textFieldStyle(CustomTextFieldStyle())
                     .overlay(
                         RoundedRectangle(cornerRadius: 10)
@@ -59,7 +63,7 @@ struct SignUpView: View {
                 // ───────── Confirm password
                 SecureField(
                     "Confirm Password",
-                    text: $viewModel.confirmPassword
+                    text: $bindableViewModel.confirmPassword
                 )
                 .textFieldStyle(CustomTextFieldStyle())
                 .overlay(
@@ -85,7 +89,7 @@ struct SignUpView: View {
 
                 // ───────── Sign‑up button
                 Button {
-                    guard viewModel.validateAndSignUp() else { return }
+                    guard viewModel.validate() else { return }
                     Task { await authVM.signUp(email: viewModel.email, password: viewModel.password) }
                 } label: {
                     Text("Sign Up")
@@ -103,13 +107,13 @@ struct SignUpView: View {
                     focusedField = .confirmPassword
                 } else {
                     focusedField = nil
-                    guard viewModel.validateAndSignUp() else { return }
+                    guard viewModel.validate() else { return }
                     Task { await authVM.signUp(email: viewModel.email, password: viewModel.password) }
                 }
             }
             .padding()
         }
-        .alert("Validation Error", isPresented: $viewModel.showingAlert) {
+        .alert("Validation Error", isPresented: $bindableViewModel.showingAlert) {
             Button("OK", role: .cancel) {}
         } message: {
             Text(viewModel.alertMessage)
@@ -122,7 +126,8 @@ struct SignUpView: View {
     }
 }
 #Preview {
+    @Previewable @State var signUpViewModel = SignUpViewModel()
     SignUpView(path: .constant(NavigationPath()))
-        .environmentObject(SignUpViewModel())
+        .environment(signUpViewModel)
         .environmentObject(AuthViewModel())
 }

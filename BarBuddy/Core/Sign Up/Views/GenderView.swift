@@ -11,8 +11,8 @@ struct GenderView: View {
     @State private var proceedToNextPage = false
     @Binding var path: NavigationPath
 
-    // ← use EnvironmentObject for your ObservableObject view‑model
-    @EnvironmentObject var viewModel: SignUpViewModel
+    // ← use Environment for your Observable view‑model
+    @Environment(SignUpViewModel.self) var viewModel
 
     let genderOptions = ["Man", "Woman", "Non‑binary", "Prefer not to say"]
 
@@ -52,7 +52,7 @@ struct GenderView: View {
                     }
                     .padding(.vertical)
 
-                    Text("BarBuddy is for making friends! You’ll see both men and women in your area, but you can adjust your preferences later.")
+                    Text("BarBuddy is for making friends! You'll see both men and women in your area, but you can adjust your preferences later.")
                         .font(.body)
                         .foregroundColor(.white)
                         .multilineTextAlignment(.center)
@@ -81,7 +81,7 @@ struct GenderView: View {
 }
 
 #Preview("Gender") {
+    @Previewable @State var signUpViewModel = SignUpViewModel()
     GenderView(path: .constant(NavigationPath()))
-      // ← inject the shared SignUpViewModel here
-      .environmentObject(SignUpViewModel())
+        .environment(signUpViewModel)
 }

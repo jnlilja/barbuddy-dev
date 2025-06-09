@@ -9,9 +9,11 @@ import SwiftUI
 
 struct VoteSelectionView: View {
     @Environment(\.colorScheme) var colorScheme
+    @Environment(BarViewModel.self) var barViewModel
     @Binding var properties: ButtonProperties
     @Binding var bar: Bar
     @State private var selectedOption: String?
+    @State private var submissionSuccessful: Bool = false
     
     var body: some View {
         VStack {
@@ -32,11 +34,11 @@ struct VoteSelectionView: View {
                 GridItem(.adaptive(minimum: 70, maximum: 120))
             ]) {
                 
-                VoteButtonView(text: "<5 min", opacity: 0.15, properties: $properties, selectedOption: $selectedOption)
-                VoteButtonView(text: "5-10 min", opacity: 0.2, properties: $properties, selectedOption: $selectedOption)
-                VoteButtonView(text: "10-20 min", opacity: 0.3, properties: $properties, selectedOption: $selectedOption)
-                VoteButtonView(text: "20-30 min", opacity: 0.4, properties: $properties, selectedOption: $selectedOption)
-                VoteButtonView(text: ">30 min", opacity: 0.5, properties: $properties, selectedOption: $selectedOption)
+                VoteButtonView(text: "< 5 min", opacity: 0.15, properties: $properties, selectedOption: $selectedOption)
+                VoteButtonView(text: "5 - 10 min", opacity: 0.2, properties: $properties, selectedOption: $selectedOption)
+                VoteButtonView(text: "10 - 20 min", opacity: 0.3, properties: $properties, selectedOption: $selectedOption)
+                VoteButtonView(text: "20 - 30 min", opacity: 0.4, properties: $properties, selectedOption: $selectedOption)
+                VoteButtonView(text: "> 30 min", opacity: 0.5, properties: $properties, selectedOption: $selectedOption)
             }
             .padding(.horizontal)
             
@@ -69,18 +71,25 @@ struct VoteSelectionView: View {
                             properties.didSubmit = true
                         }
                         if let vote = selectedOption {
+                            // remove spaces
+                            let formatted = vote.replacingOccurrences(of: "> ", with: ">")
+                                .replacingOccurrences(of: "< ", with: "<")
+                                .replacingOccurrences(of: " - ", with: "-")
+                                
                             Task {
                                 do {
                                     // Submit wait time
                                     try await BarNetworkManager.shared.submitVote(
-                                        vote: BarVote(
-                                            bar: bar.id,
-                                            waitTime: vote)
+                                        vote: BarVote(bar: bar.id, waitTime: formatted)
                                     )
                                     print("Vote submitted successfully for bar \(bar.id) with wait time: \(vote)")
+                                    guard var status = barViewModel.statuses.first(where: { $0.bar == bar.id }) else { return }
+                                    status.waitTime = formatted
+                                        
+                                    try await BarNetworkManager.shared.putBarStatus(status)
                                     
                                 } catch {
-                                    print("Failed to submit vote: \(error)")
+                                    print("Failed to submit vote: \(error.localizedDescription)")
                                 }
                             }
                             DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
@@ -113,4 +122,5 @@ struct VoteSelectionView: View {
 
 #Preview {
     VoteSelectionView(properties: .constant(.init(didSubmit: false, showMenu: false, type: "wait")), bar: .constant(Bar.sampleBar))
+        .environment(BarViewModel.preview)
 }

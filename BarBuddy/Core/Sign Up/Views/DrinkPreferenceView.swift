@@ -5,13 +5,12 @@
 //  Created by Andrew Betancourt on 2/25/25.
 //
 
-
 import SwiftUI
 
 struct DrinkPreferenceView: View {
     @State private var favoriteDrink    = ""
     @Binding var path: NavigationPath
-    @EnvironmentObject var viewModel: SignUpViewModel
+    @Environment(SignUpViewModel.self) var viewModel
     @State private var proceedToNextPage = false
 
     var body: some View {
@@ -51,7 +50,7 @@ struct DrinkPreferenceView: View {
                             Image(systemName: viewModel.doesntDrink ? "checkmark.square.fill" : "square")
                                 .foregroundColor(Color("Salmon"))
                                 .font(.system(size: 20))
-                            Text("I don't drink 🙏")
+                            Text("I don't drink ")
                                 .foregroundColor(.white)
                         }
                     }
@@ -81,6 +80,7 @@ struct DrinkPreferenceView: View {
 }
 
 #Preview("Drinks") {
+    @Previewable @State var signUpViewModel = SignUpViewModel()
     DrinkPreferenceView(path: .constant(NavigationPath()))
-        .environmentObject(SignUpViewModel())
+        .environment(signUpViewModel)
 }

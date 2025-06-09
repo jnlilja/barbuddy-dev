@@ -9,7 +9,7 @@ import SwiftUI
 
 struct AgeVerificationView: View {
     @State private var viewModel = AgeVerificationViewModel()
-    @EnvironmentObject var signUpViewModel: SignUpViewModel
+    @Environment(SignUpViewModel.self) var signUpViewModel
     @Binding var path: NavigationPath
 
     private var minimumDate: Date {
@@ -87,6 +87,7 @@ struct AgeVerificationView: View {
 }
 
 #Preview {
+    @Previewable @State var signUpViewModel = SignUpViewModel()
     AgeVerificationView(path: .constant(NavigationPath()))
-        .environmentObject(SignUpViewModel())
+        .environment(signUpViewModel)
 }

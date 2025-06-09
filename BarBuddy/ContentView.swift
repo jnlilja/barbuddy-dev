@@ -23,7 +23,7 @@ struct ContentView: View {
         }
         .onChange(of: scenePhase) { _, newPhase in
             Task {
-                await barViewModel.handleScenePhaseChange(scenePhase)
+                await barViewModel.handleScenePhaseChange(newPhase)
             }
         }
     }
