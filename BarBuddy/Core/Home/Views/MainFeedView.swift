@@ -235,18 +235,30 @@ struct MainFeedView: View {
             Button {
                 showSignOutAlert = true
             } label: {
-                Image(systemName: "rectangle.portrait.and.arrow.forward")
-                    .environment(\.layoutDirection, .rightToLeft)
-                    .font(.callout)
-                    .foregroundStyle(
-                        colorScheme == .dark
-                        ? .salmon : .darkPurple
-                    )
-                    .frame(width: 43, height: 43)
-                    .background(Color(.tertiarySystemBackground))
-                    .clipShape(RoundedCorner(radius: 10))
-                    .shadow(radius: 5)
-                    .animation(.easeInOut, value: bottomSheetPosition)
+                //
+                if #available(iOS 26, *) {
+                    Image(systemName: "rectangle.portrait.and.arrow.forward")
+                        .environment(\.layoutDirection, .rightToLeft)
+                        .font(.callout)
+                        .foregroundStyle(
+                            colorScheme == .dark
+                            ? .salmon : .darkPurple
+                        )
+                        .shadow(radius: 5)
+                        .animation(.easeInOut, value: bottomSheetPosition)
+                } else {
+                    Image(systemName: "rectangle.portrait.and.arrow.forward")
+                        .environment(\.layoutDirection, .rightToLeft)
+                        .font(.callout)
+                        .foregroundStyle(
+                            colorScheme == .dark
+                            ? .salmon : .darkPurple
+                        )
+                        .frame(width: 43, height: 43)
+                        .background(Color(.tertiarySystemBackground))
+                        .clipShape(RoundedCorner(radius: 10))
+                        .animation(.easeInOut, value: bottomSheetPosition)
+                }
             }
         }
     }
