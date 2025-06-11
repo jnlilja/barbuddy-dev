@@ -212,6 +212,7 @@ struct BarDetailView: View {
     }
 }
 
+#if DEBUG
 #Preview("Bar is Open") {
     BarDetailView(
         bar: Bar.sampleBar
@@ -222,8 +223,9 @@ struct BarDetailView: View {
 
 #Preview("Bar is Closed") {
     BarDetailView(
-        bar: Bar.sampleBar
+        bar: Bar.sampleBars[2]
     )
     .environment(MapViewModel())
     .environment(BarViewModel.preview)
 }
+#endif

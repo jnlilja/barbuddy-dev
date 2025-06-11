@@ -11,7 +11,6 @@ import Firebase
 @main
 struct BarBuddyApp: App {
     @StateObject private var authViewModel = AuthViewModel()
-    @State private var mapViewModel = MapViewModel()
     
     init() {
         loadRocketSimConnect()
@@ -33,7 +32,6 @@ struct BarBuddyApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
-                .environment(mapViewModel)
                 .environmentObject(authViewModel)
         }
     }

@@ -90,7 +90,6 @@ struct SignUpView: View {
                             colorScheme == .dark ? .nude : Color(.systemGray)
                         )
                 )
-                .foregroundStyle(.salmon)
                 .padding()
                 .frame(width: 300, height: 50)
                 .background(colorScheme == .dark ? .darkBlue : Color.white)

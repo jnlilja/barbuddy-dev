@@ -120,7 +120,9 @@ struct VoteSelectionView: View {
     }
 }
 
+#if DEBUG
 #Preview {
     VoteSelectionView(properties: .constant(.init(didSubmit: false, showMenu: false, type: "wait")), bar: .constant(Bar.sampleBar))
         .environment(BarViewModel.preview)
 }
+#endif

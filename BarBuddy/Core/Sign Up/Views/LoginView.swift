@@ -11,7 +11,6 @@ import FirebaseAuth
 struct LoginView: View {
     @State private var email              = ""
     @State private var password           = ""
-    @State private var alertMessage       = ""
     
     @State private var viewModel = SignUpViewModel()
     @State private var path = NavigationPath()
@@ -111,23 +110,17 @@ struct LoginView: View {
                     Task { await authVM.signIn(email: email, password: password) }
                 }
             }
+            .alert("Error signing in", isPresented: $authVM.showingAlert) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text(authVM.getErrorMessage())
+            }
             .navigationDestination(for: SignUpNavigation.self) { view in
                 switch view {
                 case .createAccount: SignUpView(path: $path).environment(viewModel)
-//                case .ageVerification: AgeVerificationView(path: $path)
-//                case .nameEntry: NameEntryView(path: $path)
-//                case .location: LocationView(path: $path)
-//                case .gender: GenderView(path: $path)
-//                case .hometown: HometownView(path: $path)
-//                case .school: SchoolView(path: $path)
-//                case .drink: DrinkPreferenceView(path: $path)
-//                case .photoPrompt: PhotoPromptView(path: $path)
-//                case .photoUpload: PhotoUploadView()
                 }
             }
-//            .onTapGesture {
-//                hideKeyboard()
-//            }
+            
         }
         .tint(.salmon)
     }

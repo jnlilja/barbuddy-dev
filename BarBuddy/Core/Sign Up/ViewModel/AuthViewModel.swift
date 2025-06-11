@@ -5,8 +5,6 @@
 //  Revised 2025‑04‑16 – Async/await Firebase Auth + REST profile integration.
 //
 
-//Test@123dev
-
 import Foundation
 @preconcurrency import FirebaseAuth
 
@@ -23,11 +21,28 @@ final class AuthViewModel: ObservableObject {
     
     // MARK: - Sign‑in (existing account)
     func signIn(email: String, password: String) async {
+        if email.isEmpty || password.isEmpty {
+            errorMessage = "Email and password are required."
+            showingAlert = true
+            return
+        }
         do {
             let result = try await Auth.auth().signIn(withEmail: email, password: password)
             self.authUser = result.user
+        } catch let error as NSError where error.domain == AuthErrorDomain {
+            
+            switch AuthErrorCode(rawValue: error.code) {
+            case .invalidCredential:
+                errorMessage = "Invalid email or password. Please try again."
+            case .networkError:
+                errorMessage = "Network error occurred. Please try again later."
+            default:
+                errorMessage = error.localizedDescription
+            }
+            showingAlert = true
         } catch {
-            print("❌ Sign‑in failed:", error.localizedDescription)
+            errorMessage = "An unknown error occurred. Please try again later."
+            showingAlert = true
         }
     }
     

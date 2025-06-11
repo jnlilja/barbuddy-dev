@@ -125,6 +125,7 @@ struct BarCardView: View {
     }
 }
 
+#if DEBUG
 #Preview(traits: .sizeThatFitsLayout) {
     NavigationStack {
         BarCardView(bar: Bar.sampleBar)
@@ -133,3 +134,4 @@ struct BarCardView: View {
     }
     .environment(BarViewModel.preview)
 }
+#endif

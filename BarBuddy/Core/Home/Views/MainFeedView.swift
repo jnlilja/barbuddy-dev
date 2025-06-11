@@ -156,7 +156,7 @@ struct MainFeedView: View {
             .padding([.horizontal, .bottom])
             .onSubmit(of: .text) {
                 bottomSheetPosition = .relativeBottom(0.21)
-                Task { await viewModel.updateCameraPosition(bar: searchText) }
+                viewModel.updateCameraPosition(query: searchText, barViewModel.bars)
             }
             .simultaneousGesture(
                 TapGesture().onEnded {
@@ -263,9 +263,11 @@ struct MainFeedView: View {
         }
     }
 }
+#if DEBUG
 #Preview {
     MainFeedView()
         .environment(MapViewModel())
         .environment(BarViewModel.preview)
         .environmentObject(AuthViewModel())
 }
+#endif

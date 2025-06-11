@@ -9,7 +9,7 @@ import SwiftUI
 
 struct HomeView: View {
     @State private var selectedTab = 0
-
+    @State private var mapViewModel = MapViewModel()
     var body: some View {
         TabView(selection: $selectedTab) {
             Group {
@@ -31,14 +31,16 @@ struct HomeView: View {
             .toolbar(.visible, for: .tabBar)
             .toolbarBackground(.darkBlue, for: .tabBar)
         }
-
+        .environment(mapViewModel)
         .tint(.salmon)
     }
 }
 
+#if DEBUG
 #Preview("Home View") {
     HomeView()
         .environment(MapViewModel())
         .environmentObject(AuthViewModel())
         .environment(BarViewModel.preview)
 }
+#endif

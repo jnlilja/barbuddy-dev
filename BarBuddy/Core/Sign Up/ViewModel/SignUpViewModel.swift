@@ -28,7 +28,7 @@ import FirebaseAuth
     @ObservationIgnored var isValidPassword  = true
     @ObservationIgnored var passwordsMatch   = true
     @ObservationIgnored var alertMessage     = ""
-    @ObservationIgnored var showingAlert     = false
+    var showingAlert     = false
     
     typealias ValidationChecks = [(Bool, String)]
     

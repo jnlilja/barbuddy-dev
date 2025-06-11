@@ -26,8 +26,10 @@ final class MapViewModel {
         )
     )
 
-    func updateCameraPosition(bar: String) async {
-        guard let coord = await fetchBarLocation(bar) else { return }
+    func updateCameraPosition(query: String, _ bars: [Bar]) {
+        guard let coord = bars.first(where: { $0.name.contains(query) })?.coordinate else {
+            return
+        }
         cameraPosition = .region(
             .init(
                 center: coord,
@@ -35,17 +37,5 @@ final class MapViewModel {
                 longitudinalMeters: 300
             )
         )
-    }
-
-    private func fetchBarLocation(_ bar: String) async -> CLLocationCoordinate2D? {
-        let req = MKLocalSearch.Request()
-        req.naturalLanguageQuery = bar
-        req.region = .init(
-            center: MapViewModel.pacificBeachCoordinate,
-            latitudinalMeters: 1000,
-            longitudinalMeters: 1000
-        )
-        let result = try? await MKLocalSearch(request: req).start()
-        return result?.mapItems.first?.placemark.coordinate
     }
 }

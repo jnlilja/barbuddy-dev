@@ -14,8 +14,15 @@ struct SearchBarView: View {
     
     var body: some View {
         HStack {
-            Image(systemName: "magnifyingglass")
-                .foregroundColor(Color("Salmon"))
+            if searchText.isEmpty {
+                Image(systemName: "magnifyingglass")
+                    .foregroundColor(.salmon)
+            }
+            else {
+                Image(systemName: "xmark.circle.fill")
+                    .foregroundColor(.salmon)
+                    .onTapGesture { searchText = "" }
+            }
             
             TextField(prompt, text: $searchText)
                 .textFieldStyle(RoundedBorderTextFieldStyle())
