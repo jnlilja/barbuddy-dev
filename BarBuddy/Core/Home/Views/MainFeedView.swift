@@ -235,7 +235,7 @@ struct MainFeedView: View {
             Button {
                 showSignOutAlert = true
             } label: {
-                //
+                // 
                 if #available(iOS 26, *) {
                     Image(systemName: "rectangle.portrait.and.arrow.forward")
                         .environment(\.layoutDirection, .rightToLeft)

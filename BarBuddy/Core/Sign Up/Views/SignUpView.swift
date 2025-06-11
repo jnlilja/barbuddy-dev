@@ -5,22 +5,23 @@
 //  Created by Andrew Betancourt on 2/25/25.
 //
 
-import SwiftUI
 import FirebaseAuth
+import SwiftUI
 
 struct SignUpView: View {
     @Environment(SignUpViewModel.self) private var viewModel
+    @Environment(\.colorScheme) var colorScheme
     @EnvironmentObject var authVM: AuthViewModel
     @Binding var path: NavigationPath
     @FocusState private var focusedField: FocusField?
-    
+
     enum FocusField {
         case email, password, confirmPassword
     }
 
     var body: some View {
         @Bindable var bindableViewModel = viewModel
-        
+
         ZStack {
             Color("DarkBlue").ignoresSafeArea()
 
@@ -31,46 +32,74 @@ struct SignUpView: View {
                     .padding(.bottom, 30)
 
                 // ───────── Email
-                TextField("Email", text: $bindableViewModel.email)
-                    .textFieldStyle(CustomTextFieldStyle())
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 10)
-                            .stroke(
-                                viewModel.isValidEmail
-                                    ? Color("DarkPurple") : .red,
-                                lineWidth: 1
-                            )
-                    )
-                    .autocapitalization(.none)
-                    .keyboardType(.emailAddress)
-                    .focused($focusedField, equals: .email)
-                    .submitLabel(.next)
-
-                // ───────── Password
-                SecureField("Password", text: $bindableViewModel.password)
-                    .textFieldStyle(CustomTextFieldStyle())
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 10)
-                            .stroke(
-                                viewModel.isValidPassword
-                                    ? Color("DarkPurple") : .red,
-                                lineWidth: 1
-                            )
-                    )
-                    .focused($focusedField, equals: .password)
-                    .submitLabel(.next)
-
-                // ───────── Confirm password
-                SecureField(
-                    "Confirm Password",
-                    text: $bindableViewModel.confirmPassword
+                TextField(
+                    "",
+                    text: $bindableViewModel.email,
+                    prompt: Text("Email")
+                        .foregroundStyle(
+                            colorScheme == .dark ? .nude : Color(.systemGray)
+                        )
                 )
-                .textFieldStyle(CustomTextFieldStyle())
+                .padding()
+                .frame(width: 300, height: 50)
+                .background(colorScheme == .dark ? .darkBlue : Color.white)
+                .cornerRadius(10)
                 .overlay(
                     RoundedRectangle(cornerRadius: 10)
                         .stroke(
                             viewModel.passwordsMatch
-                                ? Color("DarkPurple") : .red,
+                            ? .darkPurple : .red,
+                            lineWidth: 1
+                        )
+                )
+                .autocapitalization(.none)
+                .keyboardType(.emailAddress)
+                .focused($focusedField, equals: .email)
+                .submitLabel(.next)
+
+                // ───────── Password
+                SecureField(
+                    "",
+                    text: $bindableViewModel.password,
+                    prompt: Text("Password")
+                        .foregroundStyle(
+                            colorScheme == .dark ? .nude : Color(.systemGray)
+                        )
+                )
+                .padding()
+                .frame(width: 300, height: 50)
+                .background(colorScheme == .dark ? .darkBlue : Color.white)
+                .cornerRadius(10)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 10)
+                        .stroke(
+                            viewModel.passwordsMatch
+                                ? .darkPurple : .red,
+                            lineWidth: 1
+                        )
+                )
+                .focused($focusedField, equals: .password)
+                .submitLabel(.next)
+
+                // ───────── Confirm password
+                SecureField(
+                    "",
+                    text: $bindableViewModel.confirmPassword,
+                    prompt: Text("Confirm Password")
+                        .foregroundStyle(
+                            colorScheme == .dark ? .nude : Color(.systemGray)
+                        )
+                )
+                .foregroundStyle(.salmon)
+                .padding()
+                .frame(width: 300, height: 50)
+                .background(colorScheme == .dark ? .darkBlue : Color.white)
+                .cornerRadius(10)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 10)
+                        .stroke(
+                            viewModel.passwordsMatch
+                                ? .darkPurple : .red,
                             lineWidth: 1
                         )
                 )
@@ -90,12 +119,17 @@ struct SignUpView: View {
                 // ───────── Sign‑up button
                 Button {
                     guard viewModel.validate() else { return }
-                    Task { await authVM.signUp(email: viewModel.email, password: viewModel.password) }
+                    Task {
+                        await authVM.signUp(
+                            email: viewModel.email,
+                            password: viewModel.password
+                        )
+                    }
                 } label: {
                     Text("Sign Up")
-                        .foregroundColor(.white)
+                        .foregroundColor(colorScheme == .dark ? .darkPurple : .white)
                         .frame(width: 300, height: 50)
-                        .background(Color("DarkPurple"))
+                        .background(colorScheme == .dark ? .nude : .darkPurple)
                         .cornerRadius(10)
                 }
                 .padding(.top, 20)
@@ -108,12 +142,18 @@ struct SignUpView: View {
                 } else {
                     focusedField = nil
                     guard viewModel.validate() else { return }
-                    Task { await authVM.signUp(email: viewModel.email, password: viewModel.password) }
+                    Task {
+                        await authVM.signUp(
+                            email: viewModel.email,
+                            password: viewModel.password
+                        )
+                    }
                 }
             }
             .padding()
         }
-        .alert("Validation Error", isPresented: $bindableViewModel.showingAlert) {
+        .alert("Validation Error", isPresented: $bindableViewModel.showingAlert)
+        {
             Button("OK", role: .cancel) {}
         } message: {
             Text(viewModel.alertMessage)

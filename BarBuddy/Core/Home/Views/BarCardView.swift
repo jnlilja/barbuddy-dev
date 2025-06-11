@@ -129,7 +129,7 @@ struct BarCardView: View {
     NavigationStack {
         BarCardView(bar: Bar.sampleBar)
             .environment(MapViewModel())
-            .environment(BarViewModel.preview)
             .padding()
     }
+    .environment(BarViewModel.preview)
 }

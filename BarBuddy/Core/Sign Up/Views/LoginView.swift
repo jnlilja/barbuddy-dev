@@ -27,9 +27,15 @@ struct LoginView: View {
     var body: some View {
         NavigationStack(path: $path) {
             ZStack {
-                AnimatedBackgroundView()
-                Circle().scale(1.7).foregroundColor(colorScheme == .dark ? .salmon : .nude).opacity(0.15)
-                Circle().scale(1.35).foregroundColor(colorScheme == .dark ? .darkBlue : .nude).opacity(0.9)
+                Group {
+                    AnimatedBackgroundView()
+                    Circle().scale(1.7).foregroundColor(colorScheme == .dark ? .salmon : .nude).opacity(0.15)
+                    Circle().scale(1.35).foregroundColor(colorScheme == .dark ? .darkBlue : .nude).opacity(0.9)
+                }
+                .onTapGesture {
+                    // Hide keyboard when tapping outside of the input fields
+                    focusedField = nil
+                }
                 
                 VStack(spacing: 15) {
                     Image(systemName: "party.popper.fill")
@@ -119,6 +125,9 @@ struct LoginView: View {
 //                case .photoUpload: PhotoUploadView()
                 }
             }
+//            .onTapGesture {
+//                hideKeyboard()
+//            }
         }
         .tint(.salmon)
     }
