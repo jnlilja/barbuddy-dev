@@ -1,0 +1,24 @@
+{
+  "configurations" : [
+    {
+      "id" : "8726939B-BBD0-4C32-8156-1673093838E3",
+      "name" : "Configuration 1",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "testTimeoutsEnabled" : true
+  },
+  "testTargets" : [
+    {
+      "target" : {
+        "containerPath" : "container:BarBuddy.xcodeproj",
+        "identifier" : "599153C02D540525004B2832",
+        "name" : "BarBuddyTests"
+      }
+    }
+  ],
+  "version" : 1
+}

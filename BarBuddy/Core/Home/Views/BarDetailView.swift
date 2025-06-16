@@ -11,9 +11,15 @@ struct BarDetailView: View {
     @Environment(MapViewModel.self) var viewModel
     @Environment(BarViewModel.self) var barViewModel
     @Environment(\.colorScheme) var colorScheme
-    @State var bar: Bar
     @State private var loadingState: HoursLoadingState = .loading
-    @State private var waitButtonProperties = ButtonProperties(type: "wait")
+    @State private var voteActions = VoteButtonState(type: "wait")
+    @State private var timer: TimerManager
+    let bar: Bar
+    
+    init(bar: Bar) {
+        self.bar = bar
+        self._timer = State(wrappedValue: TimerManager(id: bar.id))
+    }
 
     private var waitTime: String? {
         barViewModel.statuses.first(where: { $0.bar == bar.id })?.waitTime
@@ -27,82 +33,88 @@ struct BarDetailView: View {
     }
 
     var body: some View {
-        if waitButtonProperties.showMenu && !waitButtonProperties.didSubmit {
-            VoteSelectionView(properties: $waitButtonProperties, bar: $bar)
+        @Bindable var timerInstance = timer
+        if voteActions.showMenu && !voteActions.didSubmit {
+            VoteSelectionView(timer: timer, actions: $voteActions, bar: bar)
                 .transition(.scale)
 
         } else {
-            NavigationStack {
-                VStack(spacing: 25) {
-                    Spacer()
-                    // MARK: — Header
-
-                    // Make the bar name adapt to the screen size
-                    Text(bar.name)
-                        .font(.system(size: 40, weight: .bold))
-                        .foregroundColor(colorScheme == .dark ? .salmon : .darkPurple)
-                        .multilineTextAlignment(.center)
-                        .lineLimit(2)
-                        .minimumScaleFactor(0.5)
-                    
-                    // MARK: — Wait time
-                    VStack(spacing: 10) {
-                        if !waitButtonProperties.didSubmit {
-                            HStack {
-                                Image(systemName: "clock.fill")
-                                Text("Wait Time")
+            VStack(spacing: 25) {
+                Spacer()
+                // MARK: — Header
+                
+                // Make the bar name adapt to the screen size
+                Text(bar.name)
+                    .font(.system(size: 40, weight: .bold))
+                    .foregroundColor(colorScheme == .dark ? .salmon : .darkPurple)
+                    .multilineTextAlignment(.center)
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.5)
+                
+                // MARK: — Wait time
+                VStack(spacing: 10) {
+                    if !voteActions.didSubmit {
+                        HStack {
+                            Image(systemName: "clock.fill")
+                            Text("Wait Time")
+                        }
+                        .foregroundColor(colorScheme == .dark ? .nude : .darkPurple)
+                        .font(.title2)
+                        .bold()
+                        
+                        ZStack {
+                            if colorScheme == .dark {
+                                RoundedRectangle(cornerRadius: 15)
+                                    .stroke(style: StrokeStyle(lineWidth: 2))
+                                    .foregroundStyle(.nude.opacity(0.5))
+                                    .frame(width: 180, height: 130)
+                                    .background(.nude.opacity(0.15))
+                                    .cornerRadius(15)
+                                    .shadow(radius: 10)
+                            } else {
+                                // For light mode
+                                RoundedRectangle(cornerRadius: 15)
+                                    .stroke(style: StrokeStyle(lineWidth: 2))
+                                    .foregroundStyle(.neonPink.opacity(0.5))
+                                    .frame(width: 180, height: 130)
+                                    .background(.salmon.opacity(0.2))
+                                    .cornerRadius(15)
+                                    .shadow(radius: 10)
                             }
-                            .foregroundColor(colorScheme == .dark ? .nude : .darkPurple)
-                            .font(.title2)
-                            .bold()
-
-                            ZStack {
-                                if colorScheme == .dark {
-                                    RoundedRectangle(cornerRadius: 15)
-                                        .stroke(style: StrokeStyle(lineWidth: 2))
-                                        .foregroundStyle(.nude.opacity(0.5))
-                                        .frame(width: 180, height: 130)
-                                        .background(.nude.opacity(0.15))
-                                        .cornerRadius(15)
-                                        .shadow(radius: 10)
-                                } else {
-                                    // For light mode
-                                    RoundedRectangle(cornerRadius: 15)
-                                        .stroke(style: StrokeStyle(lineWidth: 2))
-                                        .foregroundStyle(.neonPink.opacity(0.5))
-                                        .frame(width: 180, height: 130)
-                                        .background(.salmon.opacity(0.2))
-                                        .cornerRadius(15)
-                                        .shadow(radius: 10)
-                                }
-
-                                // MARK: — Loading state
-
-                                switch loadingState {
-                                case .loading:
-                                    ProgressView()
-                                        .tint(colorScheme == .dark ? .salmon :.darkPurple)
-                                        .scaleEffect(1.5)
-                                case .loaded:
-                                    Text(waitTime!)
-
-                                case .failed:
-                                    Text("Wait time unavailable")
-                                        .frame(width: 150)
-                                        .multilineTextAlignment(.center)
-                                case .closed:
-                                    Text("Closed")
-                                }
+                            
+                            // MARK: — Loading state
+                            
+                            switch loadingState {
+                            case .loading:
+                                ProgressView()
+                                    .tint(colorScheme == .dark ? .salmon :.darkPurple)
+                                    .scaleEffect(1.5)
+                            case .loaded:
+                                Text(waitTime!)
+                                
+                            case .failed:
+                                Text("Wait time unavailable")
+                                    .frame(width: 150)
+                                    .multilineTextAlignment(.center)
+                            case .closed:
+                                Text("Closed")
                             }
-                            .font(.title)
-                            .foregroundColor(colorScheme == .dark ? .nude : .darkPurple)
-                            .bold()
-
+                        }
+                        .font(.title)
+                        .foregroundColor(colorScheme == .dark ? .nude : .darkPurple)
+                        .bold()
+                        
+                        if timer.isActive {
+                            TimerView(timer: timerInstance)
+                                .padding(.top)
+                                .environment(timer)
+                                
+                        } else {
                             Button {
                                 withAnimation(
                                     .spring(duration: 0.5, bounce: 0.3)
                                 ) {
-                                    waitButtonProperties.showMenu = true
+                                    voteActions.showMenu = true
                                 }
                             } label: {
                                 ZStack {
@@ -120,13 +132,13 @@ struct BarDetailView: View {
                                             .cornerRadius(15)
                                             .shadow(radius: 20)
                                     }
-
+                                    
                                     VStack {
                                         Text("Vote Wait Time!")
                                             .frame(width: 130)
                                             .font(.title)
                                             .bold()
-
+                                        
                                         Image(systemName: "arrow.right")
                                     }
                                     .foregroundStyle(colorScheme == .dark ? .darkBlue : .nude)
@@ -143,68 +155,61 @@ struct BarDetailView: View {
                                 || loadingState == .failed ? 0.5 : 1
                             )
                             .padding(.top)
-                            
-                            Text("Voting has concluded for this bar.")
-                                .foregroundColor(.neonPink)
-                                .font(.caption)
-                                .padding(.top, 5)
-                                .opacity(loadingState == .closed ? 1 : 0)
-                            
-                        } else {
-                            VoteConfirmedView()
-                                .transition(.blurReplace)
                         }
-                    }
-                    Spacer()
-
-                    VStack {
-                        Text("Enjoying BarBuddy?")
-                            .font(.title3)
-                            .foregroundColor(colorScheme == .dark ? .neonPink : .darkPurple)
-                        Group {
-                            Text("Follow us on IG for events and updates!")
-                            HStack {
-                                Image("instagram-logo")
-                                Text("@barbuddy.pb")
-                            }
-                            .onTapGesture {
-                                let username = "barbuddy.pb"
-                                let appURL = URL(string: "instagram://user?username=\(username)")!
-                                let webURL = URL(string: "https://www.instagram.com/\(username)")!
-                                
-                                if UIApplication.shared.canOpenURL(appURL) {
-                                    UIApplication.shared.open(appURL)
-                                } else {
-                                    UIApplication.shared.open(webURL)
-                                }
-                            }
-                        }
-                        .foregroundStyle(colorScheme == .dark ? .nude : .darkBlue)
-                        .font(.callout)
-                        .bold()
+                        
+                        Text("Voting has concluded for this bar.")
+                            .foregroundColor(.neonPink)
+                            .font(.caption)
+                            .padding(.top, 5)
+                            .opacity(loadingState == .closed ? 1 : 0)
+                        
+                    } else {
+                        VoteConfirmedView()
+                            .transition(.blurReplace)
                     }
                 }
-                .padding()
-                .navigationBarTitleDisplayMode(.inline)
+                Spacer()
+                
+                VStack {
+                    Text("Enjoying BarBuddy?")
+                        .font(.title3)
+                        .foregroundColor(colorScheme == .dark ? .neonPink : .darkPurple)
+                    Group {
+                        Text("Follow us on IG for events and updates!")
+                        HStack {
+                            Image("instagram-logo")
+                            Text("@barbuddy.pb")
+                        }
+                        .onTapGesture {
+                            let username = "barbuddy.pb"
+                            let appURL = URL(string: "instagram://user?username=\(username)")!
+                            let webURL = URL(string: "https://www.instagram.com/\(username)")!
+                            
+                            if UIApplication.shared.canOpenURL(appURL) {
+                                UIApplication.shared.open(appURL)
+                            } else {
+                                UIApplication.shared.open(webURL)
+                            }
+                        }
+                    }
+                    .foregroundStyle(colorScheme == .dark ? .nude : .darkBlue)
+                    .font(.callout)
+                    .bold()
+                }
+                .padding(.bottom)
             }
             .onAppear {
-                print("Currently viewing \(bar.name) with ID: \(bar.id)")
-                
                 // Only proceeds if the bar is currently not closed
                 guard let isClosed, !isClosed else  {
                     loadingState = isClosed == nil ? .failed : .closed
-                    if isClosed == nil { print("\(bar.name) has no hours data.") }
                     return
                 }
                 
-                if let waitTime {
+                if waitTime != nil {
                     loadingState = .loaded
-                    print("Using cached wait time: \(waitTime)")
-                    return
                 }
                 else {
                     loadingState = .failed
-                    print("\(bar.name) contains no status data.")
                 }
             }
             .transition(.blurReplace)

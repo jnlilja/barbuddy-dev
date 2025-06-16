@@ -10,10 +10,12 @@ import SwiftUI
 struct VoteSelectionView: View {
     @Environment(\.colorScheme) var colorScheme
     @Environment(BarViewModel.self) var barViewModel
-    @Binding var properties: ButtonProperties
-    @Binding var bar: Bar
+    @Bindable var timer: TimerManager
+    @Binding var actions: VoteButtonState
     @State private var selectedOption: String?
-    @State private var submissionSuccessful: Bool = false
+    @State private var submissionError: Bool = false
+    @State private var error: Error?
+    let bar: Bar
     
     var body: some View {
         VStack {
@@ -34,11 +36,11 @@ struct VoteSelectionView: View {
                 GridItem(.adaptive(minimum: 70, maximum: 120))
             ]) {
                 
-                VoteButtonView(text: "< 5 min", opacity: 0.15, properties: $properties, selectedOption: $selectedOption)
-                VoteButtonView(text: "5 - 10 min", opacity: 0.2, properties: $properties, selectedOption: $selectedOption)
-                VoteButtonView(text: "10 - 20 min", opacity: 0.3, properties: $properties, selectedOption: $selectedOption)
-                VoteButtonView(text: "20 - 30 min", opacity: 0.4, properties: $properties, selectedOption: $selectedOption)
-                VoteButtonView(text: "> 30 min", opacity: 0.5, properties: $properties, selectedOption: $selectedOption)
+                VoteButtonView(text: "< 5 min", opacity: 0.15, properties: $actions, selectedOption: $selectedOption)
+                VoteButtonView(text: "5 - 10 min", opacity: 0.2, properties: $actions, selectedOption: $selectedOption)
+                VoteButtonView(text: "10 - 20 min", opacity: 0.3, properties: $actions, selectedOption: $selectedOption)
+                VoteButtonView(text: "20 - 30 min", opacity: 0.4, properties: $actions, selectedOption: $selectedOption)
+                VoteButtonView(text: "> 30 min", opacity: 0.5, properties: $actions, selectedOption: $selectedOption)
             }
             .padding(.horizontal)
             
@@ -47,7 +49,7 @@ struct VoteSelectionView: View {
             HStack {
                 Button {
                     withAnimation {
-                        properties.showMenu = false
+                        actions.showMenu = false
                     }
                 } label: {
                     HStack {
@@ -56,7 +58,7 @@ struct VoteSelectionView: View {
                         Image(systemName: "xmark")
                             .foregroundColor(Color("DarkPurple"))
                     }
-                    .frame(width: 200)
+                    .frame(width: 100)
                     .padding()
                     .background(colorScheme == .dark
                                 ? .nude : .salmon.opacity(0.2))
@@ -67,42 +69,50 @@ struct VoteSelectionView: View {
                 
                 if selectedOption != nil {
                     Button {
-                        withAnimation {
-                            properties.didSubmit = true
-                        }
-                        if let vote = selectedOption {
-                            // remove spaces
-                            let formatted = vote.replacingOccurrences(of: "> ", with: ">")
-                                .replacingOccurrences(of: "< ", with: "<")
-                                .replacingOccurrences(of: " - ", with: "-")
+                        guard let vote = selectedOption else { return }
+                        // remove spaces
+                        let formatted = vote.replacingOccurrences(of: "> ", with: ">")
+                            .replacingOccurrences(of: "< ", with: "<")
+                            .replacingOccurrences(of: " - ", with: "-")
+                        
+                        Task {
+                            do {
+                                // Submit wait time
+                                try await BarNetworkManager.shared.submitVote(
+                                    vote: BarVote(bar: bar.id, waitTime: formatted)
+                                )
+                                print("Vote submitted successfully for bar \(bar.id) with wait time: \(vote)")
+                                guard var status = barViewModel.statuses.first(where: { $0.bar == bar.id }) else { return }
+                                status.waitTime = formatted
                                 
-                            Task {
-                                do {
-                                    // Submit wait time
-                                    try await BarNetworkManager.shared.submitVote(
-                                        vote: BarVote(bar: bar.id, waitTime: formatted)
-                                    )
-                                    print("Vote submitted successfully for bar \(bar.id) with wait time: \(vote)")
-                                    guard var status = barViewModel.statuses.first(where: { $0.bar == bar.id }) else { return }
-                                    status.waitTime = formatted
-                                        
-                                    try await BarNetworkManager.shared.putBarStatus(status)
-                                    
-                                } catch {
-                                    print("Failed to submit vote: \(error.localizedDescription)")
+                                try await BarNetworkManager.shared.putBarStatus(status)
+                                timer.start()
+                                
+                                await MainActor.run {
+                                    withAnimation {
+                                        actions.didSubmit = true
+                                        actions.beginTimer = true
+                                    }
                                 }
-                            }
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                                withAnimation {
-                                    properties.didSubmit = false
-                                    properties.showMenu = false
+                                
+                                // 1.5 seconds delay, enusres UI changes happen on main thread
+                                try await Task.sleep(nanoseconds: 1_500_000_000)
+                                await MainActor.run {
+                                    withAnimation {
+                                        actions.didSubmit = false
+                                        actions.showMenu = false
+                                    }
                                 }
+                            } catch let voteError {
+                                submissionError = true
+                                error = voteError
                             }
                         }
                     } label: {
                         Text("Submit Vote")
                             .frame(width: 100)
-                            .font(.system(size: 16, weight: .bold, design: .rounded))
+                            .fontWeight(.bold)
+                            .fontDesign(.rounded)
                             .padding()
                             .background(
                                 colorScheme == .dark
@@ -113,8 +123,29 @@ struct VoteSelectionView: View {
                             .cornerRadius(15)
                             .padding(.bottom, 30)
                     }
+                    .transition(.move(edge: .trailing))
                     .padding(.leading, 10)
                 }
+            }
+        }
+        .alert("Vote Submission Failed", isPresented: $submissionError) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            if error is APIError {
+                switch error as? APIError {
+                case .noToken:
+                    Text("Please sign in to vote for wait times.")
+                case .statusCode(let code):
+                    Text("Failed to submit vote. Status code: \(code)")
+                default:
+                    Text("An unknown error occurred.")
+                }
+            }
+            else if error is BarVoteError {
+                Text("You must wait 5 minutes before voting again for this bar.")
+            }
+            else {
+                Text("An unknown error occurred.")
             }
         }
     }
@@ -122,7 +153,7 @@ struct VoteSelectionView: View {
 
 #if DEBUG
 #Preview {
-    VoteSelectionView(properties: .constant(.init(didSubmit: false, showMenu: false, type: "wait")), bar: .constant(Bar.sampleBar))
+    VoteSelectionView(timer: TimerManager(id: 1), actions: .constant(.init(didSubmit: false, showMenu: false, type: "wait")), bar: Bar.sampleBar)
         .environment(BarViewModel.preview)
 }
 #endif

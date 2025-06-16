@@ -7,7 +7,7 @@
 //
 
 import Foundation
-@preconcurrency import FirebaseAuth
+import FirebaseAuth
 
 actor BarNetworkManager: NetworkTestable {
     static let shared = BarNetworkManager()
@@ -73,6 +73,10 @@ actor BarNetworkManager: NetworkTestable {
         
         request.httpBody = try encoder.encode(vote)
         let (_, response) = try await session.data(for: request)
+        
+        if let response = response as? HTTPURLResponse, response.statusCode == 400 {
+            throw BarVoteError.coolDownPeriodNotMet
+        }
         if let response = response as? HTTPURLResponse, !(200...299).contains(response.statusCode)  {
             throw APIError.statusCode(response.statusCode)
         }
@@ -364,14 +368,13 @@ actor BarNetworkManager: NetworkTestable {
         }
         
         // Cache the response manually (since Authorization headers prevent auto-caching)
-        if let response = response as? HTTPURLResponse {
-            print("Caching response for bar statuses with status code: \(response.statusCode)")
-            let cachedResponse = CachedURLResponse(response: response, data: data)
-            URLCache.shared.storeCachedResponse(cachedResponse, for: request)
-            
-            // Store timestamp for cache expiration
-            UserDefaults.standard.set(Date(), forKey: "barStatuses_cache_timestamp")
-        }
+        print("Caching bar statuses data.")
+        let cachedResponse = CachedURLResponse(response: response, data: data)
+        URLCache.shared.storeCachedResponse(cachedResponse, for: request)
+        
+        // Store timestamp for cache expiration
+        UserDefaults.standard.set(Date(), forKey: "barStatuses_cache_timestamp")
+        
         return try timeStampDecoder.decode([BarStatus].self, from: data)
     }
     

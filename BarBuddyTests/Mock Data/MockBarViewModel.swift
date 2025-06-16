@@ -4,10 +4,10 @@
 //
 //  Created by Andrew Betancourt on 6/4/25.
 //
-#if DEBUG
-import Foundation
 
-@Observable
+import Foundation
+@testable import BarBuddy
+
 final class MockBarViewModel: Mockable {
     var mockHours: [BarHours]
     var mockBars: [Bar]
@@ -23,7 +23,7 @@ final class MockBarViewModel: Mockable {
         self.networkManager = MockBarNetworkManager()
     }
     
-    func getHours(for bar: Bar) async throws -> String? {
+    func getHours(for bar: Bar) throws -> String? {
         // Mock implementation to return hours as a string
         guard let hours = mockHours.first(where: { $0.bar == bar.id }) else {
             throw BarHoursError.doesNotExist("No hours found for bar with ID \(bar.id)")
@@ -98,4 +98,4 @@ final class MockBarViewModel: Mockable {
     }
 
 }
-#endif
+

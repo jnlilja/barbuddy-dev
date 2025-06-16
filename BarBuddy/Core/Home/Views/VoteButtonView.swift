@@ -11,7 +11,7 @@ struct VoteButtonView: View {
     @Environment(\.colorScheme) var colorScheme
     let text: String
     let opacity: Double
-    @Binding var properties: ButtonProperties
+    @Binding var properties: VoteButtonState
     @Binding var selectedOption: String?
 
     var body: some View {

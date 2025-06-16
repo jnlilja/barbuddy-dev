@@ -48,9 +48,9 @@ final class AuthViewModel: ObservableObject {
     
     // MARK: - Sign‑up (new account)
     /// Creates a Firebase Auth account and stores the profile in your backend.
-    func signUp(profile: SignUpUser) async {
+    func signUp(profile: User, password: String) async {
         do {
-            let result = try await Auth.auth().createUser(withEmail: profile.email, password: profile.password)
+            let result = try await Auth.auth().createUser(withEmail: profile.email, password: password)
             self.authUser = result.user
         } catch let nsError as NSError where nsError.domain == AuthErrorDomain {
             // Handle Firebase Auth errors

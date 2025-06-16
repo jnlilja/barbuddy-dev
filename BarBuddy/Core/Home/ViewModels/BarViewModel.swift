@@ -35,6 +35,10 @@ final class BarViewModel: Mockable {
     func handleScenePhaseChange(_ scenePhase: ScenePhase) async {
         switch scenePhase {
         case .active:
+            guard !isQuietHours() else {
+                print("App became active, but it's quiet hours, not refreshing data...")
+                return
+            }
             let timeSinceLastRefresh = Date().timeIntervalSince(lastRefreshTime)
             
             // If more than 5 minutes have passed, refresh immediately
@@ -61,8 +65,21 @@ final class BarViewModel: Mockable {
         }
     }
     
+    private func isQuietHours() -> Bool {
+        let calendar = Calendar.current
+        let now = Date()
+        let currentHour = calendar.component(.hour, from: now)
+        
+        // Check if current hour is between 2 AM (inclusive) and 7 AM (exclusive)
+        // This covers 2:00 AM - 6:59 AM
+        return currentHour >= 2 && currentHour < 7
+    }
+    
     // Background refresh methods
     private func startStatusRefreshTimer() {
+        // Don't start timer if it's quiet hours (2 AM - 7 AM)
+        guard !isQuietHours() else { return }
+        
         statusRefreshTimer?.invalidate()
         statusRefreshTimer = Timer.scheduledTimer(withTimeInterval: statusRefreshInterval, repeats: true) { [weak self] _ in
             Task { @MainActor in
@@ -73,7 +90,6 @@ final class BarViewModel: Mockable {
     
     private func refreshBarStatuses() async {
         do {
-            print("Background refresh: Fetching bar statuses...")
             let fetchedStatuses = try await networkManager.fetchStatuses()
             self.statuses = fetchedStatuses
             self.lastRefreshTime = Date()
@@ -83,7 +99,7 @@ final class BarViewModel: Mockable {
         }
     }
     
-    func stopStatusRefreshTimer() {
+    private func stopStatusRefreshTimer() {
         statusRefreshTimer?.invalidate()
         statusRefreshTimer = nil
     }
@@ -93,36 +109,33 @@ final class BarViewModel: Mockable {
     func loadBarData() async throws {
         var retries = 0
         let maxRetries = 3
-        let retryDelay: UInt64 = 2_000_000_000 // 2 seconds in nanoseconds
+        let retryDelay: UInt64 = 2_000_000_000 // 2 seconds
 
         while retries < maxRetries {
+            
+            // Attempt to fetch bar data
+            async let fetchedStatuses = networkManager.fetchStatuses()
+            async let fetchedBars = networkManager.fetchAllBars()
+            async let fetchedHours = networkManager.fetchAllBarHours()
+            
             do {
-                // Attempt to fetch bar data
-                async let fetchedStatuses = networkManager.fetchStatuses()
-                async let fetchedBars = networkManager.fetchAllBars()
-                async let fetchedHours = networkManager.fetchAllBarHours()
-                
-                do {
-                    let (statuses, bars, hours) = try await (fetchedStatuses, fetchedBars, fetchedHours)
-                    self.statuses = statuses
-                    self.bars = bars
-                    self.hours = hours
-                    retries = maxRetries // Exit loop on success
-                } catch let error as NSError where error.domain == NSURLErrorDomain {
-                    handleNetworkError(error, context: "Load Bar Data")
-                    retries += 1
-                    try await Task.sleep(nanoseconds: retryDelay)
-                } catch let apiError as APIError {
-                    handleAPIError(apiError, context: "Load Bar Data")
-                    retries += 1
-                    try await Task.sleep(nanoseconds: retryDelay)
-                } catch {
-                    print("Load Bar Data ERROR - \(error)")
-                    retries += 1
-                    try await Task.sleep(nanoseconds: retryDelay)
-                }
+                let (statuses, bars, hours) = try await (fetchedStatuses, fetchedBars, fetchedHours)
+                self.statuses = statuses
+                self.bars = bars
+                self.hours = hours
+                retries = maxRetries // Exit loop on success
+            } catch let error as NSError where error.domain == NSURLErrorDomain {
+                handleNetworkError(error, context: "Load Bar Data")
+                retries += 1
+                try await Task.sleep(nanoseconds: retryDelay)
+            } catch let apiError as APIError {
+                handleAPIError(apiError, context: "Load Bar Data")
+                retries += 1
+                try await Task.sleep(nanoseconds: retryDelay)
             } catch {
-                throw BarViewModelError.maxRetriesExceeded
+                print("Load Bar Data ERROR - \(error)")
+                retries += 1
+                try await Task.sleep(nanoseconds: retryDelay)
             }
         }
     }
@@ -142,43 +155,10 @@ final class BarViewModel: Mockable {
         return "\(closed ? "Closed" : "Open"): \(formatter.string(from: open)) - \(formatter.string(from: close))"
     }
     
-//    func getMostVotedWaitTime(barId: Int) async throws {
-//        // Check if barId is valid
-//        guard let index = statuses.firstIndex(where: { $0.bar == barId }) else {
-//            print("No status found for bar \(barId)")
-//            throw BarViewModelError.statusNotFound
-//        }
-//        print("Fetching new wait time from server...")
-//
-//        let votes = try await networkManager.fetchAllVotes().filter { $0.bar == barId }
-//
-//        // If no votes found, set default to "N/A"
-//        var countMap: [String: Int] = [:]
-//        votes.forEach { countMap[$0.waitTime, default: 0] += 1 }
-//        let mostVotedTime = countMap.max { $0.value < $1.value }?.key ?? "N/A"
-//
-//        statuses[index].waitTime = mostVotedTime
-//        cacheWaitTime(mostVotedTime, for: barId)
-//
-//        // Update the server with the most voted time if it differs
-//        let previousServerStatus = try? await networkManager.fetchBarStatus(statusId: statuses[index].id)
-//        if previousServerStatus?.waitTime != mostVotedTime {
-//            try await networkManager.putBarStatus(statuses[index])
-//            print("\nUpdated server with new most voted wait time: \(mostVotedTime)")
-//        } else {
-//            print("Server already has most voted time, skipping update.")
-//        }
-//    }
-    
     private func cacheWaitTime(_ time: String, for barId: Int) {
         var waitTimeCache = UserDefaults.standard.dictionary(forKey: "barVotes_wait_time_cache") as? [String: String] ?? [:]
         waitTimeCache["\(barId)"] = time
         UserDefaults.standard.set(waitTimeCache, forKey: "barVotes_wait_time_cache")
-    }
-
-    
-    func hasCachedWaitTime(for barId: Int) -> Bool {
-        statuses.contains(where: { $0.bar == barId })
     }
     
     internal func isClosed(_ openTime: Date, _ closeTime: Date) -> Bool {
@@ -285,7 +265,7 @@ final class BarViewModel: Mockable {
 // Indtended only for Xcode previews and testing
 #if DEBUG
 extension BarViewModel {
-    static let preview: BarViewModel = {
+    @MainActor static let preview: BarViewModel = {
         let viewModel = BarViewModel()
         viewModel.bars = Bar.sampleBars
         viewModel.statuses = BarStatus.sampleStatuses

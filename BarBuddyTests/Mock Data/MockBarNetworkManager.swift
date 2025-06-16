@@ -6,6 +6,7 @@
 //
 
 import Foundation
+@testable import BarBuddy
 
 @MainActor
 // MARK: - Mock Network Manager
@@ -79,10 +80,35 @@ final class MockBarNetworkManager: NetworkTestable {
         ]
     }
     
+    func fetchStatuses() async throws -> [BarStatus] {
+        return [
+            BarStatus(
+                id: 1,
+                bar: 1,
+                crowdSize: "",
+                waitTime: "<5 min",
+                lastUpdated: Date()
+            ),
+            BarStatus(
+                id: 2,
+                bar: 2,
+                crowdSize: "",
+                waitTime: ">30 min",
+                lastUpdated: Date()
+            ),
+            BarStatus(
+                id: 3,
+                bar: 3,
+                crowdSize: "",
+                waitTime: "10-15 min",
+                lastUpdated: Date()
+            )
+        ]
+    }
+    
     // MARK: - Unused Methods
     // These methods are required by the protocol but not used in the tests
     func fetchAllBars() async throws -> [BarHours] { return [] }
-    func fetchStatuses() async throws -> [BarStatus] { return [] }
     func patchBarHours(id: Int, hour: BarBuddy.BarHours) async throws {}
     func fetchAllBars() async throws -> [Bar] { return [] }
     func fetchBarStatus(statusId: Int) async throws -> BarStatus {
