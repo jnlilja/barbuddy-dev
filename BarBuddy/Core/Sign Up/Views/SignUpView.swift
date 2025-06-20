@@ -14,6 +14,7 @@ struct SignUpView: View {
     @EnvironmentObject var authVM: AuthViewModel
     @Binding var path: NavigationPath
     @FocusState private var focusedField: FocusField?
+    @AppStorage("newUser") var newUser: Bool?
 
     enum FocusField {
         case email, password, confirmPassword
@@ -23,7 +24,7 @@ struct SignUpView: View {
         @Bindable var bindableViewModel = viewModel
 
         ZStack {
-            Color("DarkBlue").ignoresSafeArea()
+            AnimatedBackgroundView()
 
             VStack(spacing: 25) {
                 Text("Create an Account")
@@ -146,6 +147,9 @@ struct SignUpView: View {
                             email: viewModel.email,
                             password: viewModel.password
                         )
+                        if authVM.authUser != nil {
+                            newUser = true
+                        }
                     }
                 }
             }

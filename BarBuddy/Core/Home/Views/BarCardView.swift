@@ -18,11 +18,7 @@ struct BarCardView: View {
     @State private var loading = true
     
     private var waitTime: String? {
-        barViewModel.statuses.first(where: { $0.bar == bar.id })?
-            .waitTime
-            .replacingOccurrences(of: "-", with: " - ")
-            .replacingOccurrences(of: "<", with: "< ")
-            .replacingOccurrences(of: ">", with: "> ")
+        barViewModel.statuses.first(where: { $0.bar == bar.id })?.formattedWaitTime
     }
     
     private var screenWidth: CGFloat {
@@ -36,9 +32,10 @@ struct BarCardView: View {
         VStack(alignment: .leading, spacing: 12) {
             // Bar Header
             Text(bar.name)
+                .lineLimit(bar.name.count > 25 ? 2 : 1)
                 .minimumScaleFactor(0.5)
-                .lineLimit(1)
-                .font(.system(size: 32, weight: .bold))
+                .font(.largeTitle)
+                .bold()
                 .foregroundColor(colorScheme == .dark ? .white : .darkBlue)
             
             // Open Hours
@@ -53,7 +50,7 @@ struct BarCardView: View {
             }
             else{
                 Rectangle()
-                    .fill(Color("DarkPurple").opacity(0.3))
+                    .fill(.darkPurple.opacity(0.3))
                     .frame(height: 200)
                     .cornerRadius(10)
             }
@@ -88,25 +85,24 @@ struct BarCardView: View {
                 }
                 .foregroundColor(.white)
                 
-                NavigationLink(destination: BarDetailView(bar: bar)
-                    .environment(viewModel)) {
-                        ZStack {
-                            RoundedRectangle(cornerRadius: 20)
-                                .fill(.darkBlue)
-                                .frame(height: 80)
+                NavigationLink(destination: BarDetailView(bar: bar)) {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 20)
+                            .fill(.darkBlue)
+                            .frame(height: 80)
+                        
+                        VStack(spacing: 5) {
+                            Text("Wrong?")
+                                .font(.system(size: 14, weight: .medium))
                             
-                            VStack(spacing: 5) {
-                                Text("Wrong?")
-                                    .font(.system(size: 14, weight: .medium))
-                                
-                                Text("Vote Wait Time >")
-                                    .multilineTextAlignment(.center)
-                                    .frame(width: 80)
-                                    .bold()
-                            }
+                            Text("Vote Wait Time >")
+                                .multilineTextAlignment(.center)
+                                .frame(width: 80)
+                                .bold()
                         }
-                        .foregroundColor(.white)
                     }
+                    .foregroundColor(.white)
+                }
             }
         }
         .onAppear {
@@ -129,6 +125,14 @@ struct BarCardView: View {
 #Preview(traits: .sizeThatFitsLayout) {
     NavigationStack {
         BarCardView(bar: Bar.sampleBar)
+            .environment(MapViewModel())
+            .padding()
+    }
+    .environment(BarViewModel.preview)
+}
+#Preview("Long Name", traits: .sizeThatFitsLayout) {
+    NavigationStack {
+        BarCardView(bar: Bar.sampleBars[3])
             .environment(MapViewModel())
             .padding()
     }

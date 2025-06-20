@@ -7,7 +7,7 @@
 
 import Foundation
 import SwiftUI
-@preconcurrency import _MapKit_SwiftUI
+import MapKit
 
 @MainActor
 @Observable
@@ -27,7 +27,7 @@ final class MapViewModel {
     )
 
     func updateCameraPosition(query: String, _ bars: [Bar]) {
-        guard let coord = bars.first(where: { $0.name.contains(query) })?.coordinate else {
+        guard let coord = bars.first(where: { $0.name.localizedCaseInsensitiveContains(query) })?.coordinate else {
             return
         }
         cameraPosition = .region(
@@ -35,6 +35,15 @@ final class MapViewModel {
                 center: coord,
                 latitudinalMeters: 300,
                 longitudinalMeters: 300
+            )
+        )
+    }
+    
+    func resetCameraPosition() {
+        cameraPosition = .region(
+            .init(
+                center: Self.pacificBeachCoordinate,
+                span: .init(latitudeDelta: 0.01, longitudeDelta: 0.01)
             )
         )
     }

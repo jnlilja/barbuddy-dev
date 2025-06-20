@@ -6,7 +6,7 @@
 //
 import CoreLocation
 
-struct Bar: Codable, Identifiable, Hashable {
+struct Bar: Codable, Identifiable, Hashable, CustomStringConvertible {
     let id: Int
     let name: String
     let address: String
@@ -23,14 +23,9 @@ struct Bar: Codable, Identifiable, Hashable {
     var coordinate: CLLocationCoordinate2D {
         CLLocationCoordinate2D(latitude: location.latitude, longitude: location.longitude)
     }
-}
-struct Location: Codable, Hashable {
-    let latitude: Double
-    let longitude: Double
-}
-
-struct CurrentStatus: Codable, Hashable {
-    let crowdSize: String?
-    let waitTime: String?
-    let lastUpdated: Date?
+    
+    // Nice to have a string representation of the bar for debugging purposes.
+    var description: String {
+        "Bar(id: \(id), name: \(name), address: \(address), coordinate: \(coordinate))"
+    }
 }

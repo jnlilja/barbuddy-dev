@@ -23,17 +23,26 @@ struct VoteConfirmedView: View {
                 Image(systemName: "checkmark.circle.fill")
                     .font(.system(size: 60))
                     .foregroundStyle(.darkBlue)
-                    .symbolEffect(.bounce, value: isAnimating)
+                    .symbolEffect(.bounce.up.byLayer, value: isAnimating)
                 
                 Text("Voted!")
                     .foregroundStyle(.darkBlue)
                     .cornerRadius(15)
                     .bold()
                     .font(.system(size: 60, weight: .bold, design: .rounded))
+                    .phaseAnimator(VotedAnimationPhase.allCases, trigger: isAnimating) { content, phase in
+                        content
+                            .scaleEffect(phase.scale)
+                    } animation: { phase in
+                        switch phase {
+                        case .up: .snappy(duration: 0.3)
+                        default: .snappy(duration: 0.2)
+                        }
+                    }
             }
         }
-        .onAppear() {
-            withAnimation(.easeInOut(duration: 1).delay(3)) {
+        .onAppear {
+            withAnimation {
                 isAnimating.toggle()
             }
         }
@@ -43,3 +52,5 @@ struct VoteConfirmedView: View {
 #Preview {
     VoteConfirmedView()
 }
+
+

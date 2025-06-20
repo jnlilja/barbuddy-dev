@@ -9,8 +9,6 @@ import PhotosUI
 import SwiftUI
 
 struct PhotoUploadView: View {
-    @EnvironmentObject var authViewModel: AuthViewModel
-    @Environment(SignUpViewModel.self) var signUpViewModel
     @State private var selectedImages: [UIImage] = []
     @State private var photoPickerItems: [PhotosPickerItem] = []
 
@@ -19,74 +17,146 @@ struct PhotoUploadView: View {
 
     var body: some View {
         ZStack {
-            Color("DarkBlue").ignoresSafeArea()
+            Color(.darkBlue)
+                .ignoresSafeArea()
 
             VStack {
-                Spacer()
+                if selectedImages.isEmpty {
+                    Spacer()
+                    
+                    Image(systemName: "camera.fill")
+                        .font(.system(size: 80))
+                        .foregroundColor(Color("Salmon"))
+                        .padding(.bottom, 30)
+                    
+                    Text("A Picture is Worth")
+                        .font(.title)
+                        .foregroundColor(.white)
+                        .bold()
+                    
+                    Text("a Thousand Words")
+                        .font(.title)
+                        .foregroundColor(Color("Salmon"))
+                        .bold()
+                        .padding(.bottom, 50)
+                    
+                    Text("Add 4-6 profile pictures to get started!")
+                        .font(.body)
+                        .foregroundColor(.white)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal)
+                    
+                    Spacer()
+                    
+                    PhotosPicker(
+                        selection: $photoPickerItems,
+                        maxSelectionCount: maxPhotos,
+                        selectionBehavior: .ordered,
+                        matching: .images
+                    ) {
+                        HStack {
+                            Text("Add Profile Pictures")
+                            Image(systemName: "plus.circle.fill")
+                        }
+                        .font(.headline)
+                        .foregroundColor(.white)
+                        .frame(width: 250, height: 50)
+                        .background(.darkPurple)
+                        .cornerRadius(10)
+                        .padding(.bottom, 50)
+                    }
+                    .onChange(of: photoPickerItems) { oldItems, newItems in
+                        Task {
+                            for item in newItems {
+                                if let data = try? await item.loadTransferable(type: Data.self),
+                                   let img = UIImage(data: data)
+                                {
+                                    selectedImages.append(img)
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    
+                    Text("Review Your Photos")
+                        .font(.title)
+                        .foregroundColor(.white)
+                        .bold()
+                        .padding(.top)
+                    
+                    Text("\(selectedImages.count)/\(maxPhotos) added")
+                        .font(.caption)
+                        .foregroundStyle(.white)
 
-                Text("Add \(minPhotos)-\(maxPhotos) Photos")
-                    .font(.title).bold()
-                    .foregroundColor(.white)
-
-                Text("\(selectedImages.count)/\(maxPhotos) photos added")
-                    .foregroundColor(Color("Salmon"))
-                    .padding(.vertical, 20)
-
-                // snapshot of the @State array for Sendable closure
-                let imageSnapshot = selectedImages
-
-                LazyVGrid(columns: Array(repeating: .init(.flexible()), count: 3),
-                          spacing: 15)
-                {
-                    ForEach(0..<maxPhotos, id: \.self) { i in
+                    ScrollView(.horizontal) {
+                        LazyHStack(spacing: 16) {
+                            ForEach(selectedImages, id: \.self) { image in
+                                ImageTileView(image: image)
+                                    .scrollTransition(
+                                        axis: .horizontal
+                                    ) { content, phase in
+                                        return content
+                                            .offset(x: phase.value * -90)
+                                    }
+                                    .containerRelativeFrame(.horizontal)
+                                    .clipShape(.rect(cornerRadius: 32))
+                            }
+                        }
+                        .scrollTargetLayout()
+                    }
+                    .contentMargins(32, for: .scrollContent)
+                    .scrollTargetBehavior(.viewAligned)
+                    .scrollIndicators(.never)
+                    
+                    HStack {
+                        Text("Create Your Account")
+                            .font(.headline)
+                            .foregroundColor(.white)
+                            .frame(width: 190, height: 50)
+                            .background(.darkPurple)
+                            .cornerRadius(10)
+                            
                         PhotosPicker(
                             selection: $photoPickerItems,
                             maxSelectionCount: maxPhotos,
                             selectionBehavior: .ordered,
                             matching: .images
                         ) {
-                            if i < imageSnapshot.count {
-                                ImageTileView(image: imageSnapshot[i])
-                            } else {
-                                EmptyImageTileView()
+                            Text("Edit")
+                                .font(.headline)
+                                .foregroundColor(.white)
+                                .frame(width: 100, height: 50)
+                                .background(.darkPurple)
+                                .cornerRadius(10)
+                                .padding(.leading)
+                        }
+                        .onChange(of: photoPickerItems) { oldItems, newItems in
+                            Task {
+                                for (i, item) in newItems.enumerated() {
+                                    if let data = try? await item.loadTransferable(type: Data.self),
+                                       let img = UIImage(data: data)
+                                    {
+                                        // Replace photo if previous photo in current index is different
+                                        if i < oldItems.count && selectedImages[i] != img {
+                                            selectedImages[i] = img
+                                        }
+                                        // Add more photos when our new selection is bigger than previous one
+                                        if !selectedImages.contains(img) {
+                                            selectedImages.append(img)
+                                        }
+                                    }
+                                }
+                                
+                                // Remove last n photos if user deselects n photos
+                                if oldItems.count > newItems.count {
+                                    selectedImages.removeLast(oldItems.count - newItems.count)
+                                }
                             }
                         }
                     }
+                    .padding(.bottom)
+                    Spacer()
                 }
-                .padding()
-                .onChange(of: photoPickerItems) { _, newItems in
-                    selectedImages.removeAll()
-                    Task {
-                        for item in newItems {
-                            if let data = try? await item.loadTransferable(type: Data.self),
-                               let img  = UIImage(data: data)
-                            {
-                                selectedImages.append(img)
-                            }
-                        }
-                    }
-                }
-
-                Spacer()
-
-                Button(action: {
-                    Task {
-                        //let profile = signUpViewModel.buildProfile()
-                        //await authViewModel.signUp(
-                        //    profile: profile
-                        //)
-                    }
-                }) {
-                    Text("Let's go!")
-                        .font(.headline)
-                        .foregroundColor(.white)
-                        .opacity(selectedImages.count < minPhotos ? 0.6 : 1) // Dim text when disabled
-                        .frame(width: 300, height: 50)
-                        .background(Color("DarkPurple"))
-                        .cornerRadius(10)
-                }
-                .disabled(selectedImages.count < minPhotos) // Prevent interaction when disabled
-                .padding(.bottom, 50)
             }
         }
     }
@@ -95,6 +165,4 @@ struct PhotoUploadView: View {
 #Preview("Photo Upload") {
     @Previewable @State var signUpViewModel = SignUpViewModel()
     PhotoUploadView()
-        .environment(signUpViewModel)
-        .environmentObject(AuthViewModel())
 }

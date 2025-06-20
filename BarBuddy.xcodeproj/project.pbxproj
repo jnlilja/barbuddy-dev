@@ -11,7 +11,7 @@
 		1B471B9D2DFF85BA003C7591 /* TestPlan.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = 1B471B9C2DFF85BA003C7591 /* TestPlan.xctestplan */; };
 		1BBB5B712D979D0400A5E2E8 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 1BBB5B702D979D0400A5E2E8 /* FirebaseAuth */; };
 		1BF7EF472D79161D001786D8 /* BottomSheet in Frameworks */ = {isa = PBXBuildFile; productRef = 1BF7EF462D79161D001786D8 /* BottomSheet */; };
-		1BFF2B742DB6C59400D160AB /* PusherSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 1BFF2B732DB6C59400D160AB /* PusherSwift */; };
+		1BFF2B742DB6C59400D160AB /* PusherSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 1BFF2B732DB6C59400D160AB /* PusherSwift */; settings = {ATTRIBUTES = (Required, ); }; };
 		1BFF2B772DB6C73900D160AB /* SDWebImageSwiftUI in Frameworks */ = {isa = PBXBuildFile; productRef = 1BFF2B762DB6C73900D160AB /* SDWebImageSwiftUI */; };
 /* End PBXBuildFile section */
 
@@ -205,7 +205,7 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 1620;
-				LastUpgradeCheck = 1620;
+				LastUpgradeCheck = 2600;
 				TargetAttributes = {
 					599153B02D540523004B2832 = {
 						CreatedOnToolsVersion = 16.2;
@@ -363,12 +363,13 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
@@ -420,11 +421,12 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				VALIDATE_PRODUCT = YES;
 			};

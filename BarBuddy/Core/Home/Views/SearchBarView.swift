@@ -7,10 +7,12 @@
 
 
 import SwiftUI
+import BottomSheet
 
 struct SearchBarView: View {
     @Binding var searchText: String
     @State var prompt: String
+    var position: Binding<BottomSheetPosition>?
     
     var body: some View {
         HStack {
@@ -27,16 +29,20 @@ struct SearchBarView: View {
             TextField(prompt, text: $searchText)
                 .textFieldStyle(RoundedBorderTextFieldStyle())
                 .submitLabel(.search)
+                .simultaneousGesture(TapGesture().onEnded {
+                    position?.wrappedValue = .relativeTop(1)
+                })
         }
         .padding(.horizontal)
         .padding(.vertical, 8)
-        .background(Color(.secondarySystemBackground))  // Changed to pure white
+        .background(Color(.secondarySystemBackground))
         .cornerRadius(10)
         .shadow(radius: 2)
     }
 }
 
 #Preview {
-    SearchBarView(searchText: .constant(""), prompt: "Enter search term")
+    @Previewable @State var searchText: String = ""
+    SearchBarView(searchText: $searchText, prompt: "Enter search term")
         .padding(.horizontal)
 }

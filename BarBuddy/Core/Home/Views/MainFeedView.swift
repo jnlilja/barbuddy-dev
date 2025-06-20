@@ -16,13 +16,10 @@ struct MainFeedView: View {
     
     @State private var bottomSheetPosition: BottomSheetPosition = .relative(0.86)
     @State private var searchText = ""
-    @State private var hours: String?
-    
     @State private var selectedBar: Bar?
-    @State private var isLoading = true
-    @State private var isErrorPresented = false
-    @State private var toggleBarError = false
-    @State private var showSignOutAlert: Bool = false
+    @State private var actions = MainFeedActions()
+    
+    @FocusState private var isFocused: Bool
     
     let locationViewModel = LocationManager()
     
@@ -38,7 +35,7 @@ struct MainFeedView: View {
             mapLayer
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbarBackgroundVisibility(.hidden, for: .navigationBar)
-                .toolbar { toolbarContent; logOut }
+                .toolbar { pacificBeachHeader; logOutButton }
                 .bottomSheet(
                     bottomSheetPosition: $bottomSheetPosition,
                     switchablePositions: [
@@ -46,17 +43,23 @@ struct MainFeedView: View {
                     ],
                     headerContent: { headerView }
                 ) {
-                    contentList
+                    if searchText.isEmpty {
+                        contentList
+                    } else {
+                        SearchResultsView(
+                            searchText: $searchText,
+                            isLoading: $actions.isLoading,
+                            position: $bottomSheetPosition,
+                            focus: _isFocused
+                        )
+                    }
                 }
                 .customBackground(.darkBlue.opacity(0.9))
                 .dragIndicatorColor(
                     bottomSheetPosition == .relativeTop(1) ? .clear : .white
                 )
-                .enableContentDrag()
-                .enableAppleScrollBehavior()
-                .isResizable()
                 .ignoresSafeArea(.keyboard)
-                .sensoryFeedback(trigger: showSignOutAlert) {
+                .sensoryFeedback(trigger: actions.showSignOutAlert) {
                     // Only apply haptics when tapped on logout icon
                     return $1 ? .selection : .none
                 }
@@ -65,41 +68,42 @@ struct MainFeedView: View {
             if barViewModel.bars.isEmpty {
                 do {
                     try await barViewModel.loadBarData()
-                    isLoading = false
+                    actions.isLoading = false
                 } catch {
                     print("Error loading bar data: \(error)")
-                    isErrorPresented = true
+                    actions.isErrorPresented = true
                 }
             }
-            isLoading = false
+            actions.isLoading = false
         }
         .tint(.salmon)
         .environment(viewModel)
-        .alert("Error Loading Data", isPresented: $isErrorPresented) {
+        .alert("Error Loading Data", isPresented: $actions.isErrorPresented) {
             Button("Retry") {
-                isLoading = true
+                actions.isLoading = true
                 Task {
                     do {
                         try await barViewModel.loadBarData()
-                        toggleBarError = false
+                        actions.toggleBarError = false
                     } catch {
                         print("Error loading bar data: \(error)")
                     }
-                    isLoading = false
+                    actions.isLoading = false
                 }
             }
             Button("Cancel", role: .cancel) {
-                toggleBarError = true
+                actions.toggleBarError = true
             }
         } message: {
             Text("There was an error loading the bar data. Please try again.")
         }
-        .alert("Confirm Sign Out", isPresented: $showSignOutAlert) {
+        .alert("Confirm Sign Out", isPresented: $actions.showSignOutAlert) {
             Button("Cancel", role: .cancel) {}
             Button("Sign Out") {
                 URLCache.shared.removeAllCachedResponses()
                 UserDefaults.standard.removeObject(forKey: "barStatuses_cache_timestamp")
                 UserDefaults.standard.removeObject(forKey: "barHours_cache_timestamp")
+                barViewModel.stopStatusRefreshTimer()
                 authViewModel.signOut()
             }
         } message: {
@@ -124,7 +128,6 @@ struct MainFeedView: View {
             MapCompass()
             MapPitchToggle()
         }
-        .ignoresSafeArea(.keyboard)
         .onAppear { locationViewModel.startLocationServices() }
         .sheet(
             item: $selectedBar,
@@ -150,73 +153,94 @@ struct MainFeedView: View {
                 .resizable()
                 .frame(width: 18, height: 18)
         }
+        .scaleEffect(selectedBar == bar ? 1.7 : 1)
+        .animation(.snappy(extraBounce: 0.5), value: selectedBar)
     }
     private var headerView: some View {
-        SearchBarView(searchText: $searchText, prompt: "Search bars")
+        SearchBarView(searchText: $searchText, prompt: "Where to drink?", position: $bottomSheetPosition)
             .padding([.horizontal, .bottom])
+            .simultaneousGesture(TapGesture().onEnded({ _ in
+                actions.showSearchView = true
+            }))
+            .focused($isFocused)
+            .scrollDismissesKeyboard(.automatic)
             .onSubmit(of: .text) {
-                bottomSheetPosition = .relativeBottom(0.21)
-                viewModel.updateCameraPosition(query: searchText, barViewModel.bars)
+                bottomSheetPosition = searchText.isEmpty ? .relative(0.86) : .relativeBottom(0.21)
+                viewModel.updateCameraPosition(query: searchText, filteredBars)
             }
-            .simultaneousGesture(
-                TapGesture().onEnded {
-                    bottomSheetPosition = .relative(0.86)
-                }
-            )
     }
     private var contentList: some View {
-        VStack {
-            NavigationLink(destination: DealsAndEventsView()) {
-                DealsAndEventsButtonView()
-                    .padding([.horizontal, .bottom])
-            }
-            .buttonStyle(PlainButtonStyle())
-            if isLoading {
-                ForEach(0..<3) { _ in
-                    SkeletonBarCardView()
+        ScrollView {
+            VStack(spacing: 0) {
+                GeometryReader { geometryProxy in
+                    let minY = geometryProxy.frame(in: .named("scrollViewCoordinateSpace")).minY
+                    Color.clear.preference(key: ScrollOffsetPreferenceKey.self, value: minY)
                 }
-                .padding([.horizontal, .bottom])
-            } else {
-                if toggleBarError || isErrorPresented {
-                    Button {
-                        isLoading = true
-                        Task {
-                            do {
-                                try await barViewModel.loadBarData()
-                                isLoading = false
-                                toggleBarError = false
-                            } catch {
-                                print("Error loading bar data: \(error)")
-                                isLoading = false
-                            }
-                        }
-                    } label: {
-                        Text("Could not load bars. Please try again.")
-                            .foregroundColor(.neonPink)
-                            .bold()
-                            .padding(.top, 20)
+                .frame(height: 0)
+                .onPreferenceChange(ScrollOffsetPreferenceKey.self) { offsetValue in
+                    actions.isSwipingUP = offsetValue < 0.0
+                }
+                
+                NavigationLink(destination: DealsAndEventsView()) {
+                    DealsAndEventsButtonView()
+                        .padding([.horizontal, .bottom])
+                }
+                .buttonStyle(.plain)
+                
+                if actions.isLoading {
+                    ForEach(0..<3) { _ in
+                        SkeletonBarCardView()
                     }
-                } else if filteredBars.isEmpty {
-                    Text("No results found")
-                        .foregroundColor(.white)
-                        .font(.title3)
+                    .padding([.horizontal, .bottom])
                 } else {
-                    ForEach(filteredBars) { bar in
-                        BarCardView(bar: bar)
-                            .environment(viewModel)
-                            .padding([.horizontal, .bottom])
-                            .transition(
-                                .opacity.combined(with: .move(edge: .bottom))
-                            )
+                    if actions.toggleBarError || actions.isErrorPresented {
+                        Button {
+                            actions.isLoading = true
+                            Task {
+                                do {
+                                    try await barViewModel.loadBarData()
+                                    actions.isLoading = false
+                                    actions.toggleBarError = false
+                                } catch {
+                                    print("Error loading bar data: \(error)")
+                                    actions.isLoading = false
+                                }
+                            }
+                        } label: {
+                            Text("Could not load bars. Please try again.")
+                                .foregroundColor(.neonPink)
+                                .bold()
+                                .padding(.top, 20)
+                        }
+                    } else {
+                        ForEach(barViewModel.bars) { bar in
+                            BarCardView(bar: bar)
+                                .environment(viewModel)
+                                .padding([.horizontal, .bottom])
+                                .transition(.blurReplace)
+                                .scrollTransition { barCard, phase in
+                                    barCard
+                                        .scaleEffect(phase == .bottomTrailing ? 0.95 : 1)
+                                }
+                        }
                     }
                 }
             }
         }
-        .animation(.easeInOut(duration: 0.4), value: isLoading)
-        .animation(.easeInOut(duration: 0.3), value: searchText)
+        .safeAreaPadding(.bottom, 90)
+        .scrollDismissesKeyboard(.immediately)
+        .coordinateSpace(name: "scrollViewCoordinateSpace")
+        .simultaneousGesture(
+            DragGesture().onEnded { gesture in
+                // Check if scrolled to top and it's a clear swipe up
+                if actions.isSwipingUP  {
+                    self.bottomSheetPosition = .relativeTop(1)
+                }
+            }
+        )
     }
     // MARK: — Toolbar
-    private var toolbarContent: some ToolbarContent {
+    private var pacificBeachHeader: some ToolbarContent {
         ToolbarItem(placement: .principal) {
             Text("Pacific Beach")
                 .font(.title)
@@ -230,39 +254,32 @@ struct MainFeedView: View {
                 .animation(.easeInOut, value: bottomSheetPosition)
         }
     }
-    private var logOut: some ToolbarContent {
+    private var logOutButton: some ToolbarContent {
         ToolbarItem(placement: .cancellationAction) {
             Button {
-                showSignOutAlert = true
+                actions.showSignOutAlert = true
             } label: {
-                // 
+                //
                 if #available(iOS 26, *) {
                     Image(systemName: "rectangle.portrait.and.arrow.forward")
-                        .environment(\.layoutDirection, .rightToLeft)
-                        .font(.callout)
-                        .foregroundStyle(
-                            colorScheme == .dark
-                            ? .salmon : .darkPurple
-                        )
-                        .shadow(radius: 5)
-                        .animation(.easeInOut, value: bottomSheetPosition)
+
                 } else {
                     Image(systemName: "rectangle.portrait.and.arrow.forward")
-                        .environment(\.layoutDirection, .rightToLeft)
-                        .font(.callout)
-                        .foregroundStyle(
-                            colorScheme == .dark
-                            ? .salmon : .darkPurple
-                        )
                         .frame(width: 43, height: 43)
                         .background(Color(.tertiarySystemBackground))
                         .clipShape(RoundedCorner(radius: 10))
-                        .animation(.easeInOut, value: bottomSheetPosition)
                 }
             }
+            .environment(\.layoutDirection, .rightToLeft)
+            .font(.callout)
+            .foregroundStyle(
+                colorScheme == .dark
+                ? .salmon : .darkPurple
+            )
         }
     }
 }
+
 #if DEBUG
 #Preview {
     MainFeedView()

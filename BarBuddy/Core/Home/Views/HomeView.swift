@@ -10,6 +10,7 @@ import SwiftUI
 struct HomeView: View {
     @State private var selectedTab = 0
     @State private var mapViewModel = MapViewModel()
+    
     var body: some View {
         TabView(selection: $selectedTab) {
             Group {
@@ -19,19 +20,14 @@ struct HomeView: View {
                         Text("Map")
                     }
                     .tag(0)
-                
-                EmptyView()
-                    .tabItem {
-                        Image(systemName: "person.circle")
-                        Text("Coming Soon")
-                    }
-                    .sensoryFeedback(.selection, trigger: selectedTab)
-                    .tag(1)
             }
             .toolbar(.visible, for: .tabBar)
             .toolbarBackground(.darkBlue, for: .tabBar)
         }
         .environment(mapViewModel)
+        .onAppear {
+            mapViewModel.resetCameraPosition()
+        }
         .tint(.salmon)
     }
 }
@@ -43,4 +39,4 @@ struct HomeView: View {
         .environmentObject(AuthViewModel())
         .environment(BarViewModel.preview)
 }
-#endif
+#endif // DEBUG

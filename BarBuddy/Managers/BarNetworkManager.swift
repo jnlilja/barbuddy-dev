@@ -853,23 +853,3 @@ actor BarNetworkManager: NetworkTestable {
         }
     }
 }
-
-func retry<T> (
-    maxAttempts: Int = 3,
-    delay: TimeInterval = 1,
-    task: @escaping @Sendable () async throws -> T
-) async throws -> T {
-    var attempts = 0
-    while true {
-        print("Attempt \(attempts + 1) of \(maxAttempts)")
-        do {
-            return try await task()
-        } catch {
-            attempts += 1
-            if attempts >= maxAttempts {
-                throw error
-            }
-            try await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
-        }
-    }
-}

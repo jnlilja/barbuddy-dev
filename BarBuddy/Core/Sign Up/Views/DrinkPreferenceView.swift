@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct DrinkPreferenceView: View {
-    @State private var favoriteDrink    = ""
+    @State private var favoriteDrink = ""
     @Binding var path: NavigationPath
     @Environment(SignUpViewModel.self) var viewModel
     @State private var proceedToNextPage = false

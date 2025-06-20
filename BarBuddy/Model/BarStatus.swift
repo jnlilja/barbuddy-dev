@@ -12,5 +12,12 @@ struct BarStatus: Codable, Equatable, Sendable {
     let crowdSize: String
     var waitTime: String
     let lastUpdated: Date
+    
+    var formattedWaitTime: String {
+        waitTime
+            .replacingOccurrences(of: "<", with: "< ")
+            .replacingOccurrences(of: ">", with: "> ")
+            .replacingOccurrences(of: "-", with: " - ")
+    }
 }
     

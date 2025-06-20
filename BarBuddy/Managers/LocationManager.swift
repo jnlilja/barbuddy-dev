@@ -23,6 +23,7 @@ final class LocationManager: NSObject, CLLocationManagerDelegate {
         if locationManager.authorizationStatus == .authorizedAlways || locationManager.authorizationStatus == .authorizedWhenInUse {
             locationManager.startUpdatingLocation()
             isAuthorized = true
+            userLocation = locationManager.location
         } else {
             isAuthorized = false
             locationManager.requestWhenInUseAuthorization()

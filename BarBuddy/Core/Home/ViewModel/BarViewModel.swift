@@ -7,6 +7,7 @@
 
 import Foundation
 import SwiftUI
+import FirebaseAuth
 
 @Observable
 final class BarViewModel: Mockable {
@@ -14,7 +15,6 @@ final class BarViewModel: Mockable {
     var statuses: [BarStatus]
     var hours: [BarHours]
     @ObservationIgnored var networkManager: NetworkTestable
-    @ObservationIgnored private var hasFetchedBars = false
     
     // Background refresh timers
     @ObservationIgnored private var statusRefreshTimer: Timer?
@@ -29,27 +29,26 @@ final class BarViewModel: Mockable {
         self.statuses = []
         self.hours = []
         
-        startStatusRefreshTimer()
+        if Auth.auth().currentUser != nil {
+            startStatusRefreshTimer()
+        }
     }
     
     func handleScenePhaseChange(_ scenePhase: ScenePhase) async {
         switch scenePhase {
         case .active:
-            guard !isQuietHours() else {
-                print("App became active, but it's quiet hours, not refreshing data...")
+            guard !isQuietHours(), Auth.auth().currentUser != nil else {
                 return
             }
             let timeSinceLastRefresh = Date().timeIntervalSince(lastRefreshTime)
+            let remaining = abs(timeSinceLastRefresh - statusRefreshInterval).truncatingRemainder(dividingBy: 300)
             
             // If more than 5 minutes have passed, refresh immediately
             if timeSinceLastRefresh >= statusRefreshInterval {
-                print("App became active, refreshing data immediately...")
                 await refreshBarStatuses()
-            }
-            
-            // Restart timer if it's not running
-            if statusRefreshTimer == nil {
-                startStatusRefreshTimer()
+                startStatusRefreshTimer(statusRefreshInterval - remaining)
+            } else {
+                startStatusRefreshTimer(remaining)
             }
             
         case .background:
@@ -76,20 +75,25 @@ final class BarViewModel: Mockable {
     }
     
     // Background refresh methods
-    private func startStatusRefreshTimer() {
+    private func startStatusRefreshTimer(_ interval: TimeInterval = 300) {
         // Don't start timer if it's quiet hours (2 AM - 7 AM)
         guard !isQuietHours() else { return }
-        
+
         statusRefreshTimer?.invalidate()
-        statusRefreshTimer = Timer.scheduledTimer(withTimeInterval: statusRefreshInterval, repeats: true) { [weak self] _ in
+        statusRefreshTimer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
             Task { @MainActor in
                 await self?.refreshBarStatuses()
+                
+                if interval < self?.statusRefreshInterval ?? 300 {
+                    self?.startStatusRefreshTimer()
+                }
             }
         }
     }
     
     private func refreshBarStatuses() async {
         do {
+            print("Times up! Refreshing bar statuses...")
             let fetchedStatuses = try await networkManager.fetchStatuses()
             self.statuses = fetchedStatuses
             self.lastRefreshTime = Date()
@@ -99,7 +103,7 @@ final class BarViewModel: Mockable {
         }
     }
     
-    private func stopStatusRefreshTimer() {
+    func stopStatusRefreshTimer() {
         statusRefreshTimer?.invalidate()
         statusRefreshTimer = nil
     }
@@ -124,17 +128,38 @@ final class BarViewModel: Mockable {
                 self.bars = bars
                 self.hours = hours
                 retries = maxRetries // Exit loop on success
+                
             } catch let error as NSError where error.domain == NSURLErrorDomain {
+                #if DEBUG
                 handleNetworkError(error, context: "Load Bar Data")
+                #endif
+                
                 retries += 1
+                if retries == maxRetries {
+                    throw error
+                }
                 try await Task.sleep(nanoseconds: retryDelay)
+                
             } catch let apiError as APIError {
+                #if DEBUG
                 handleAPIError(apiError, context: "Load Bar Data")
+                #endif
+                
                 retries += 1
+                if retries == maxRetries {
+                    throw apiError
+                }
                 try await Task.sleep(nanoseconds: retryDelay)
+                
             } catch {
+                #if DEBUG
                 print("Load Bar Data ERROR - \(error)")
+                #endif
+                
                 retries += 1
+                if retries == maxRetries {
+                    throw error
+                }
                 try await Task.sleep(nanoseconds: retryDelay)
             }
         }
@@ -147,18 +172,11 @@ final class BarViewModel: Mockable {
             let open = hours.openTime,
             let close = hours.closeTime
         else {
-            print("One of the opening/closing times is nil for bar \(hours.bar).")
             return nil
         }
         let closed = isClosed(open, close)
         hours.isClosed = closed
         return "\(closed ? "Closed" : "Open"): \(formatter.string(from: open)) - \(formatter.string(from: close))"
-    }
-    
-    private func cacheWaitTime(_ time: String, for barId: Int) {
-        var waitTimeCache = UserDefaults.standard.dictionary(forKey: "barVotes_wait_time_cache") as? [String: String] ?? [:]
-        waitTimeCache["\(barId)"] = time
-        UserDefaults.standard.set(waitTimeCache, forKey: "barVotes_wait_time_cache")
     }
     
     internal func isClosed(_ openTime: Date, _ closeTime: Date) -> Bool {
@@ -212,69 +230,40 @@ final class BarViewModel: Mockable {
         return now < openDate || now >= closeDate
     }
     
+    #if DEBUG
     private func handleStatusCodeError(_ statusCode: Int) {
-        print("Encountered an error with status code \(statusCode): ", terminator: "")
+        print("Encountered an error with status code \(statusCode):", terminator: " ")
         switch statusCode {
-        case 403:
-            print("Forbidden. You do not have permission to perform this action.")
-        case 404:
-            print("Bar hours not found.")
-        case 400:
-            print("Bad request. Please check the data.")
-        case 500:
-            print("Server error. Please try again later.")
-        default:
-            print("Unexpected status code \(statusCode).")
+        case 403: print("Forbidden. You do not have permission to perform this action.")
+        case 404: print("Bar hours not found.")
+        case 400: print("Bad request. Please check the data.")
+        case 500: print("Server error. Please try again later.")
+        default: print("Unexpected status code \(statusCode).")
         }
     }
     
     private func handleAPIError(_ error: APIError, context: String) {
         print("\(context) ERROR -", terminator: " ")
         switch error {
-        case .noToken:
-            print("No token available. Please log in.")
-        case .statusCode(let statusCode):
-            handleStatusCodeError(statusCode)
-        case .invalidURL:
-            print("The URL is not valid.")
-        case .encoding(let encodingError):
-            print("Encoding error: \(encodingError.localizedDescription)")
-        case .decoding(let decodingError):
-            print("Decoding error: \(decodingError.localizedDescription)")
+        case .noToken: print("No token available. Please log in.")
+        case .statusCode(let statusCode): handleStatusCodeError(statusCode)
+        case .invalidURL: print("The URL is not valid.")
+        case .encoding(let encodingError): print("Encoding error: \(encodingError.localizedDescription)")
+        case .decoding(let decodingError): print("Decoding error: \(decodingError.localizedDescription)")
         }
     }
     
     private func handleNetworkError(_ error: NSError, context: String) {
-        print("\(context) ERROR:", terminator: " ")
+        print("\(context) ERROR -", terminator: " ")
         switch error.code {
-        case NSURLErrorCannotParseResponse:
-            print("Failed to parse response from the server.")
-        case NSURLErrorNotConnectedToInternet:
-            print("No internet connection. Please check your network settings.")
-        case NSURLErrorTimedOut:
-            print("The request timed out. Please try again later.")
-        case NSURLErrorNetworkConnectionLost:
-            print("Network connection was lost. Please check your internet connection.")
-        default:
-            print("An unexpected error occurred: \(error.localizedDescription)")
+        case NSURLErrorCannotParseResponse: print("Failed to parse response from the server.")
+        case NSURLErrorNotConnectedToInternet: print("No internet connection. Please check your network settings.")
+        case NSURLErrorTimedOut: print("The request timed out.")
+        case NSURLErrorNetworkConnectionLost: print("Network connection was lost. Please check your internet connection.")
+        default: print("An unexpected error occurred: \(error.localizedDescription)")
         }
     }
+    #endif
 }
-
-// MARK: - BarViewModel Preview
-// Indtended only for Xcode previews and testing
-#if DEBUG
-extension BarViewModel {
-    @MainActor static let preview: BarViewModel = {
-        let viewModel = BarViewModel()
-        viewModel.bars = Bar.sampleBars
-        viewModel.statuses = BarStatus.sampleStatuses
-        viewModel.hours = BarHours.sampleHours
-        
-        return viewModel
-    }()
-}
-#endif
-
 // MARK: - Protocol Conformance
 extension BarViewModel: BarViewModelProtocol {}

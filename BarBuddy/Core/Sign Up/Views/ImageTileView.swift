@@ -12,10 +12,15 @@ struct ImageTileView: View {
     var body: some View {
         Image(uiImage: image)
             .resizable()
-            .scaledToFill()
-            .frame(width: 100, height: 100)
-            .clipShape(
-                RoundedRectangle(cornerRadius: 10)
-            )
+            .aspectRatio(contentMode: .fill)
+            .frame(maxHeight: 600)
+    }
+}
+
+#Preview {
+    @Previewable @State var image: UIImage = UIImage(named: "logo")!
+    ZStack {
+        Color.darkBlue.ignoresSafeArea()
+        ImageTileView(image: image)
     }
 }

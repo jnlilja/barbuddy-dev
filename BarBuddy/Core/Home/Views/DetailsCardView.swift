@@ -40,7 +40,7 @@ struct DetailsCardView: View {
         }
         .frame(maxWidth: .infinity)
         .padding()
-        .background(Color(.secondarySystemBackground))
+        .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(15)
         .padding(.horizontal)
         .shadow(radius: 2)

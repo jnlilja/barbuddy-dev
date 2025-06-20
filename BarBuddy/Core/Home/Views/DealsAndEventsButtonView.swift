@@ -11,18 +11,18 @@ struct DealsAndEventsButtonView: View {
     @Environment(\.colorScheme) var colorScheme
     var body: some View {
         ZStack {
-            Color(colorScheme == .dark ? .secondarySystemBackground : .white)
+            Color(.secondarySystemGroupedBackground)
                 .cornerRadius(8)
                 .shadow(radius: 3)
             
-            VStack(spacing: 8.0) {
+            VStack(spacing: 8) {
                 Text("Deals and Events")
                     .font(.system(size: 30))
                     .fontWeight(.medium)
                     .foregroundColor(colorScheme == .dark ? .white : .darkBlue)
                     .multilineTextAlignment(.center)
                 
-                HStack(spacing: 3.0) {
+                HStack(spacing: 3) {
                     Text("See what's happening")
                         .font(.system(size: 14))
                         .fontWeight(.bold)
@@ -37,7 +37,7 @@ struct DealsAndEventsButtonView: View {
             }
             .padding()
         }
-        .frame(height: 100.0)
+        .frame(height: 100)
     }
 }
 

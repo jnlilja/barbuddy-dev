@@ -81,7 +81,7 @@ struct VoteSelectionView: View {
                                 try await BarNetworkManager.shared.submitVote(
                                     vote: BarVote(bar: bar.id, waitTime: formatted)
                                 )
-                                print("Vote submitted successfully for bar \(bar.id) with wait time: \(vote)")
+                
                                 guard var status = barViewModel.statuses.first(where: { $0.bar == bar.id }) else { return }
                                 status.waitTime = formatted
                                 
@@ -148,12 +148,19 @@ struct VoteSelectionView: View {
                 Text("An unknown error occurred.")
             }
         }
+        .sensoryFeedback(.success, trigger: actions.didSubmit)
     }
 }
 
 #if DEBUG
 #Preview {
-    VoteSelectionView(timer: TimerManager(id: 1), actions: .constant(.init(didSubmit: false, showMenu: false, type: "wait")), bar: Bar.sampleBar)
-        .environment(BarViewModel.preview)
+    VoteSelectionView(
+        timer: TimerManager(id: 1),
+        actions: .constant(
+            .init(didSubmit: false, showMenu: false, type: "wait")
+        ),
+        bar: Bar.sampleBar
+    )
+    .environment(BarViewModel.preview)
 }
 #endif

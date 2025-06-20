@@ -9,7 +9,7 @@ import FirebaseAuth
 @Observable final class SignUpViewModel {
     // ───────── UI‑bound fields ─────────
     var email            = ""
-    var newUsername      = ""
+    var userName         = ""
     var password         = ""
     var confirmPassword  = ""
 
@@ -23,18 +23,21 @@ import FirebaseAuth
     var doesntDrink      = false       // added for DrinkPreferenceView
     var sexualPreference = "straight"
     
+    var birthday         = Date()
     // ───────── Validation state ─────────
-    @ObservationIgnored var isValidEmail     = true
-    @ObservationIgnored var isValidPassword  = true
-    @ObservationIgnored var passwordsMatch   = true
-    @ObservationIgnored var alertMessage     = ""
+    private var isValidEmail     = true
+    var isValidPassword  = true
+    var passwordsMatch   = true
+    var alertMessage     = ""
     var showingAlert     = false
+    var showingAgeAlert  = false
+    var proceedToName    = false
     
     typealias ValidationChecks = [(Bool, String)]
     
     func buildProfile() -> SignUpUser {
         SignUpUser(
-                username: newUsername,
+                username: userName,
                 first_name: firstName,
                 last_name: lastName,
                 email: email,
@@ -64,6 +67,14 @@ import FirebaseAuth
           }
         }
         return true
+    }
+    
+    func isOfAge() -> Bool {
+        let calendar = Calendar.current
+        let ageComponents = calendar.dateComponents([.year], from: birthday, to: Date())
+        let age = ageComponents.year ?? 0
+        
+        return age >= 21
     }
 
 

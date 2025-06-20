@@ -8,7 +8,6 @@ import SwiftUI
 import SDWebImageSwiftUI
 
 struct BarDetailView: View {
-    @Environment(MapViewModel.self) var viewModel
     @Environment(BarViewModel.self) var barViewModel
     @Environment(\.colorScheme) var colorScheme
     @State private var loadingState: HoursLoadingState = .loading
@@ -199,6 +198,11 @@ struct BarDetailView: View {
                 .padding(.bottom)
             }
             .onAppear {
+                // DEBUG Bar info
+                #if DEBUG
+                print(bar)
+                #endif
+                
                 // Only proceeds if the bar is currently not closed
                 guard let isClosed, !isClosed else  {
                     loadingState = isClosed == nil ? .failed : .closed
@@ -222,7 +226,6 @@ struct BarDetailView: View {
     BarDetailView(
         bar: Bar.sampleBar
     )
-    .environment(MapViewModel())
     .environment(BarViewModel.preview)
 }
 
@@ -230,7 +233,6 @@ struct BarDetailView: View {
     BarDetailView(
         bar: Bar.sampleBars[2]
     )
-    .environment(MapViewModel())
     .environment(BarViewModel.preview)
 }
 #endif
