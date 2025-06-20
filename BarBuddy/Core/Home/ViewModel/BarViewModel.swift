@@ -93,13 +93,12 @@ final class BarViewModel: Mockable {
     
     private func refreshBarStatuses() async {
         do {
-            print("Times up! Refreshing bar statuses...")
             let fetchedStatuses = try await networkManager.fetchStatuses()
             self.statuses = fetchedStatuses
             self.lastRefreshTime = Date()
             
         } catch {
-            print("Background refresh error: \(error.localizedDescription)")
+            
         }
     }
     

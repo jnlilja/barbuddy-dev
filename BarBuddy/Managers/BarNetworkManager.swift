@@ -238,10 +238,14 @@ actor BarNetworkManager: NetworkTestable {
 
             let isExpired = Date().timeIntervalSince(cacheDate) > barHoursCacheExpiration
             if !isExpired {
+                #if DEBUG
                 print("Using cached bar hours data (valid)")
+                #endif
                 return try self.decoder.decode([BarHours].self, from: cachedResponse.data)
             } else {
+                #if DEBUG
                 print("Cache expired. Fetching new bar hours data.")
+                #endif
                 URLCache.shared.removeCachedResponse(for: request)
                 UserDefaults.standard.removeObject(forKey: "barHours_cache_timestamp")
             }
@@ -256,7 +260,9 @@ actor BarNetworkManager: NetworkTestable {
         
         // Cache the response manually (since Authorization headers prevent auto-caching)
         if let response = response as? HTTPURLResponse {
+            #if DEBUG
             print("Caching response for bar hours with status code: \(response.statusCode)")
+            #endif
             let cachedResponse = CachedURLResponse(response: response, data: data)
             URLCache.shared.storeCachedResponse(cachedResponse, for: request)
             
@@ -352,10 +358,14 @@ actor BarNetworkManager: NetworkTestable {
             
             let isExpired = Date().timeIntervalSince(cacheDate) > barStatusCache
             if !isExpired {
+                #if DEBUG
                 print("Using cached bar statuses data (valid)")
+                #endif
                 return try timeStampDecoder.decode([BarStatus].self, from: cachedResponse.data)
             } else {
+                #if DEBUG
                 print("Cache expired. Fetching new bar statuses data.")
+                #endif
                 URLCache.shared.removeCachedResponse(for: request)
                 UserDefaults.standard.removeObject(forKey: "barStatuses_cache_timestamp")
             }
@@ -368,7 +378,9 @@ actor BarNetworkManager: NetworkTestable {
         }
         
         // Cache the response manually (since Authorization headers prevent auto-caching)
+        #if DEBUG
         print("Caching bar statuses data.")
+        #endif
         let cachedResponse = CachedURLResponse(response: response, data: data)
         URLCache.shared.storeCachedResponse(cachedResponse, for: request)
         
@@ -547,7 +559,9 @@ actor BarNetworkManager: NetworkTestable {
         
         // Check if we have a cached response first
         if let cachedResponse = URLCache.shared.cachedResponse(for: request) {
+            #if DEBUG
             print("Using cached bars data (valid)")
+            #endif
             return try timeStampDecoder.decode([Bar].self, from: cachedResponse.data)
         }
         
@@ -559,7 +573,9 @@ actor BarNetworkManager: NetworkTestable {
         
         // Cache the response manually (since Authorization headers prevent auto-caching)
         if let response = response as? HTTPURLResponse {
+            #if DEBUG
             print("Caching response for bars with status code: \(response.statusCode)")
+            #endif
             let cachedResponse = CachedURLResponse(response: response, data: data)
             URLCache.shared.storeCachedResponse(cachedResponse, for: request)
         }

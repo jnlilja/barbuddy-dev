@@ -26,6 +26,13 @@ struct Bar: Codable, Identifiable, Hashable, CustomStringConvertible {
     
     // Nice to have a string representation of the bar for debugging purposes.
     var description: String {
-        "Bar(id: \(id), name: \(name), address: \(address), coordinate: \(coordinate))"
+        """
+        - Bar Info -
+        name: \(name)
+        id: \(id)
+        address: \(address)
+        coordinate: \(coordinate)
+        -----
+        """
     }
 }

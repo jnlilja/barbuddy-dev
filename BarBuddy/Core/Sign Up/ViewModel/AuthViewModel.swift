@@ -96,7 +96,9 @@ final class AuthViewModel: ObservableObject {
             authUser = nil
             currentUser = nil
         } catch {
+            #if DEBUG
             print("❌ Sign‑out failed:", error.localizedDescription)
+            #endif
         }
     }
     

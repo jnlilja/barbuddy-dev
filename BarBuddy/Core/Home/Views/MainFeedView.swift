@@ -70,7 +70,6 @@ struct MainFeedView: View {
                     try await barViewModel.loadBarData()
                     actions.isLoading = false
                 } catch {
-                    print("Error loading bar data: \(error)")
                     actions.isErrorPresented = true
                 }
             }
@@ -86,7 +85,7 @@ struct MainFeedView: View {
                         try await barViewModel.loadBarData()
                         actions.toggleBarError = false
                     } catch {
-                        print("Error loading bar data: \(error)")
+                        actions.isErrorPresented = true
                     }
                     actions.isLoading = false
                 }
@@ -202,7 +201,6 @@ struct MainFeedView: View {
                                     actions.isLoading = false
                                     actions.toggleBarError = false
                                 } catch {
-                                    print("Error loading bar data: \(error)")
                                     actions.isLoading = false
                                 }
                             }
