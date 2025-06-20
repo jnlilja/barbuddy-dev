@@ -30,37 +30,22 @@ class BarViewSet(viewsets.ModelViewSet):
     serializer_class = BarSerializer
 
     def get_queryset(self):
-        queryset = Bar.objects.all().prefetch_related(
-            'users_at_bar', 
-            'images',
-            'ratings',
-            'wait_time_votes',
-            'crowd_size_votes'
+        queryset = Bar.objects.all().select_related('status').prefetch_related(
+            'users_at_bar', 'images'
         )
-        
-        # Get location parameters
         latitude = self.request.query_params.get('latitude')
         longitude = self.request.query_params.get('longitude')
-        radius = self.request.query_params.get('radius', 5)  # Default 5km
-        
-        # Only apply location filtering if both lat/long are provided
+        radius = self.request.query_params.get('radius', 5)
         if latitude and longitude:
             try:
-                user_location = Point(
-                    float(longitude),
-                    float(latitude),
-                    srid=4326
-                )
-                # Add prefetch_related to reduce database queries
+                user_location = Point(float(longitude), float(latitude), srid=4326)
                 queryset = queryset.annotate(
                     distance=Distance('location', user_location)
                 ).filter(
                     location__distance_lte=(user_location, D(km=float(radius)))
-                ).order_by('distance').prefetch_related('users_at_bar', 'images')
+                ).order_by('distance')
             except (ValueError, TypeError):
-                # Log error but don't crash
                 print(f"Invalid location parameters: lat={latitude}, lon={longitude}")
-        
         return queryset
 
 

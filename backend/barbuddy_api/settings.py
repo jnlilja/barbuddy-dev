@@ -131,8 +131,17 @@ DATABASES = {
         'NAME': env('DB_NAME'),
         'USER': env('DB_USER'),
         'PASSWORD': env('DB_PASSWORD'),
+
+        ####### UNIX SOCKET CONFIGURATION #######
         'HOST': f"/cloudsql/{env('INSTANCE_CONNECTION_NAME')}",  # Unix socket path
-        'PORT': '',  # Leave empty for socket
+        'PORT': '',  
+
+
+        ####### TCP/IP CONFIGURATION (if needed) ####### LCOAL DEVELOPMENT ONLY
+        # 'HOST': env('HOST'),  
+        # 'PORT': env('PORT'),  
+
+
         'CONN_MAX_AGE': 60,
         'OPTIONS': {
             'connect_timeout': 5,
