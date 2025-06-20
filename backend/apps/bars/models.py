@@ -18,7 +18,6 @@ class Bar(models.Model):
     location = gis.PointField(geography=True, srid=4326)
     users_at_bar = models.ManyToManyField(User, related_name='bars_attended', blank=True)
     
-    
 
     def clean(self):
         super().clean()
