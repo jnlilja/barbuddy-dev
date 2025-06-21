@@ -60,12 +60,15 @@ struct MainFeedView: View {
                     bottomSheetPosition == .relativeTop(1) ? .clear : .white
                 )
                 .ignoresSafeArea(.keyboard)
-                .sensoryFeedback(trigger: actions.showSignOutAlert) {
+                .sensoryFeedback(trigger: actions.showSettings) {
                     // Only apply haptics when tapped on logout icon
                     return $1 ? .selection : .none
                 }
                 .disabled(actions.showDeleteAlert)
         }
+        .alert("Sign Out Error", isPresented: $actions.showDeleteErrorAlert) {
+            Button("OK", role: .cancel) {}
+        } message: { Text("There was an error signing you out.") }
         .task {
             if barViewModel.bars.isEmpty {
                 do {
@@ -139,7 +142,7 @@ struct MainFeedView: View {
                     do {
                         try await authViewModel.deleteUser(password: password)
                     } catch {
-                        
+                        actions.showDeleteErrorAlert = true
                     }
                 }
             }
