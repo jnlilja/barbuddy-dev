@@ -69,14 +69,14 @@ final class BarViewModel: Mockable {
         let now = Date()
         let currentHour = calendar.component(.hour, from: now)
         
-        // Check if current hour is between 2 AM (inclusive) and 7 AM (exclusive)
-        // This covers 2:00 AM - 6:59 AM
-        return currentHour >= 2 && currentHour < 7
+        // Check if current hour is between 4 AM (inclusive) and 7 AM (exclusive)
+        // This covers 4:00 AM - 6:59 AM
+        return currentHour >= 4 && currentHour < 7
     }
     
     // Background refresh methods
     private func startStatusRefreshTimer(_ interval: TimeInterval = 300) {
-        // Don't start timer if it's quiet hours (2 AM - 7 AM)
+        // Don't start timer if it's quiet hours (4 AM - 7 AM)
         guard !isQuietHours() else { return }
 
         statusRefreshTimer?.invalidate()
