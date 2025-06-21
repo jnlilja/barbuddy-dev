@@ -39,7 +39,6 @@ struct DeletePromptView: View {
                                 actions.showDeleteAlert = false
                                 actions.showDeleteConfirmationAlert = true
                             } catch {
-                                print("Reauthentication failed: \(error.localizedDescription)")
                                 actions.wrongPasswordAlertShown = true
                             }
                         }
@@ -69,7 +68,6 @@ struct DeletePromptView: View {
                             actions.showDeleteAlert = false
                             actions.showDeleteConfirmationAlert = true
                         } catch {
-                            print("Reauthentication failed: \(error.localizedDescription)")
                             actions.wrongPasswordAlertShown = true
                         }
                     }

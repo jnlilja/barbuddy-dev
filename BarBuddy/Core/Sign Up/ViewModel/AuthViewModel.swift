@@ -131,9 +131,9 @@ final class AuthViewModel: ObservableObject {
             authUser = nil
             currentUser = nil
         } catch {
-#if DEBUG
+            #if DEBUG
             print("Delete user failed: \(error.localizedDescription)")
-#endif
+            #endif
         }
     }
     
