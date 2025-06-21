@@ -16,6 +16,7 @@ struct MainFeedView: View {
     
     @State private var bottomSheetPosition: BottomSheetPosition = .relative(0.86)
     @State private var searchText = ""
+    @State private var password = ""
     @State private var selectedBar: Bar?
     @State private var actions = MainFeedActions()
     
@@ -63,6 +64,7 @@ struct MainFeedView: View {
                     // Only apply haptics when tapped on logout icon
                     return $1 ? .selection : .none
                 }
+                .disabled(actions.showDeleteAlert)
         }
         .task {
             if barViewModel.bars.isEmpty {
@@ -75,8 +77,75 @@ struct MainFeedView: View {
             }
             actions.isLoading = false
         }
+        .sheet(isPresented: $actions.showSettings) {
+            HStack {
+                VStack(alignment: .leading, spacing: 16) {
+                    if let email = authViewModel.authUser?.email {
+                        Text("\(Text("Email").bold()): \(email)")
+                            .padding(.top)
+                    }
+                    Spacer()
+
+                    Button {
+                        actions.showSignOutAlert = true
+                    } label: {
+                        HStack {
+                            Image(systemName: "figure.walk.departure")
+                            Text("Sign Out")
+                        }
+                        .foregroundStyle(colorScheme == .dark ? .salmon : .darkBlue)
+                    }
+                    
+                    Divider()
+                    
+                    Button {
+                        withAnimation {
+                            actions.showDeleteAlert = true
+                        }
+                        actions.showSettings = false
+                    } label: {
+                        Image(systemName: "trash")
+                        Text("Delete Account")
+                    }
+                    .tint(.red)
+                    
+                    Divider()
+                    
+                    Spacer()
+                }
+                .padding(.leading)
+                .presentationDetents([.fraction(0.25)])
+                .presentationDragIndicator(.visible)
+                
+                Spacer()
+                
+            }
+        }
+        .overlay {
+            if actions.showDeleteAlert {
+                ZStack {
+                    Color.black.opacity(0.5).ignoresSafeArea()
+                    DeletePromptView(password: $password, actions: $actions)
+                        .transition(.blurReplace)
+                }
+            }
+        }
         .tint(.salmon)
         .environment(viewModel)
+        .alert("Are You Sure?", isPresented: $actions.showDeleteConfirmationAlert) {
+            Button("Cancel", role: .cancel) {}
+            Button("Delete", role: .destructive) {
+                Task {
+                    do {
+                        try await authViewModel.deleteUser(password: password)
+                    } catch {
+                        
+                    }
+                }
+            }
+        } message: {
+            Text("This action cannot be undone. Your account will be permanently deleted.")
+        }
         .alert("Error Loading Data", isPresented: $actions.isErrorPresented) {
             Button("Retry") {
                 actions.isLoading = true
@@ -255,14 +324,14 @@ struct MainFeedView: View {
     private var logOutButton: some ToolbarContent {
         ToolbarItem(placement: .cancellationAction) {
             Button {
-                actions.showSignOutAlert = true
+                actions.showSettings = true
             } label: {
                 //
                 if #available(iOS 26, *) {
-                    Image(systemName: "rectangle.portrait.and.arrow.forward")
+                    Image(systemName: "line.3.horizontal")
 
                 } else {
-                    Image(systemName: "rectangle.portrait.and.arrow.forward")
+                    Image(systemName: "line.3.horizontal")
                         .frame(width: 43, height: 43)
                         .background(Color(.tertiarySystemBackground))
                         .clipShape(RoundedCorner(radius: 10))

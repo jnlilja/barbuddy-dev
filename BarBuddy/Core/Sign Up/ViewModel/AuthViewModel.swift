@@ -102,6 +102,41 @@ final class AuthViewModel: ObservableObject {
         }
     }
     
+    func reauthenticate(password: String) async throws {
+        guard let user = authUser, let email = user.email else { return }
+        let credential = EmailAuthProvider.credential(withEmail: email, password: password)
+        
+        do {
+            try await user.reauthenticate(with: credential)
+        } catch {
+            #if DEBUG
+            print("Reauthentication failed: \(error.localizedDescription)")
+            #endif
+            throw error
+
+        }
+    }
+    
+    func deleteUser(password: String) async throws {
+        guard let user = authUser else { return }
+        
+        // Credentials expire after 5 minutes
+        if let lastSignInDate = user.metadata.lastSignInDate,
+            lastSignInDate < Date(timeInterval: -300, since: Date()) {
+            try await reauthenticate(password: password)
+        }
+
+        do {
+            try await user.delete()
+            authUser = nil
+            currentUser = nil
+        } catch {
+#if DEBUG
+            print("Delete user failed: \(error.localizedDescription)")
+#endif
+        }
+    }
+    
     func getErrorMessage() -> String {
         return errorMessage
     }

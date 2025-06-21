@@ -14,4 +14,8 @@ struct MainFeedActions {
     var showSignOutAlert = false
     var showSearchView = false
     var isSwipingUP = false
+    var showSettings = false
+    var showDeleteAlert = false
+    var showDeleteConfirmationAlert = false
+    var wrongPasswordAlertShown: Bool = false
 }
