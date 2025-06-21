@@ -19,7 +19,7 @@ struct BarDetailView: View {
         self.bar = bar
         self._timer = State(wrappedValue: TimerManager(id: bar.id))
     }
-
+    
     private var waitTime: String? {
         barViewModel.statuses.first(where: { $0.bar == bar.id })?.waitTime
             .replacingOccurrences(of: "<", with: "< ")
@@ -30,13 +30,13 @@ struct BarDetailView: View {
     private var isClosed: Bool? {
         barViewModel.hours.first(where: { $0.bar == bar.id })?.isClosed
     }
-
+    
     var body: some View {
         @Bindable var timerInstance = timer
         if voteActions.showMenu && !voteActions.didSubmit {
             VoteSelectionView(timer: timer, actions: $voteActions, bar: bar)
                 .transition(.scale)
-
+            
         } else {
             VStack(spacing: 25) {
                 Spacer()
@@ -103,58 +103,52 @@ struct BarDetailView: View {
                         .foregroundColor(colorScheme == .dark ? .nude : .darkPurple)
                         .bold()
                         
-                        if timer.isActive {
-                            TimerView(timer: timerInstance)
-                                .padding(.top)
-                                .environment(timer)
-                                
-                        } else {
-                            Button {
-                                withAnimation(
-                                    .spring(duration: 0.5, bounce: 0.3)
-                                ) {
-                                    voteActions.showMenu = true
-                                }
-                            } label: {
-                                ZStack {
-                                    if colorScheme == .dark {
-                                        RoundedRectangle(cornerRadius: 15)
-                                            .foregroundStyle(.nude)
-                                            .frame(width: 180, height: 120)
-                                            .cornerRadius(15)
-                                            .shadow(radius: 20)
-                                    } else {
-                                        // For light mode
-                                        RoundedRectangle(cornerRadius: 15)
-                                            .foregroundStyle(.darkPurple)
-                                            .frame(width: 180, height: 120)
-                                            .cornerRadius(15)
-                                            .shadow(radius: 20)
-                                    }
-                                    
-                                    VStack {
-                                        Text("Vote Wait Time!")
-                                            .frame(width: 130)
-                                            .font(.title)
-                                            .bold()
-                                        
-                                        Image(systemName: "arrow.right")
-                                    }
-                                    .foregroundStyle(colorScheme == .dark ? .darkBlue : .nude)
-                                }
+                        Button {
+                            withAnimation(
+                                .spring(duration: 0.5, bounce: 0.3)
+                            ) {
+                                voteActions.showMenu = true
                             }
-                            // Disable vote button if bar is closed or wait time could not be fetched
-                            .disabled(
-                                loadingState == .closed
-                                || loadingState == .failed
-                                || loadingState == .loading
-                            )
-                            .opacity(
-                                loadingState == .closed
-                                || loadingState == .failed ? 0.5 : 1
-                            )
-                            .padding(.top)
+                        } label: {
+                            ZStack {
+                                if colorScheme == .dark {
+                                    RoundedRectangle(cornerRadius: 15)
+                                        .foregroundStyle(.nude)
+                                        .frame(width: 180, height: 120)
+                                        .cornerRadius(15)
+                                        .shadow(radius: 20)
+                                } else {
+                                    // For light mode
+                                    RoundedRectangle(cornerRadius: 15)
+                                        .foregroundStyle(.darkPurple)
+                                        .frame(width: 180, height: 120)
+                                        .cornerRadius(15)
+                                        .shadow(radius: 20)
+                                }
+                                
+                                VStack {
+                                    Text("Vote Wait Time!")
+                                        .frame(width: 130)
+                                        .font(.title)
+                                        .bold()
+                                    
+                                    Image(systemName: "arrow.right")
+                                }
+                                .foregroundStyle(colorScheme == .dark ? .darkBlue : .nude)
+                            }
                         }
+                        // Disable vote button if bar is closed or wait time could not be fetched
+                        .disabled(
+                            loadingState == .closed
+                            || loadingState == .failed
+                            || loadingState == .loading
+                        )
+                        .opacity(
+                            loadingState == .closed
+                            || loadingState == .failed ? 0.5 : 1
+                        )
+                        .padding(.top)
+                        
                         
                         Text("Voting has concluded for this bar.")
                             .foregroundColor(.neonPink)

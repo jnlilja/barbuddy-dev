@@ -122,7 +122,10 @@ final class BarViewModel: Mockable {
             async let fetchedHours = networkManager.fetchAllBarHours()
             
             do {
-                let (statuses, bars, hours) = try await (fetchedStatuses, fetchedBars, fetchedHours)
+                let (statuses, hours) = try await (fetchedStatuses, fetchedHours)
+                var bars: [Bar] = try await fetchedBars
+                reorderBars(&bars)
+                
                 self.statuses = statuses
                 self.bars = bars
                 self.hours = hours
@@ -162,6 +165,29 @@ final class BarViewModel: Mockable {
                 try await Task.sleep(nanoseconds: retryDelay)
             }
         }
+    }
+    // Reorder to have most popular bars at the top
+    private func reorderBars(_ bars: inout [Bar]) {
+        guard
+            let hideaway = bars.first(where: { $0.name.localizedCaseInsensitiveContains("Hideaway") }),
+            let openBar = bars.first(where: { $0.name.localizedCaseInsensitiveContains("Open") }),
+            let local = bars.first(where: { $0.name.localizedCaseInsensitiveContains("Local") }),
+            let shore = bars.first(where: { $0.name.localizedCaseInsensitiveContains("Shore Club") }),
+            let fire = bars.first(where: { $0.name.localizedCaseInsensitiveContains("Firehouse")})
+        else { return }
+        
+        bars.removeAll { $0.name.localizedCaseInsensitiveContains("Hideaway")}
+        bars.removeAll { $0.name.localizedCaseInsensitiveContains("Open") }
+        bars.removeAll { $0.name.localizedCaseInsensitiveContains("Local") }
+        bars.removeAll { $0.name.localizedCaseInsensitiveContains("Shore Club") }
+        bars.removeAll { $0.name.localizedCaseInsensitiveContains("Firehouse") }
+        
+        
+        bars.insert(hideaway, at: 0)
+        bars.insert(openBar, at: 1)
+        bars.insert(local, at: 2)
+        bars.insert(shore, at: 3)
+        bars.insert(fire, at: 4)
     }
     
     func formatBarHours(hours: inout BarHours) -> String? {
