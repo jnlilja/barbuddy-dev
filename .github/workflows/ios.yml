@@ -15,8 +15,6 @@ on:
 jobs:
   build-and-test:
     name: iOS Build and Test
-    # Stopping workflow for now until environment variable issue is resolved
-    if: false
     runs-on: macos-15
     timeout-minutes: 25
     strategy:
@@ -28,6 +26,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Increment Build Number
+        run: |
+          cd "$(dirname $(find . -name "*.xcodeproj" | head -1))"
+          agvtool bump -all
 
       - name: Setup Xcode
         uses: maxim-lobanov/setup-xcode@v1
