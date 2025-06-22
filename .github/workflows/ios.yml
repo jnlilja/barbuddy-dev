@@ -27,21 +27,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Increment Build Number
-        run: |
-          cd "$(dirname $(find . -name "*.xcodeproj" | head -1))"
-          agvtool bump -all
-
-      - name: Commit and Push Updated Build Number
-        if: github.ref == 'refs/heads/main'  # optional: only push from main
-        run: |
-          git config user.name "github-actions"
-          git config user.email "github-actions@github.com"
-          git pull origin "$(git rev-parse --abbrev-ref HEAD)"
-          git add .
-          git commit -m "CI: Increment build number [skip ci]" || echo "No changes to commit"
-          git push
-
       - name: Setup Xcode
         uses: maxim-lobanov/setup-xcode@v1
         with:
