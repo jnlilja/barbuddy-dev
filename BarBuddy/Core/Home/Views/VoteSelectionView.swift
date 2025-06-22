@@ -81,12 +81,6 @@ struct VoteSelectionView: View {
                                 try await BarNetworkManager.shared.submitVote(
                                     vote: BarVote(bar: bar.id, waitTime: formatted)
                                 )
-                
-                                guard var status = barViewModel.statuses.first(where: { $0.bar == bar.id }) else { return }
-                                status.waitTime = formatted
-                                
-                                try await BarNetworkManager.shared.putBarStatus(status)
-                                timer.start()
                                 
                                 await MainActor.run {
                                     withAnimation {
