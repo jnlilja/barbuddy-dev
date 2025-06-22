@@ -8,7 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		1B3A00D92DF31C3F00BB5B68 /* Shimmer in Frameworks */ = {isa = PBXBuildFile; productRef = 1B3A00D82DF31C3F00BB5B68 /* Shimmer */; };
-		1B471B9D2DFF85BA003C7591 /* TestPlan.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = 1B471B9C2DFF85BA003C7591 /* TestPlan.xctestplan */; };
+		1B471B9D2DFF85BA003C7591 /* BarBuddy.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = 1B471B9C2DFF85BA003C7591 /* BarBuddy.xctestplan */; };
 		1BBB5B712D979D0400A5E2E8 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 1BBB5B702D979D0400A5E2E8 /* FirebaseAuth */; };
 		1BF7EF472D79161D001786D8 /* BottomSheet in Frameworks */ = {isa = PBXBuildFile; productRef = 1BF7EF462D79161D001786D8 /* BottomSheet */; };
 		1BFF2B742DB6C59400D160AB /* PusherSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 1BFF2B732DB6C59400D160AB /* PusherSwift */; settings = {ATTRIBUTES = (Required, ); }; };
@@ -33,7 +33,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		1B471B9C2DFF85BA003C7591 /* TestPlan.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = TestPlan.xctestplan; sourceTree = "<group>"; };
+		1B471B9C2DFF85BA003C7591 /* BarBuddy.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = BarBuddy.xctestplan; sourceTree = "<group>"; };
 		599153B12D540523004B2832 /* BarBuddy.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BarBuddy.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		599153C12D540525004B2832 /* BarBuddyTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BarBuddyTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		599153CB2D540525004B2832 /* BarBuddyUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BarBuddyUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -103,7 +103,7 @@
 		599153A82D540523004B2832 = {
 			isa = PBXGroup;
 			children = (
-				1B471B9C2DFF85BA003C7591 /* TestPlan.xctestplan */,
+				1B471B9C2DFF85BA003C7591 /* BarBuddy.xctestplan */,
 				599153B32D540523004B2832 /* BarBuddy */,
 				599153C42D540525004B2832 /* BarBuddyTests */,
 				599153CE2D540525004B2832 /* BarBuddyUITests */,
@@ -253,7 +253,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				1B471B9D2DFF85BA003C7591 /* TestPlan.xctestplan in Resources */,
+				1B471B9D2DFF85BA003C7591 /* BarBuddy.xctestplan in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -438,7 +438,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 5;
+				CURRENT_PROJECT_VERSION = 6;
 				DEVELOPMENT_ASSET_PATHS = "\"BarBuddy/Preview Content\"";
 				DEVELOPMENT_TEAM = KB334NZN76;
 				ENABLE_PREVIEWS = YES;
@@ -457,7 +457,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.1;
+				MARKETING_VERSION = 1.2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.jessicalilja.Bar-Buddy";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -467,6 +467,7 @@
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = 1;
+				VERSIONING_SYSTEM = "apple-generic";
 			};
 			name = Debug;
 		};
@@ -476,7 +477,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 5;
+				CURRENT_PROJECT_VERSION = 6;
 				DEVELOPMENT_ASSET_PATHS = "\"BarBuddy/Preview Content\"";
 				DEVELOPMENT_TEAM = KB334NZN76;
 				ENABLE_PREVIEWS = YES;
@@ -495,7 +496,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.1;
+				MARKETING_VERSION = 1.2.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.jessicalilja.Bar-Buddy";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -505,6 +506,7 @@
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = 1;
+				VERSIONING_SYSTEM = "apple-generic";
 			};
 			name = Release;
 		};

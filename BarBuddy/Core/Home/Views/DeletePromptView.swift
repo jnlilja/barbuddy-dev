@@ -39,6 +39,7 @@ struct DeletePromptView: View {
                                 actions.showDeleteAlert = false
                                 actions.showDeleteConfirmationAlert = true
                             } catch {
+                                print("Error reauthenticating: \(error.localizedDescription)")
                                 actions.wrongPasswordAlertShown = true
                             }
                         }
@@ -49,6 +50,7 @@ struct DeletePromptView: View {
                     withAnimation {
                         actions.showDeleteAlert = false
                     }
+                    password = ""
                 } label: {
                     Text("Cancel")
                         .frame(width: 100, height: 45)
@@ -68,6 +70,7 @@ struct DeletePromptView: View {
                             actions.showDeleteAlert = false
                             actions.showDeleteConfirmationAlert = true
                         } catch {
+                            print("Error reauthenticating: \(error.localizedDescription)")
                             actions.wrongPasswordAlertShown = true
                         }
                     }
@@ -88,9 +91,6 @@ struct DeletePromptView: View {
         .background()
         .clipShape(.rect(cornerRadius: 20))
         .shadow(radius: 5)
-        .onDisappear {
-            password = ""
-        }
         .alert("Password is Incorrect", isPresented: $actions.wrongPasswordAlertShown) {
             Button("OK", role: .cancel) {}
         } message: {

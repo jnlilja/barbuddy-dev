@@ -18,4 +18,5 @@ struct MainFeedActions {
     var showDeleteAlert = false
     var showDeleteConfirmationAlert = false
     var wrongPasswordAlertShown: Bool = false
+    var showDeleteErrorAlert = false
 }

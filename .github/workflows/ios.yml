@@ -15,8 +15,6 @@ on:
 jobs:
   build-and-test:
     name: iOS Build and Test
-    # Stopping workflow for now until environment variable issue is resolved
-    if: false
     runs-on: macos-15
     timeout-minutes: 25
     strategy:
