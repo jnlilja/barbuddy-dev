@@ -224,18 +224,22 @@ class BarVoteViewSet(viewsets.ModelViewSet):
         return qs
 
     def perform_create(self, serializer):
-        # prevent re-vote within 5 minutes
-        cutoff = timezone.now() - timedelta(minutes=5)
-        recent = BarVote.objects.filter(
-            bar=serializer.validated_data['bar'],
-            user=self.request.user,
-            timestamp__gte=cutoff
-        ).first()
-        if recent:
-            raise serializers.ValidationError(
-                "You can only vote once every 5 minutes for this bar's wait time."
-            )
+        ##### DELETING COOLDOWN FOR NOW #####
         serializer.save(user=self.request.user)
+
+
+        # # prevent re-vote within 5 minutes
+        # cutoff = timezone.now() - timedelta(minutes=5)
+        # recent = BarVote.objects.filter(
+        #     bar=serializer.validated_data['bar'],
+        #     user=self.request.user,
+        #     timestamp__gte=cutoff
+        # ).first()
+        # if recent:
+        #     raise serializers.ValidationError(
+        #         "You can only vote once every 5 minutes for this bar's wait time."
+        #     )
+        # serializer.save(user=self.request.user)
 
 
 class BarCrowdSizeViewSet(viewsets.ModelViewSet):
@@ -265,18 +269,21 @@ class BarCrowdSizeViewSet(viewsets.ModelViewSet):
         })
 
     def perform_create(self, serializer):
-        # prevent re-vote within 5 minutes
-        cutoff = timezone.now() - timedelta(minutes=5)
-        recent = BarCrowdSize.objects.filter(
-            bar=serializer.validated_data['bar'],
-            user=self.request.user,
-            timestamp__gte=cutoff
-        ).first()
-        if recent:
-            raise serializers.ValidationError(
-                "You can only vote once every 5 minutes for this bar's crowd size."
-            )
+
+        #### DELETING COOLDOWN FOR NOW ####
         serializer.save(user=self.request.user)
+        # # prevent re-vote within 5 minutes
+        # cutoff = timezone.now() - timedelta(minutes=5)
+        # recent = BarCrowdSize.objects.filter(
+        #     bar=serializer.validated_data['bar'],
+        #     user=self.request.user,
+        #     timestamp__gte=cutoff
+        # ).first()
+        # if recent:
+        #     raise serializers.ValidationError(
+        #         "You can only vote once every 5 minutes for this bar's crowd size."
+        #     )
+        # serializer.save(user=self.request.user)
 
 class BarImageViewSet(viewsets.ModelViewSet):
     """
