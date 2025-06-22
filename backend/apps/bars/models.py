@@ -201,9 +201,11 @@ class BarVote(models.Model):
     timestamp = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        constraints = [
-            models.UniqueConstraint(fields=['bar', 'user'], name='unique_wait_time_vote_per_bar_user')
-        ]
+
+        ### COMENTING OUT UNIQUE CONSTRAINTS FOR NOW
+        # constraints = [
+        #     models.UniqueConstraint(fields=['bar', 'user'], name='unique_wait_time_vote_per_bar_user')
+        # ]
         indexes = [
             models.Index(fields=['bar']),
             models.Index(fields=['user']),
@@ -231,9 +233,10 @@ class BarCrowdSize(models.Model):
     timestamp = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        constraints = [
-            models.UniqueConstraint(fields=['bar', 'user'], name='unique_crowd_size_vote_per_bar_user')
-        ]
+        ### COMENTING OUT UNIQUE CONSTRAINTS FOR NOW
+        # constraints = [
+        #     models.UniqueConstraint(fields=['bar', 'user'], name='unique_crowd_size_vote_per_bar_user')
+        # ]
         indexes = [
             models.Index(fields=['bar']),
             models.Index(fields=['user']),
