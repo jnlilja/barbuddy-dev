@@ -131,20 +131,12 @@ struct VoteSelectionView: View {
         .alert("Vote Submission Failed", isPresented: $submissionError) {
             Button("OK", role: .cancel) {}
         } message: {
-            if error is APIError {
-                switch error as? APIError {
-                case .noToken:
-                    Text("Please sign in to vote for wait times.")
-                case .statusCode(let code):
-                    Text("Failed to submit vote. Status code: \(code)")
-                default:
-                    Text("An unknown error occurred.")
-                }
-            }
-            else if error is BarVoteError {
-                Text("You must wait 5 minutes before voting again for this bar.")
-            }
-            else {
+            switch error as? APIError {
+            case .noToken:
+                Text("Please sign in to vote for wait times.")
+            case .statusCode(let code):
+                Text("Failed to submit vote. Status code: \(code)")
+            default:
                 Text("An unknown error occurred.")
             }
         }

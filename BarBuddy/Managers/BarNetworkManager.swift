@@ -74,9 +74,6 @@ actor BarNetworkManager: NetworkTestable {
         request.httpBody = try encoder.encode(vote)
         let (_, response) = try await session.data(for: request)
         
-        if let response = response as? HTTPURLResponse, response.statusCode == 400 {
-            throw BarVoteError.coolDownPeriodNotMet
-        }
         if let response = response as? HTTPURLResponse, !(200...299).contains(response.statusCode)  {
             throw APIError.statusCode(response.statusCode)
         }
