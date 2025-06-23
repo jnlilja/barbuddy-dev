@@ -37,7 +37,7 @@ struct MainFeedView: View {
             mapLayer
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbarBackgroundVisibility(.hidden, for: .navigationBar)
-                .toolbar { pacificBeachHeader; logOutButton }
+                .toolbar { pacificBeachHeader }
                 .bottomSheet(
                     bottomSheetPosition: $bottomSheetPosition,
                     switchablePositions: [
@@ -62,10 +62,6 @@ struct MainFeedView: View {
                     bottomSheetPosition == .relativeTop(1) ? .clear : .white
                 )
                 .ignoresSafeArea(.keyboard)
-                .sensoryFeedback(trigger: actions.showSettings) {
-                    // Only apply haptics when tapped on logout icon
-                    return $1 ? .selection : .none
-                }
                 .disabled(actions.showDeleteAlert)
         }
         .alert("Sign Out Error", isPresented: $actions.showDeleteErrorAlert) {

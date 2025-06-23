@@ -113,6 +113,18 @@ final class AuthViewModel: ObservableObject {
         }
     }
     
+    func anonymousLogin() async {
+        do {
+            let result = try await Auth.auth().signInAnonymously()
+            self.authUser = result.user
+            
+        } catch {
+#if DEBUG
+            print("❌ Anonymous login failed:", error.localizedDescription)
+#endif
+        }
+    }
+    
     func reauthenticate(password: String) async throws {
         guard let user = authUser, let email = user.email else {
             throw APIError.noToken

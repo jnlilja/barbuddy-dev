@@ -8,26 +8,18 @@
 import SwiftUI
 
 struct HomeView: View {
-    @State private var selectedTab = 0
+    @State private var selectedTab = 1
     @State private var mapViewModel = MapViewModel()
     
     var body: some View {
         TabView(selection: $selectedTab) {
-            Group {
+            Tab("Map", systemImage: "map.fill", value: 1) {
                 MainFeedView()
-                    .tabItem {
-                        Image(systemName: "map.fill")
-                        Text("Map")
-                    }
-                    .tag(0)
+                    .toolbarBackground(.visible, for: .tabBar)
+                    .toolbarBackground(.darkBlue, for: .tabBar)
             }
-            .toolbar(.visible, for: .tabBar)
-            .toolbarBackground(.darkBlue, for: .tabBar)
         }
         .environment(mapViewModel)
-        .onAppear {
-            mapViewModel.resetCameraPosition()
-        }
         .tint(.salmon)
     }
 }
@@ -39,4 +31,4 @@ struct HomeView: View {
         .environmentObject(AuthViewModel())
         .environment(BarViewModel.preview)
 }
-#endif // DEBUG
+#endif

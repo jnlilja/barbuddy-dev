@@ -16,14 +16,11 @@ struct BarBuddyApp: App {
         loadRocketSimConnect()
         FirebaseApp.configure()
         
-        // Configure URLCache with increased memory and disk capacities
-        // Optimized for image-heavy social networking app with frequent API calls
-        let memoryCapacity = 200 * 1024 * 1024  // 200 MB (4x increase)
-        let diskCapacity = 500 * 1024 * 1024    // 500 MB (5x increase)
+        let memoryCapacity = 200 * 1024 * 1024  // 200 MB
+        let diskCapacity = 500 * 1024 * 1024    // 500 MB
         let cache = URLCache(memoryCapacity: memoryCapacity, diskCapacity: diskCapacity)
         URLCache.shared = cache
         
-        // Optional: Log cache configuration for debugging
         #if DEBUG
         print("📱 URLCache configured: Memory=\(memoryCapacity/1024/1024)MB, Disk=\(diskCapacity/1024/1024)MB")
         #endif

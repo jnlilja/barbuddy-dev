@@ -13,19 +13,16 @@ struct ContentView: View {
     @Environment(\.scenePhase) var scenePhase
     
     var body: some View {
-        Group {
-            if authViewModel.authUser != nil {
-                HomeView()
-                    .environment(barViewModel)
-            } else {
-                LoginView()
+        HomeView()
+            .environment(barViewModel)
+            .onChange(of: scenePhase) { _, newPhase in
+                Task {
+                    await barViewModel.handleScenePhaseChange(newPhase)
+                }
             }
-        }
-        .onChange(of: scenePhase) { _, newPhase in
-            Task {
-                await barViewModel.handleScenePhaseChange(newPhase)
+            .onAppear {
+                Task { await authViewModel.anonymousLogin() }
             }
-        }
     }
 }
 
