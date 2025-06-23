@@ -23,35 +23,33 @@ from django.contrib.gis.forms import PointField as GISPointField
 from django.forms import HiddenInput
 
 class BarAdminForm(forms.ModelForm):
-    location = GISPointField(widget=HiddenInput(), required=False)
+    latitude = forms.FloatField(required=False, label="Latitude")
+    longitude = forms.FloatField(required=False, label="Longitude")
 
     class Meta:
         model = Bar
         fields = '__all__'
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance and self.instance.location:
+            self.fields['latitude'].initial = self.instance.location.y
+            self.fields['longitude'].initial = self.instance.location.x
+
     def clean(self):
         cleaned_data = super().clean()
-        address = cleaned_data.get('address')
-
-        if address:
-            ssl_context = ssl.create_default_context(cafile=certifi.where())
-            geolocator = Nominatim(user_agent="barbuddy_admin", ssl_context=ssl_context)
-            try:
-                location = geolocator.geocode(address, timeout=10)
-            except Exception as e:
-                raise forms.ValidationError(f"Geocoding error: {str(e)}")
-
-            if location:
-                point = Point(location.longitude, location.latitude)
-                cleaned_data['location'] = point
-                self.instance.location = point
-            else:
-                raise forms.ValidationError("Could not geocode address. Please enter a valid address.")
+        lat = cleaned_data.get('latitude')
+        lon = cleaned_data.get('longitude')
+        if lat is not None and lon is not None:
+            from django.contrib.gis.geos import Point
+            cleaned_data['location'] = Point(lon, lat)
+            self.instance.location = Point(lon, lat)
         return cleaned_data
 
 
+# Use regular ModelAdmin, not OSMGeoAdmin
 @admin.register(Bar)
-class BarAdmin(admin.ModelAdmin):  # Changed from GeoAdminBase
+class BarAdmin(admin.ModelAdmin):
     form = BarAdminForm
     list_display = ("name", "address", "average_price")
     search_fields = ("name", "address")
