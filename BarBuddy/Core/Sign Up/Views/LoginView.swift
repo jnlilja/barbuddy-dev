@@ -11,15 +11,15 @@ import FirebaseAuth
 struct LoginView: View {
     @State private var email              = ""
     @State private var password           = ""
-    
     @State private var viewModel = SignUpViewModel()
     @State private var path = NavigationPath()
+    @State private var isLoading = false
     @EnvironmentObject var authVM: AuthViewModel
     @Environment(\.colorScheme) var colorScheme
     
     @FocusState private var focusedField: FocusField?
     
-    enum FocusField {
+    private enum FocusField {
         case email, password
     }
 
@@ -65,6 +65,7 @@ struct LoginView: View {
                         .focused($focusedField, equals: .email)
                         .submitLabel(.next)
                         .textContentType(.emailAddress)
+                        .disabled(isLoading)
                         
                     
                     SecureField("Password", text: $password, prompt: Text("Password")
@@ -80,9 +81,15 @@ struct LoginView: View {
                         .focused($focusedField, equals: .password)
                         .submitLabel(.done)
                         .textContentType(.password)
+                        .disabled(isLoading)
                     
                     // ───────── Login button
                     Button {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                            withAnimation {
+                                isLoading = true
+                            }
+                        }
                         Task {
                             await authVM.signIn(email: email, password: password)
                         }
@@ -94,6 +101,7 @@ struct LoginView: View {
                             .cornerRadius(10)
                     }
                     .padding(.top, 25)
+                    .disabled(isLoading)
                     
                     Button("Don't have an account? Sign up") {
                         path.append(SignUpNavigation.createAccount)
@@ -102,16 +110,37 @@ struct LoginView: View {
                     .foregroundColor(colorScheme == .dark ? .nude : .darkPurple)
                 }
             }
+            .overlay {
+                if isLoading && !authVM.showingAlert {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 20)
+                            .frame(width: 100, height: 100)
+                            .foregroundStyle(Color(.secondarySystemGroupedBackground))
+                            .shadow(radius: 5)
+                        
+                        ProgressView()
+                            .tint(.salmon)
+                    }
+                    .transition(.scale)
+                }
+            }
             .onSubmit {
                 if focusedField == .email {
                     focusedField = .password
                 } else {
                     focusedField = nil
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                        withAnimation {
+                            isLoading = true
+                        }
+                    }
                     Task { await authVM.signIn(email: email, password: password) }
                 }
             }
             .alert("Error signing in", isPresented: $authVM.showingAlert) {
-                Button("OK", role: .cancel) {}
+                Button("OK", role: .cancel) {
+                    isLoading = false
+                }
             } message: {
                 Text(authVM.getErrorMessage())
             }
