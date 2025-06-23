@@ -30,14 +30,25 @@ final class AuthViewModel: ObservableObject {
             let result = try await Auth.auth().signIn(withEmail: email, password: password)
             self.authUser = result.user
         } catch let error as NSError where error.domain == AuthErrorDomain {
-            
+            // Firebase releated errors
             switch AuthErrorCode(rawValue: error.code) {
             case .invalidCredential:
                 errorMessage = "Invalid email or password. Please try again."
             case .networkError:
-                errorMessage = "Network error occurred. Please try again later."
+                errorMessage = "Connection timed out. Check your internet connection and try again."
             default:
                 errorMessage = error.localizedDescription
+            }
+            showingAlert = true
+        } catch let error as NSError where error.domain == NSURLErrorDomain {
+            // Network related errors
+            switch error.code {
+            case NSURLErrorNetworkConnectionLost:
+                errorMessage = "Network connection lost. Check your internet connection and try again."
+            case NSURLErrorNotConnectedToInternet:
+                errorMessage = "You are not connected to the internet."
+            default:
+                errorMessage = "An unknown network error occurred. Please try again later."
             }
             showingAlert = true
         } catch {

@@ -12,16 +12,12 @@ struct SearchResultsRowView: View {
     @Environment(\.colorScheme) var colorScheme
     let bar: Bar
     
-    private var hours: String {
+    private var hours: BarHours? {
         guard let hours = viewModel.hours.first(where: { $0.bar == bar.id }),
-              let open = hours.openTime,
-              let closed = hours.closeTime
-        else {
-            return "Hours Unavailable"
-        }
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "h:mm a"
-        return "\(dateFormatter.string(from: open)) - \(dateFormatter.string(from: closed))"
+            hours.openTime != nil,
+            hours.closeTime != nil
+        else { return nil }
+        return hours
     }
     
     private var waitTime: String {
@@ -36,13 +32,15 @@ struct SearchResultsRowView: View {
                     .foregroundStyle(colorScheme == .dark ? .nude : .darkBlue)
                     .font(.headline)
                 
-                Text(hours)
+                Text(hours?.displayHours ?? "Hours unavailable")
                     .foregroundStyle(colorScheme == .dark ? .white: .darkPurple)
             }
 
             Spacer()
-
-            Text(waitTime)
+            
+            if let isClosed = hours?.isClosed {
+                Text(!isClosed ? waitTime : "Closed")
+            }
         }
         .padding()
         .background(Color(.secondarySystemGroupedBackground))

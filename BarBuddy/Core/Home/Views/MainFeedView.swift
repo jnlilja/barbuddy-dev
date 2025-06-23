@@ -7,6 +7,7 @@
 import BottomSheet
 import MapKit
 import SwiftUI
+import FirebaseAuth
 
 struct MainFeedView: View {
     @Environment(MapViewModel.self) var viewModel
@@ -126,11 +127,7 @@ struct MainFeedView: View {
         }
         .overlay {
             if actions.showDeleteAlert {
-                ZStack {
-                    Color.black.opacity(0.5).ignoresSafeArea()
-                    DeletePromptView(password: $password, actions: $actions)
-                        .transition(.blurReplace)
-                }
+                DeletePromptView(password: $password, actions: $actions)
             }
         }
         .tint(.salmon)

@@ -15,7 +15,12 @@ struct VoteSelectionView: View {
     @State private var selectedOption: String?
     @State private var submissionError: Bool = false
     @State private var error: Error?
+    @State private var loadingState: LoadingState = .idle
     let bar: Bar
+    
+    private enum LoadingState {
+        case idle, onSubmit, loading
+    }
     
     var body: some View {
         VStack {
@@ -43,6 +48,7 @@ struct VoteSelectionView: View {
                 VoteButtonView(text: "> 30 min", opacity: 0.5, properties: $actions, selectedOption: $selectedOption)
             }
             .padding(.horizontal)
+            .disabled(loadingState == .loading || loadingState == .onSubmit)
             
             Spacer()
             
@@ -69,6 +75,12 @@ struct VoteSelectionView: View {
                 
                 if selectedOption != nil {
                     Button {
+                        loadingState = .onSubmit
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                            withAnimation {
+                                loadingState = .loading
+                            }
+                        }
                         guard let vote = selectedOption else { return }
                         // remove spaces
                         let formatted = vote.replacingOccurrences(of: "> ", with: ">")
@@ -81,12 +93,6 @@ struct VoteSelectionView: View {
                                 try await BarNetworkManager.shared.submitVote(
                                     vote: BarVote(bar: bar.id, waitTime: formatted)
                                 )
-                
-                                guard var status = barViewModel.statuses.first(where: { $0.bar == bar.id }) else { return }
-                                status.waitTime = formatted
-                                
-                                try await BarNetworkManager.shared.putBarStatus(status)
-                                timer.start()
                                 
                                 await MainActor.run {
                                     withAnimation {
@@ -125,30 +131,62 @@ struct VoteSelectionView: View {
                     }
                     .transition(.move(edge: .trailing))
                     .padding(.leading, 10)
+                    .disabled(loadingState == .loading || loadingState == .onSubmit)
                 }
             }
         }
+        .overlay {
+            if loadingState == .loading && !submissionError {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 20)
+                        .frame(width: 100, height: 100)
+                        .foregroundStyle(Color(.secondarySystemGroupedBackground))
+                        .shadow(radius: 5)
+                    
+                    ProgressView()
+                        .tint(.salmon)
+                }
+                .transition(.scale)
+            }
+        }
         .alert("Vote Submission Failed", isPresented: $submissionError) {
-            Button("OK", role: .cancel) {}
+            Button("OK", role: .cancel) {
+                loadingState = .idle
+            }
         } message: {
             if error is APIError {
                 switch error as? APIError {
                 case .noToken:
                     Text("Please sign in to vote for wait times.")
                 case .statusCode(let code):
-                    Text("Failed to submit vote. Status code: \(code)")
+                    handleStatusCodeError(code)
                 default:
-                    Text("An unknown error occurred.")
+                    EmptyView()
                 }
-            }
-            else if error is BarVoteError {
-                Text("You must wait 5 minutes before voting again for this bar.")
-            }
-            else {
+                
+            } else if let error = error as? NSError, error.domain == NSURLErrorDomain {
+                switch error.code {
+                case NSURLErrorTimedOut: Text("Connection timed out. Check your internet connection and try again.")
+                case NSURLErrorNetworkConnectionLost: Text("Network connection lost. Check your internet connection and try again.")
+                case NSURLErrorSecureConnectionFailed: Text("A secure connection could not be established. Check your internet connection and try again.")
+                    
+                default: Text("An unknown network error occurred. Check your internet connection and try again.")
+                        .onAppear() {
+                            print(error.localizedDescription)
+                        }
+                }
+            } else {
                 Text("An unknown error occurred.")
             }
         }
         .sensoryFeedback(.success, trigger: actions.didSubmit)
+    }
+}
+
+private func handleStatusCodeError(_ code: Int) -> some View {
+    switch code {
+    case 400..<500: Text("The vote you submitted was invalid.")
+    default: Text("Failed to submit vote. Status code: \(code)")
     }
 }
 
