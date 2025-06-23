@@ -52,7 +52,8 @@ struct MainFeedView: View {
                             searchText: $searchText,
                             isLoading: $actions.isLoading,
                             position: $bottomSheetPosition,
-                            focus: _isFocused
+                            focus: _isFocused,
+                            selectedBar: $selectedBar
                         )
                     }
                 }

@@ -15,6 +15,7 @@ struct SearchResultsView: View {
     @Binding var isLoading: Bool
     var position: Binding<BottomSheetPosition>?
     var focus: FocusState<Bool>
+    @Binding var selectedBar: Bar?
     
     private var filteredBars: [Bar] {
         viewModel.bars.filter {
@@ -41,6 +42,7 @@ struct SearchResultsView: View {
                             mapViewModel.updateCameraPosition(query: bar.name, viewModel.bars)
                             position?.wrappedValue = .relativeBottom(0.21)
                             focus.wrappedValue = false
+                            selectedBar = bar
                             
                         } label: {
                             SearchResultsRowView(bar: bar)
@@ -63,7 +65,7 @@ struct SearchResultsView: View {
     @Previewable @State var searchText: String = ""
     @Previewable @FocusState var focus: Bool
     NavigationStack {
-        SearchResultsView(searchText: $searchText, isLoading: .constant(false), focus: _focus)
+        SearchResultsView(searchText: $searchText, isLoading: .constant(false), focus: _focus, selectedBar: .constant(nil))
             .background(Color.darkBlue)
     }
     .environment(BarViewModel.preview)
@@ -73,7 +75,7 @@ struct SearchResultsView: View {
     @Previewable @State var searchText: String = ""
     @Previewable @FocusState var focus: Bool
     NavigationStack {
-        SearchResultsView(searchText: $searchText, isLoading: .constant(true), focus: _focus)
+        SearchResultsView(searchText: $searchText, isLoading: .constant(true), focus: _focus, selectedBar: .constant(nil))
             .background(Color.darkBlue)
     }
     .environment(BarViewModel.preview)
@@ -86,7 +88,7 @@ struct SearchResultsView: View {
         ZStack {
             Color.darkBlue
             
-            SearchResultsView(searchText: $searchText, isLoading: .constant(false), focus: _focus)
+            SearchResultsView(searchText: $searchText, isLoading: .constant(false), focus: _focus, selectedBar: .constant(nil))
                 .background(Color.darkBlue)
         }
     }
