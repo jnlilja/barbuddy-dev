@@ -9,7 +9,7 @@ import MapKit
 import SwiftUI
 import FirebaseAuth
 
-struct MainFeedView: View {
+struct MapView: View {
     @Environment(MapViewModel.self) var viewModel
     @Environment(BarViewModel.self) var barViewModel
     @Environment(\.colorScheme) var colorScheme
@@ -78,71 +78,8 @@ struct MainFeedView: View {
             }
             actions.isLoading = false
         }
-        .sheet(isPresented: $actions.showSettings) {
-            HStack {
-                VStack(alignment: .leading, spacing: 16) {
-                    if let email = authViewModel.authUser?.email {
-                        Text("\(Text("Email").bold()): \(email)")
-                            .padding(.top)
-                    }
-                    Spacer()
-
-                    Button {
-                        actions.showSignOutAlert = true
-                    } label: {
-                        HStack {
-                            Image(systemName: "figure.walk.departure")
-                            Text("Sign Out")
-                        }
-                        .foregroundStyle(colorScheme == .dark ? .salmon : .darkBlue)
-                    }
-                    
-                    Divider()
-                    
-                    Button {
-                        withAnimation {
-                            actions.showDeleteAlert = true
-                        }
-                        actions.showSettings = false
-                    } label: {
-                        Image(systemName: "trash")
-                        Text("Delete Account")
-                    }
-                    .tint(.red)
-                    
-                    Divider()
-                    
-                    Spacer()
-                }
-                .padding(.leading)
-                .presentationDetents([.fraction(0.25)])
-                .presentationDragIndicator(.visible)
-                
-                Spacer()
-                
-            }
-        }
-        .overlay {
-            if actions.showDeleteAlert {
-                DeletePromptView(password: $password, actions: $actions)
-            }
-        }
         .tint(.salmon)
         .environment(viewModel)
-        .alert("Are You Sure?", isPresented: $actions.showDeleteConfirmationAlert) {
-            Button("Cancel", role: .cancel) {}
-            Button("Delete", role: .destructive) {
-                Task {
-                    do {
-                        try await authViewModel.deleteUser(password: password)
-                    } catch {
-                        actions.showDeleteErrorAlert = true
-                    }
-                }
-            }
-        } message: {
-            Text("This action cannot be undone. Your account will be permanently deleted.")
-        }
         .alert("Error Loading Data", isPresented: $actions.isErrorPresented) {
             Button("Retry") {
                 actions.isLoading = true
@@ -346,7 +283,7 @@ struct MainFeedView: View {
 
 #if DEBUG
 #Preview {
-    MainFeedView()
+    MapView()
         .environment(MapViewModel())
         .environment(BarViewModel.preview)
         .environmentObject(AuthViewModel())

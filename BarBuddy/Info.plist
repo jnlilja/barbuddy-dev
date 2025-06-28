@@ -4,6 +4,17 @@
 <dict>
 	<key>API_BASE_URL</key>
 	<string>https://barbuddy-backend-148659891217.us-west1.run.app/api/</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.46978982395-ua857logjvff99ef166hju4mbhhod14n</string>
+			</array>
+		</dict>
+	</array>
 	<key>LSApplicationQueriesSchemes</key>
 	<array>
 		<string>instagram</string>

@@ -21,7 +21,7 @@ struct SearchResultsRowView: View {
     }
     
     private var waitTime: String {
-        viewModel.statuses.first(where: { $0.bar == bar.id })?.formattedWaitTime ?? "N/A"
+        viewModel.statuses.first(where: { $0.bar == bar.id })?.formattedWaitTime ?? "N /A"
     }
     
     var body: some View {

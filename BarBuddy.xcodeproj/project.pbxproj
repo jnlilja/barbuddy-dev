@@ -10,6 +10,8 @@
 		1B3A00D92DF31C3F00BB5B68 /* Shimmer in Frameworks */ = {isa = PBXBuildFile; productRef = 1B3A00D82DF31C3F00BB5B68 /* Shimmer */; };
 		1B471B9D2DFF85BA003C7591 /* BarBuddy.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = 1B471B9C2DFF85BA003C7591 /* BarBuddy.xctestplan */; };
 		1BBB5B712D979D0400A5E2E8 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 1BBB5B702D979D0400A5E2E8 /* FirebaseAuth */; };
+		1BD234732E0BE06200BA99AB /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = 1BD234722E0BE06200BA99AB /* FirebaseCore */; };
+		1BD234762E0BE12700BA99AB /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 1BD234752E0BE12700BA99AB /* GoogleSignInSwift */; };
 		1BF7EF472D79161D001786D8 /* BottomSheet in Frameworks */ = {isa = PBXBuildFile; productRef = 1BF7EF462D79161D001786D8 /* BottomSheet */; };
 		1BFF2B742DB6C59400D160AB /* PusherSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 1BFF2B732DB6C59400D160AB /* PusherSwift */; settings = {ATTRIBUTES = (Required, ); }; };
 		1BFF2B772DB6C73900D160AB /* SDWebImageSwiftUI in Frameworks */ = {isa = PBXBuildFile; productRef = 1BFF2B762DB6C73900D160AB /* SDWebImageSwiftUI */; };
@@ -77,8 +79,10 @@
 			files = (
 				1B3A00D92DF31C3F00BB5B68 /* Shimmer in Frameworks */,
 				1BFF2B772DB6C73900D160AB /* SDWebImageSwiftUI in Frameworks */,
+				1BD234762E0BE12700BA99AB /* GoogleSignInSwift in Frameworks */,
 				1BF7EF472D79161D001786D8 /* BottomSheet in Frameworks */,
 				1BBB5B712D979D0400A5E2E8 /* FirebaseAuth in Frameworks */,
+				1BD234732E0BE06200BA99AB /* FirebaseCore in Frameworks */,
 				1BFF2B742DB6C59400D160AB /* PusherSwift in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -146,6 +150,8 @@
 				1BFF2B732DB6C59400D160AB /* PusherSwift */,
 				1BFF2B762DB6C73900D160AB /* SDWebImageSwiftUI */,
 				1B3A00D82DF31C3F00BB5B68 /* Shimmer */,
+				1BD234722E0BE06200BA99AB /* FirebaseCore */,
+				1BD234752E0BE12700BA99AB /* GoogleSignInSwift */,
 			);
 			productName = BarBuddy;
 			productReference = 599153B12D540523004B2832 /* BarBuddy.app */;
@@ -235,6 +241,7 @@
 				1BFF2B722DB6C59400D160AB /* XCRemoteSwiftPackageReference "pusher-websocket-swift" */,
 				1BFF2B752DB6C73900D160AB /* XCRemoteSwiftPackageReference "SDWebImageSwiftUI" */,
 				1B3A00D72DF31C3F00BB5B68 /* XCRemoteSwiftPackageReference "SwiftUI-Shimmer" */,
+				1BD234742E0BE12700BA99AB /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 599153B22D540523004B2832 /* Products */;
@@ -438,7 +445,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 13;
+				CURRENT_PROJECT_VERSION = 14;
 				DEVELOPMENT_ASSET_PATHS = "\"BarBuddy/Preview Content\"";
 				DEVELOPMENT_TEAM = KB334NZN76;
 				ENABLE_PREVIEWS = YES;
@@ -457,7 +464,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.2.4;
+				MARKETING_VERSION = 1.3;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.jessicalilja.Bar-Buddy";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -477,7 +484,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 13;
+				CURRENT_PROJECT_VERSION = 14;
 				DEVELOPMENT_ASSET_PATHS = "\"BarBuddy/Preview Content\"";
 				DEVELOPMENT_TEAM = KB334NZN76;
 				ENABLE_PREVIEWS = YES;
@@ -496,7 +503,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.2.4;
+				MARKETING_VERSION = 1.3;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.jessicalilja.Bar-Buddy";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -644,6 +651,14 @@
 				minimumVersion = 11.10.0;
 			};
 		};
+		1BD234742E0BE12700BA99AB /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/google/GoogleSignIn-iOS";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 8.0.0;
+			};
+		};
 		1BF7EF452D79161D001786D8 /* XCRemoteSwiftPackageReference "BottomSheet" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/lucaszischka/BottomSheet";
@@ -680,6 +695,16 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 1BBB5B6F2D979D0400A5E2E8 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseAuth;
+		};
+		1BD234722E0BE06200BA99AB /* FirebaseCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 1BBB5B6F2D979D0400A5E2E8 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseCore;
+		};
+		1BD234752E0BE12700BA99AB /* GoogleSignInSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 1BD234742E0BE12700BA99AB /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignInSwift;
 		};
 		1BF7EF462D79161D001786D8 /* BottomSheet */ = {
 			isa = XCSwiftPackageProductDependency;

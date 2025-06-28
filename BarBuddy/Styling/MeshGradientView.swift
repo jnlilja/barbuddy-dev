@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct AnimatedBackgroundView: View {
+struct MeshGradientView: View {
     @Environment(\.colorScheme) var colorScheme
     @State private var appear = false
     @State private var appear2 = false
@@ -87,5 +87,5 @@ struct AnimatedBackgroundView: View {
     }
 }
 #Preview {
-    AnimatedBackgroundView()
+    MeshGradientView()
 }

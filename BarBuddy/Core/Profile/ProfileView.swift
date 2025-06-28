@@ -22,41 +22,50 @@ struct ProfileView: View {
     
     @Namespace var animation
     
+    private var screenWidth: CGFloat {
+        UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .first?.screen.bounds.width ?? 390
+    }
+    
     private var gridCellWidth: CGFloat {
-        let screenWidth = UIScreen.main.bounds.width
         let padding = CGFloat(16 * 2 + 15 * 2)
         return (screenWidth - padding) / 3
     }
     
     var body: some View {
         NavigationStack {
-            ZStack {
-                Color.darkBlue
-                    .ignoresSafeArea()
-                // ─── Main profile + tabs + content ───
-                if let user = authVM.currentUser {
+            GeometryReader { geometry in
+                ZStack {
+                    Color.darkBlue
+                        .ignoresSafeArea()
+                    // ─── Main profile + tabs + content ───
                     VStack(spacing: 25) {
                         // Profile header
                         HStack {
-                            NavigationLink(destination: EmptyView()) {
-                                Image(systemName: "pencil.circle.fill")
-                                    .foregroundStyle(.white)
-                                    .padding(.leading)
+                            Image(systemName: "pencil.circle.fill")
+                                .foregroundStyle(.white)
+                                .padding(.leading)
+                                .hidden()
+                            
+                            Spacer()
+                            
+                            Group {
+                                if let username = authVM.currentUser?.username {
+                                    Text("\(username)")
+                                } else {
+                                    Text("Log In Or Create an Account")
+                                }
                             }
+                            .font(.system(size: 20, weight: .bold))
+                            .foregroundColor(.nude)
+                            .padding()
+                            .background(.salmon.opacity(0.4))
+                            .clipShape(RoundedRectangle(cornerRadius: 20))
                             
                             Spacer()
                             
-                            Text("\(user.username)")
-                                .font(.system(size: 20, weight: .bold))
-                                .foregroundColor(.nude)
-                                .padding()
-                                .background(.salmon.opacity(0.4))
-                                .clipShape(RoundedRectangle(cornerRadius: 20))
-                            
-                            
-                            Spacer()
-                            
-                            NavigationLink(destination: EmptyView()) {
+                            NavigationLink(destination: SettingsView()) {
                                 Image(systemName: "line.3.horizontal")
                                     .foregroundStyle(.white)
                                     .padding(.trailing)
@@ -64,7 +73,7 @@ struct ProfileView: View {
                         }
                         
                         Group {
-                            if let pic = user.profile_pictures.first, let url = URL(string: pic) {
+                            if let pic = authVM.currentUser?.profile_pictures.first, let url = URL(string: pic) {
                                 WebImage(url: url)
                                     .resizable()
                                     .scaledToFill()
@@ -72,27 +81,60 @@ struct ProfileView: View {
                                     .clipShape(Circle())
                                     .overlay(
                                         Circle().stroke(
-                                            Color.white,
+                                            .white,
                                             lineWidth: 4
                                         )
                                     )
+                                    .overlay(alignment: .bottomTrailing) {
+                                        Button {
+                                            // TODO: Add action for editing profile picture
+                                            print("Edit profile picture tapped")
+                                        } label: {
+                                            Image(systemName: "pencil")
+                                                .font(.system(size: 16, weight: .bold))
+                                                .foregroundColor(.white)
+                                                .frame(width: 32, height: 32)
+                                                .background(Color.salmon)
+                                                .clipShape(Circle())
+                                                .overlay(Circle().stroke(Color.white, lineWidth: 1.5))
+                                                .shadow(radius: 2)
+                                        }
+                                        .offset(x: 5, y: 5) // Adjust offset to position on the rim
+                                    }
                                     .shadow(radius: 7)
                             } else {
-                                Circle()
-                                    .fill(Color.gray.opacity(0.3))
-                                    .frame(width: 120, height: 120)
+                                ZStack {
+                                    Circle()
+                                        .fill(Color.gray.opacity(0.3))
+                                        .frame(width: 120, height: 120)
+                                    
+                                    Image(systemName: "person.fill")
+                                        .resizable()
+                                        .frame(width: 50, height: 50)
+                                        .foregroundColor(.white)
+                                }
                             }
                         }
                         .padding(.top, 20)
                         
-                        HStack(spacing: 8) {
+                        if let user = authVM.currentUser {
                             Text("\(user.first_name) \(user.last_name)")
                                 .font(.system(size: 32, weight: .bold))
                                 .foregroundColor(.white)
-                        }
-                        .padding(.bottom)
+                                .padding(.bottom)
                             
-                        ProfileTabView(selection: $selectedTab)
+                            ProfileTabView(selection: $selectedTab, geometry: geometry)
+                        } else {
+                            Text("Guest")
+                                .font(.system(size: 32, weight: .bold))
+                                .foregroundColor(.white)
+                                .padding(.bottom)
+                            
+                            Text("Sign in to access your profile and features.")
+                                .font(.system(size: 18, weight: .medium))
+                                .foregroundColor(.white)
+                        }
+                        
                         
                         // Tab content
                         switch selectedTab {
@@ -103,33 +145,22 @@ struct ProfileView: View {
                                 GridItem(.fixed(gridCellWidth), spacing: 15),
                                 GridItem(.fixed(gridCellWidth))
                             ], spacing: 15) {
-                                ForEach(user.profile_pictures.sorted(), id: \.self) { img in
-                                    ZStack(alignment: .topTrailing) {
-                                        if let url = URL(string: img) {
-                                            WebImage(url: url)
-                                                .resizable()
-                                                .scaledToFill()
-                                                .frame(width: gridCellWidth, height: gridCellWidth)
-                                                .clipped()
-                                                .cornerRadius(10)
-                                                .onTapGesture {
-                                                    selectedImage = img
-                                                    isImageExpanded = true
-                                                }
+                                if let user = authVM.currentUser {
+                                    ForEach(user.profile_pictures.sorted(), id: \.self) { img in
+                                        ZStack(alignment: .topTrailing) {
+                                            if let url = URL(string: img) {
+                                                WebImage(url: url)
+                                                    .resizable()
+                                                    .scaledToFill()
+                                                    .frame(width: gridCellWidth, height: gridCellWidth)
+                                                    .clipped()
+                                                    .cornerRadius(10)
+                                                    .onTapGesture {
+                                                        selectedImage = img
+                                                        isImageExpanded = true
+                                                    }
+                                            }
                                         }
-                                        Button {
-                                            // edit
-                                        } label: {
-                                            Circle()
-                                                .fill(Color("Salmon"))
-                                                .frame(width: 30, height: 30)
-                                                .overlay(
-                                                    Image(systemName: "pencil")
-                                                        .font(.system(size: 12))
-                                                        .foregroundColor(.white)
-                                                )
-                                        }
-                                        .padding(8)
                                     }
                                 }
                             }
@@ -139,17 +170,19 @@ struct ProfileView: View {
                             // Info sections
                             HStack {
                                 VStack(alignment: .leading, spacing: 20) {
-                                    InfoSection(title: "Basic Info", items: [
-                                        InfoItem(icon: "calendar",         text: user.date_of_birth ?? ""),
-                                        InfoItem(icon: "mappin.circle.fill", text: user.hometown ?? "")
-                                    ])
-                                    InfoSection(title: "Work & Education", items: [
-                                        InfoItem(icon: "graduationcap.fill", text: user.job_or_university ?? "")
-                                    ])
-                                    InfoSection(title: "Preferences", items: [
-                                        InfoItem(icon: "wineglass.fill",      text: user.favorite_drink ?? ""),
-                                        InfoItem(icon: "person.2.fill",      text: user.sexual_preference ?? "")
-                                    ])
+                                    if let user = authVM.currentUser {
+                                        InfoSection(title: "Basic Info", items: [
+                                            InfoItem(icon: "calendar",         text: user.date_of_birth ?? ""),
+                                            InfoItem(icon: "mappin.circle.fill", text: user.hometown ?? "")
+                                        ])
+                                        InfoSection(title: "Work & Education", items: [
+                                            InfoItem(icon: "graduationcap.fill", text: user.job_or_university ?? "")
+                                        ])
+                                        InfoSection(title: "Preferences", items: [
+                                            InfoItem(icon: "wineglass.fill",      text: user.favorite_drink ?? ""),
+                                            InfoItem(icon: "person.2.fill",      text: user.sexual_preference ?? "")
+                                        ])
+                                    }
                                 }
                                 .padding(.horizontal, 16)
                                 
@@ -216,6 +249,7 @@ struct FriendRow: View {
 struct TabButton: View {
     let text: String
     let isSelected: Bool
+    let geometry: GeometryProxy
     let action: () -> Void
     
     var body: some View {
@@ -223,8 +257,9 @@ struct TabButton: View {
             Text(text)
                 .font(.system(size: 16, weight: .medium))
                 .foregroundColor(isSelected ? .white : .gray)
-                .frame(width: 75, height: 40)
+                .frame(width: geometry.size.width / 4, height: 40)
                 .cornerRadius(25)
+                .contentShape(RoundedRectangle(cornerRadius: 25)) // Increases hit area for taps
         }
         .buttonStyle(.plain)
     }
@@ -288,4 +323,9 @@ struct InfoItem: Identifiable {
                 return vm
             }()
         )
+}
+#Preview("No User") {
+    @Previewable @StateObject var authVM = AuthViewModel()
+    ProfileView()
+        .environmentObject(authVM)
 }

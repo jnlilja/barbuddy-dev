@@ -85,7 +85,8 @@ import FirebaseAuth
     }
     private func isValidPasswordFormat(_ str: String) -> Bool {
         let regex = "^(?=.*[0-9])(?=.*[!@#$%^&*]).{8,}$"
-        return NSPredicate(format: "SELF MATCHES %@", regex).evaluate(with: str)
+        isValidPassword = NSPredicate(format: "SELF MATCHES %@", regex).evaluate(with: str)
+        return isValidPassword
     }
     private func error(_ message: String) {
         alertMessage  = message

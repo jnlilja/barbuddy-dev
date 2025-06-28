@@ -8,19 +8,32 @@
 import SwiftUI
 
 struct HomeView: View {
-    @State private var selectedTab = 1
+    @State private var selectedTab = 2
     @State private var mapViewModel = MapViewModel()
     
     var body: some View {
         TabView(selection: $selectedTab) {
-            Tab("Map", systemImage: "map.fill", value: 1) {
-                MainFeedView()
-                    .toolbarBackground(.visible, for: .tabBar)
+            Tab("Swipe", systemImage: "person.fill.checkmark.and.xmark", value: 0) {
+                SwipeView()
+            }
+            
+            Tab("Messages", systemImage: "message.fill", value: 1) {
+                MessagesView()
+            }
+            
+            Tab("Map", systemImage: "map.fill", value: 2) {
+                MapView()
                     .toolbarBackground(.darkBlue, for: .tabBar)
+                    .toolbarBackground(.visible, for: .tabBar)
+            }
+            
+            Tab("Profile", systemImage: "person.circle.fill", value: 3) {
+                ProfileView()
             }
         }
         .environment(mapViewModel)
         .tint(.salmon)
+        .sensoryFeedback(.selection, trigger: selectedTab)
     }
 }
 

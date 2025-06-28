@@ -7,6 +7,7 @@
 
 import SwiftUI
 import Firebase
+import GoogleSignIn
 
 @main
 struct BarBuddyApp: App {
@@ -16,6 +17,7 @@ struct BarBuddyApp: App {
         loadRocketSimConnect()
         FirebaseApp.configure()
         
+        // Configure URL Cache
         let memoryCapacity = 200 * 1024 * 1024  // 200 MB
         let diskCapacity = 500 * 1024 * 1024    // 500 MB
         let cache = URLCache(memoryCapacity: memoryCapacity, diskCapacity: diskCapacity)
@@ -24,12 +26,23 @@ struct BarBuddyApp: App {
         #if DEBUG
         print("📱 URLCache configured: Memory=\(memoryCapacity/1024/1024)MB, Disk=\(diskCapacity/1024/1024)MB")
         #endif
+
+        // Configure TabBar Appearance globally
+        let tabBarAppearance = UITabBarAppearance()
+        tabBarAppearance.configureWithOpaqueBackground()
+        tabBarAppearance.backgroundColor = .darkBlue
+
+        UITabBar.appearance().standardAppearance = tabBarAppearance
+        UITabBar.appearance().scrollEdgeAppearance = tabBarAppearance
     }
 
     var body: some Scene {
         WindowGroup {
             ContentView()
                 .environmentObject(authViewModel)
+                .onOpenURL { url in
+                    GIDSignIn.sharedInstance.handle(url)
+                }
         }
     }
 }

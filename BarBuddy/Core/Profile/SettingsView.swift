@@ -8,32 +8,153 @@
 import SwiftUI
 
 struct SettingsView: View {
+    @Environment(\.colorScheme) var colorScheme
     @EnvironmentObject var viewModel: AuthViewModel
+    @State private var showApperanceSettings = false
+    @State private var enableDarkMode = false
+    @State private var selectedTheme: String?
     var body: some View {
-
-        Button {
-            Task {
-                viewModel.signOut()
-            }
-        } label: {
-            ZStack {
-                RoundedRectangle(cornerRadius: 15)
-                    .frame(width: 150, height: 50)
-                    .foregroundStyle(.salmon)
-                HStack {
-                    // Figure walk right to left
-                    Image(systemName: "figure.walk")
-                        .environment(\.layoutDirection, .rightToLeft)
-                    Text("Log Out")
+        List {
+            Section(header: Text("Account").foregroundStyle(.nude)) {
+                Button {
+                    
+                } label: {
+                    HStack(spacing: 15) {
+                        Image(systemName: "person.circle")
+                            .frame(width: 24, height: 24)
+                            .foregroundStyle(.primary)
+                        Text("Edit Profile")
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
                 }
-                .font(.headline)
-                .foregroundColor(.white)
+                
+                Button {
+                    
+                } label: {
+                    HStack(spacing: 15) {
+                        Image(systemName: "rectangle.and.pencil.and.ellipsis")
+                            .frame(width: 24, height: 24)
+                            .foregroundStyle(.primary)
+                        Text("Change Password")
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                }
+                
+                Button {
+                    viewModel.signOut()
+                } label: {
+                    HStack(spacing: 15) {
+                        Image(systemName: "figure.walk.departure")
+                            .frame(width: 24, height: 24)
+                        if viewModel.authUser?.isAnonymous ?? true {
+                            Text("Return to Menu")
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                        } else {
+                            Text("Logout")
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+                    }
+                }
+                if let isAnonymous = viewModel.authUser?.isAnonymous, !isAnonymous {
+                    NavigationLink(destination: ConfirmDeleteView()) {
+                        HStack(spacing: 15) {
+                            Image(systemName: "trash.fill")
+                                .frame(width: 24, height: 24)
+                                .foregroundStyle(.red)
+                            Text("Delete Account")
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+                        .foregroundStyle(.red)
+                    }
+                }
             }
+            .tint(.primary)
+            
+            Section(header: Text("More").foregroundStyle(.nude)) {
+                Button {
+                    
+                } label: {
+                    HStack(spacing: 15) {
+                        Image(systemName: "info.circle")
+                            .frame(width: 24, height: 24)
+                            .foregroundStyle(.primary)
+                        Text("About Us")
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                }
+                
+                Button {
+                    
+                } label: {
+                    HStack(spacing: 15) {
+                        Image(systemName: "checkmark.shield")
+                            .frame(width: 24, height: 24)
+                            .foregroundStyle(.primary)
+                        Text("Terms of Service")
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                }
+                Button {
+                    showApperanceSettings = true
+                } label: {
+                    HStack(spacing: 15) {
+                        Image(systemName: "moon.stars.fill")
+                            .frame(width: 24, height: 24)
+                            .foregroundStyle(.primary)
+                        Text("Apperance")
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                }
+            }
+            .tint(.primary)
+        }
+        .scrollContentBackground(.hidden)
+        .background(colorScheme == .dark ? Color(.secondarySystemFill) : .darkBlue.opacity(0.9))
+        .toolbarBackground(.darkBlue, for: .navigationBar)
+        .toolbarBackgroundVisibility(.visible, for: .navigationBar)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Text("Settings")
+                    .foregroundColor(.white)
+                    .font(.largeTitle)
+                    .bold()
+                    .padding(.bottom)
+            }
+        }
+        .sheet(isPresented: $showApperanceSettings) {
+            Group {
+                VStack {
+                    Text("Set Apperance")
+                        .font(.title)
+                        .padding(.top)
+                    
+                    Spacer()
+                    
+                    VStack(alignment: .leading) {
+                        Text("System Apperance")
+                            .font(.headline)
+                            .foregroundColor(.primary)
+                        
+                        Text("Light Mode")
+                            .foregroundColor(.primary)
+                            .font(.headline)
+                        
+                        Text("Dark Mode")
+                            .foregroundColor(.primary)
+                            .font(.headline)
+                    }
+                    
+                    Spacer()
+                }
+            }
+            .presentationDetents([.fraction(0.2)])
         }
     }
 }
 
 #Preview {
-    SettingsView()
-        .environmentObject(AuthViewModel())
+    NavigationStack {
+        SettingsView()
+            .environmentObject(AuthViewModel())
+    }
 }

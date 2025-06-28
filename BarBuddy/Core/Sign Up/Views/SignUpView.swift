@@ -9,168 +9,104 @@ import FirebaseAuth
 import SwiftUI
 
 struct SignUpView: View {
-    @Environment(SignUpViewModel.self) private var viewModel
+    @Environment(SignUpViewModel.self) var viewModel
     @Environment(\.colorScheme) var colorScheme
     @EnvironmentObject var authVM: AuthViewModel
     @Binding var path: NavigationPath
     @FocusState private var focusedField: FocusField?
-    @AppStorage("newUser") var newUser: Bool?
-
-    enum FocusField {
-        case email, password, confirmPassword
-    }
-
+    
     var body: some View {
-        @Bindable var bindableViewModel = viewModel
-
-        ZStack {
-            AnimatedBackgroundView()
-
-            VStack(spacing: 25) {
-                Text("Create an Account")
-                    .font(.largeTitle).bold()
-                    .foregroundColor(.white)
-                    .padding(.bottom, 30)
-
-                // ───────── Email
-                TextField(
-                    "",
-                    text: $bindableViewModel.email,
-                    prompt: Text("Email")
-                        .foregroundStyle(
-                            colorScheme == .dark ? .nude : Color(.systemGray)
-                        )
-                )
-                .padding()
-                .frame(width: 300, height: 50)
-                .background(colorScheme == .dark ? .darkBlue : Color.white)
-                .cornerRadius(10)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 10)
-                        .stroke(
-                            viewModel.passwordsMatch
-                            ? .darkPurple : .red,
-                            lineWidth: 1
-                        )
-                )
-                .autocapitalization(.none)
-                .keyboardType(.emailAddress)
-                .focused($focusedField, equals: .email)
-                .submitLabel(.next)
-
-                // ───────── Password
-                SecureField(
-                    "",
-                    text: $bindableViewModel.password,
-                    prompt: Text("Password")
-                        .foregroundStyle(
-                            colorScheme == .dark ? .nude : Color(.systemGray)
-                        )
-                )
-                .padding()
-                .frame(width: 300, height: 50)
-                .background(colorScheme == .dark ? .darkBlue : Color.white)
-                .cornerRadius(10)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 10)
-                        .stroke(
-                            viewModel.passwordsMatch
-                                ? .darkPurple : .red,
-                            lineWidth: 1
-                        )
-                )
-                .focused($focusedField, equals: .password)
-                .submitLabel(.next)
-
-                // ───────── Confirm password
-                SecureField(
-                    "",
-                    text: $bindableViewModel.confirmPassword,
-                    prompt: Text("Confirm Password")
-                        .foregroundStyle(
-                            colorScheme == .dark ? .nude : Color(.systemGray)
-                        )
-                )
-                .padding()
-                .frame(width: 300, height: 50)
-                .background(colorScheme == .dark ? .darkBlue : Color.white)
-                .cornerRadius(10)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 10)
-                        .stroke(
-                            viewModel.passwordsMatch
-                                ? .darkPurple : .red,
-                            lineWidth: 1
-                        )
-                )
-                .focused($focusedField, equals: .confirmPassword)
-                .submitLabel(.done)
-
-                // validation hint
-                if !viewModel.isValidPassword {
+        @Bindable var viewModel = viewModel
+        
+        GeometryReader { proxy in
+            ZStack {
+                Color.darkBlue.ignoresSafeArea()
+                VStack(spacing: 25) {
+                    VStack {
+                        Text("Let's get started!")
+                            .font(.largeTitle)
+                            .bold()
+                            .foregroundColor(.white)
+                    }
+                    
+                    // Email
+                    SignUpTextFieldView(prompt: "Email", text: $viewModel.email, geometry: proxy)
+                        .focused($focusedField, equals: .email)
+                    
+                    // Name
+                    SignUpTextFieldView(prompt: "First Name", text: $viewModel.firstName, geometry: proxy)
+                        .focused($focusedField, equals: .email)
+                    
+                    SignUpTextFieldView(prompt: "Last Name", text: $viewModel.lastName, geometry: proxy)
+                        .focused($focusedField, equals: .email)
+                        
+                    // Password
+                    SignUpTextFieldView(prompt: "Password", text: $viewModel.password, geometry: proxy, isPassword: true)
+                        .focused($focusedField, equals: .password)
+                    
+                    // Confirm Password
+                    SignUpTextFieldView(prompt: "Confirm Password", text: $viewModel.confirmPassword, geometry: proxy, isPassword: true)
+                        .focused($focusedField, equals: .confirmPassword)
+                    
                     Text(
                         "Password must be at least 8 characters with a number and special character"
                     )
                     .font(.caption)
-                    .foregroundColor(.red)
+                    .foregroundColor(.neonPink)
                     .multilineTextAlignment(.center)
-                }
-
-                // ───────── Sign‑up button
-                Button {
-                    guard viewModel.validate() else { return }
-                    Task {
-                        await authVM.signUp(
-                            email: viewModel.email,
-                            password: viewModel.password
-                        )
+                    .opacity(!viewModel.isValidPassword ? 1 : 0)
+                    
+                    Spacer()
+                    
+                    // ───────── Sign‑up button
+                    Button {
+                        guard viewModel.validate() else { return }
+                        path.append(SignUpNavigation.ageVerification)
+                        
+                    } label: {
+                        Text("Continue")
+                            .foregroundColor(colorScheme == .dark ? .darkPurple : .white)
+                            .frame(width: 300, height: 50)
+                            .background(colorScheme == .dark ? .nude : .darkPurple)
+                            .cornerRadius(10)
                     }
-                } label: {
-                    Text("Sign Up")
-                        .foregroundColor(colorScheme == .dark ? .darkPurple : .white)
-                        .frame(width: 300, height: 50)
-                        .background(colorScheme == .dark ? .nude : .darkPurple)
-                        .cornerRadius(10)
+                    .padding(.top, 20)
                 }
-                .padding(.top, 20)
-            }
-            .onSubmit {
-                if focusedField == .email {
-                    focusedField = .password
-                } else if focusedField == .password {
-                    focusedField = .confirmPassword
-                } else {
-                    focusedField = nil
-                    guard viewModel.validate() else { return }
-                    Task {
-                        await authVM.signUp(
-                            email: viewModel.email,
-                            password: viewModel.password
-                        )
-                        if authVM.authUser != nil {
-                            newUser = true
+                .onSubmit {
+                    if focusedField == .email {
+                        focusedField = .password
+                    } else if focusedField == .password {
+                        focusedField = .confirmPassword
+                    } else {
+                        focusedField = nil
+                        guard viewModel.validate() else {
+                            return
                         }
+                        path.append(SignUpNavigation.ageVerification)
                     }
                 }
+                .padding()
+                
+                .alert("Validation Error", isPresented: $viewModel.showingAlert) {
+                    Button("OK", role: .cancel) {}
+                } message: {
+                    Text(viewModel.alertMessage)
+                }
+                .alert("Failed to Sign Up", isPresented: $authVM.signUpAlert) {
+                    Button("OK", role: .cancel) {}
+                } message: {
+                    Text(authVM.getErrorMessage())
+                }
             }
-            .padding()
-        }
-        .alert("Validation Error", isPresented: $bindableViewModel.showingAlert)
-        {
-            Button("OK", role: .cancel) {}
-        } message: {
-            Text(viewModel.alertMessage)
-        }
-        .alert("Authentication Error", isPresented: $authVM.showingAlert) {
-            Button("OK", role: .cancel) {}
-        } message: {
-            Text(authVM.getErrorMessage())
         }
     }
 }
 #Preview {
     @Previewable @State var signUpViewModel = SignUpViewModel()
-    SignUpView(path: .constant(NavigationPath()))
-        .environment(signUpViewModel)
-        .environmentObject(AuthViewModel())
+    @Previewable @State var path = NavigationPath()
+    NavigationStack(path: $path) {
+        SignUpView(path: $path)
+            .environment(signUpViewModel)
+            .environmentObject(AuthViewModel())
+    }
 }

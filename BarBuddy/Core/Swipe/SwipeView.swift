@@ -106,7 +106,7 @@ struct SwipeView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                Color("DarkPurple").ignoresSafeArea()
+                Color.darkBlue.ignoresSafeArea()
                 if !vm.searchText.isEmpty {
                     if !vm.barsSearchResult.isEmpty {
                         ScrollView {
@@ -201,7 +201,6 @@ struct SwipeView: View {
                 vm.barsSearchResult = queriedBars
             })
             .searchable(text: $vm.searchText)
-            .toolbarBackground(Color("DarkPurple"), for: .navigationBar)
             .toolbarColorScheme(.dark, for: .navigationBar)
             .task {
                 do {
@@ -219,7 +218,6 @@ struct SwipeView: View {
                 }
             }
         }
-        .preferredColorScheme(.dark)
         .tint(.white)
         .accentColor(.white)
     }
