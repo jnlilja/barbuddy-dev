@@ -14,6 +14,7 @@ struct SignUpView: View {
     @EnvironmentObject var authVM: AuthViewModel
     @Binding var path: NavigationPath
     @FocusState private var focusedField: FocusField?
+    @State private var isLoading: Bool = false
     
     var body: some View {
         @Bindable var viewModel = viewModel
@@ -40,6 +41,7 @@ struct SignUpView: View {
                     SignUpTextFieldView(prompt: "Email", text: $viewModel.email, geometry: proxy)
                         .focused($focusedField, equals: .email)
                         .autocapitalization(.none)
+                        .autocorrectionDisabled()
                         .keyboardType(.emailAddress)
                         .submitLabel(.next)
                     
@@ -55,9 +57,22 @@ struct SignUpView: View {
                     
                     // ───────── Sign‑up button
                     Button {
-                        guard viewModel.validate() else { return }
-                        path.append(SignUpNavigation.ageVerification)
-                        
+                        focusedField = nil
+                        withAnimation {
+                            isLoading = true
+                        }
+                        guard viewModel.validate() else {
+                            isLoading = false
+                            return
+                        }
+                        //path.append(SignUpNavigation.ageVerification)
+                        Task {
+                            await authVM.signUp(email: viewModel.email, password: viewModel.password)
+                            
+                            if authVM.signUpAlert || viewModel.showingAgeAlert {
+                                isLoading = false
+                            }
+                        }
                     } label: {
                         Text("Continue")
                             .foregroundColor(colorScheme == .dark ? .darkPurple : .white)
@@ -65,7 +80,6 @@ struct SignUpView: View {
                             .background(colorScheme == .dark ? .nude : .darkPurple)
                             .cornerRadius(10)
                             .padding(.top, 30)
-
                     }
                     
                     Spacer()
@@ -76,11 +90,22 @@ struct SignUpView: View {
                     } else if focusedField == .password {
                         focusedField = .confirmPassword
                     } else {
+                        withAnimation {
+                            isLoading = true
+                        }
                         focusedField = nil
                         guard viewModel.validate() else {
+                            isLoading = false
                             return
                         }
-                        path.append(SignUpNavigation.ageVerification)
+                        //path.append(SignUpNavigation.ageVerification)
+                        Task {
+                            await authVM.signUp(email: viewModel.email, password: viewModel.password)
+                            
+                            if authVM.signUpAlert || viewModel.showingAgeAlert {
+                                isLoading = false
+                            }
+                        }
                     }
                 }
                 .alert("Validation Error", isPresented: $viewModel.showingAlert) {
@@ -92,6 +117,20 @@ struct SignUpView: View {
                     Button("OK", role: .cancel) {}
                 } message: {
                     Text(authVM.getErrorMessage())
+                }
+                .overlay {
+                    if isLoading {
+                        ZStack {
+                            RoundedRectangle(cornerRadius: 20)
+                                .frame(width: 100, height: 100)
+                                .foregroundStyle(Color(.secondarySystemGroupedBackground))
+                                .shadow(radius: 5)
+                            
+                            ProgressView()
+                                .tint(.salmon)
+                        }
+                        .transition(.scale)
+                    }
                 }
             }
         }

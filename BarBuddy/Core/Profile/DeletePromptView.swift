@@ -11,6 +11,7 @@ import FirebaseAuth
 
 struct DeletePromptView: View {
     @Environment(\.colorScheme) var colorScheme
+    @Environment(BarViewModel.self) var barViewModel
     @EnvironmentObject var viewModel: AuthViewModel
     @State private var password: String = ""
     @State private var confirmPassword: String = ""
@@ -28,7 +29,7 @@ struct DeletePromptView: View {
             Rectangle()
                 .fill()
                 .ignoresSafeArea()
-                .foregroundStyle(.darkBlue.gradient)
+                .foregroundStyle(.darkBlue.mix(with: .darkPurple, by: 0.3))
                 
             VStack(alignment: .leading) {
                 Text("Account Deletion")
@@ -120,11 +121,15 @@ struct DeletePromptView: View {
                 }
             }
         }
-        .alert("Warning", isPresented: $showAlert) {
+        .alert("Final Warning", isPresented: $showAlert) {
             Button("Cancel", role: .cancel) {}
             Button("Delete", role: .destructive) {
                 Task {
                     do {
+                        URLCache.shared.removeAllCachedResponses()
+                        UserDefaults.standard.removeObject(forKey: "barStatuses_cache_timestamp")
+                        UserDefaults.standard.removeObject(forKey: "barHours_cache_timestamp")
+                        barViewModel.stopStatusRefreshTimer()
                         try await viewModel.deleteUser(password: password)
                     } catch {
                         
@@ -157,4 +162,5 @@ struct DeletePromptView: View {
 #Preview {
     DeletePromptView()
         .environmentObject(AuthViewModel())
+        .environment(BarViewModel())
 }

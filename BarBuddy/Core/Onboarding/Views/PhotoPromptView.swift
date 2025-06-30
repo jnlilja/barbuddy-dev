@@ -46,7 +46,7 @@ struct PhotoPromptView: View {
                 
                 Button(action: {
                     proceedToPhotoUpload = true
-                    //path.append(SignUpNavigation.photoUpload)
+
                 }) {
                     Text("Add Photos")
                         .font(.headline)

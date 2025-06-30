@@ -255,30 +255,6 @@ struct MapView: View {
                 .animation(.easeInOut, value: bottomSheetPosition)
         }
     }
-    private var logOutButton: some ToolbarContent {
-        ToolbarItem(placement: .cancellationAction) {
-            Button {
-                actions.showSettings = true
-            } label: {
-                //
-                if #available(iOS 26, *) {
-                    Image(systemName: "line.3.horizontal")
-
-                } else {
-                    Image(systemName: "line.3.horizontal")
-                        .frame(width: 43, height: 43)
-                        .background(Color(.tertiarySystemBackground))
-                        .clipShape(RoundedCorner(radius: 10))
-                }
-            }
-            .environment(\.layoutDirection, .rightToLeft)
-            .font(.callout)
-            .foregroundStyle(
-                colorScheme == .dark
-                ? .salmon : .darkPurple
-            )
-        }
-    }
 }
 
 #if DEBUG

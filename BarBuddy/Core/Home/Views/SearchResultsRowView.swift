@@ -21,14 +21,15 @@ struct SearchResultsRowView: View {
     }
     
     private var waitTime: String {
-        viewModel.statuses.first(where: { $0.bar == bar.id })?.formattedWaitTime ?? "N /A"
+        viewModel.statuses.first(where: { $0.bar == bar.id })?.formattedWaitTime ?? "N/A"
     }
     
     var body: some View {
         HStack {
             VStack(alignment: .leading) {
                 Text(bar.name)
-                    .lineLimit(2)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
                     .foregroundStyle(colorScheme == .dark ? .nude : .darkBlue)
                     .font(.headline)
                 

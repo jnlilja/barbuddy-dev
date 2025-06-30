@@ -52,7 +52,6 @@ struct SearchResultsView: View {
                     .padding(.horizontal)
                 }
             }
-            .transaction { $0.animation = nil }
             .scrollDismissesKeyboard(.immediately)
             .padding(.bottom, 90)
             .ignoresSafeArea(.keyboard)

@@ -10,9 +10,10 @@ import SwiftUI
 struct SettingsView: View {
     @Environment(\.colorScheme) var colorScheme
     @EnvironmentObject var viewModel: AuthViewModel
+    @Environment(BarViewModel.self) var barViewModel
     @State private var showApperanceSettings = false
-    @State private var enableDarkMode = false
     @State private var selectedTheme: String?
+
     var body: some View {
         List {
             Section(header: Text("Account").foregroundStyle(.nude)) {
@@ -41,6 +42,10 @@ struct SettingsView: View {
                 }
                 
                 Button {
+                    URLCache.shared.removeAllCachedResponses()
+                    UserDefaults.standard.removeObject(forKey: "barStatuses_cache_timestamp")
+                    UserDefaults.standard.removeObject(forKey: "barHours_cache_timestamp")
+                    barViewModel.stopStatusRefreshTimer()
                     viewModel.signOut()
                 } label: {
                     HStack(spacing: 15) {
@@ -122,32 +127,8 @@ struct SettingsView: View {
             }
         }
         .sheet(isPresented: $showApperanceSettings) {
-            Group {
-                VStack {
-                    Text("Set Apperance")
-                        .font(.title)
-                        .padding(.top)
-                    
-                    Spacer()
-                    
-                    VStack(alignment: .leading) {
-                        Text("System Apperance")
-                            .font(.headline)
-                            .foregroundColor(.primary)
-                        
-                        Text("Light Mode")
-                            .foregroundColor(.primary)
-                            .font(.headline)
-                        
-                        Text("Dark Mode")
-                            .foregroundColor(.primary)
-                            .font(.headline)
-                    }
-                    
-                    Spacer()
-                }
-            }
-            .presentationDetents([.fraction(0.2)])
+            AppearanceSettingView()
+                .presentationDetents([.fraction(0.2)])
         }
     }
 }
@@ -156,5 +137,6 @@ struct SettingsView: View {
     NavigationStack {
         SettingsView()
             .environmentObject(AuthViewModel())
+            .environment(BarViewModel())
     }
 }

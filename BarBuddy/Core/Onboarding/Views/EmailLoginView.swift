@@ -95,7 +95,7 @@ struct EmailLoginView: View {
                     do {
                         try await authVM.signIn(email: email, password: password)
                     } catch {
-                        
+                        isLoading = false
                     }
                 }
             } label: {
@@ -138,7 +138,7 @@ struct EmailLoginView: View {
                     do {
                         try await authVM.signIn(email: email, password: password)
                     } catch {
-                        
+                        isLoading = false
                     }
                 }
             }
@@ -150,11 +150,49 @@ struct EmailLoginView: View {
         } message: {
             Text(authVM.getErrorMessage())
         }
+        .overlay {
+            if isLoading {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 20)
+                        .frame(width: 100, height: 100)
+                        .foregroundStyle(Color(.secondarySystemGroupedBackground))
+                        .shadow(radius: 5)
+                    
+                    ProgressView()
+                        .tint(.salmon)
+                }
+                .transition(.scale)
+            }
+        }
         .navigationDestination(for: SignUpNavigation.self) { view in
             Group {
                 switch view {
-                case .createAccount: SignUpView(path: $path)
-                case .ageVerification: AgeVerificationView(path: $path)
+                case .createAccount:
+                    SignUpView(path: $path)
+                    
+//                case .ageVerification:
+//                    AgeVerificationView(path: $path)
+//                    
+//                case .nameEntry:
+//                    NameEntryView(path: $path)
+//                    
+//                case .location:
+//                    LocationView(path: $path)
+//                    
+//                case .gender:
+//                    GenderView(path: $path)
+//                    
+//                case .hometown:
+//                    HometownView(path: $path)
+//                    
+//                case .school:
+//                    SchoolView(path: $path)
+//                    
+//                case .drink:
+//                    DrinkPreferenceView(path: $path)
+//                    
+//                case .photoUpload:
+//                    PhotoUploadView()
                 }
             }
             .environment(viewModel)
@@ -166,9 +204,12 @@ struct EmailLoginView: View {
 #Preview("Login View") {
     @Previewable @State var proceed: Bool = false
     @Previewable @State var path = NavigationPath()
-    ZStack {
-        MeshGradientView()
-        EmailLoginView(path: $path, proceed: $proceed)
-            .environmentObject(AuthViewModel())
+    NavigationStack(path: $path) {
+        ZStack {
+            MeshGradientView()
+            EmailLoginView(path: $path, proceed: $proceed)
+        }
     }
+    .environment(SignUpViewModel())
+    .environmentObject(AuthViewModel())
 }

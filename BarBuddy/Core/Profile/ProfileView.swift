@@ -35,7 +35,7 @@ struct ProfileView: View {
     
     var body: some View {
         NavigationStack {
-            GeometryReader { geometry in
+            //GeometryReader { geometry in
                 ZStack {
                     Color.darkBlue
                         .ignoresSafeArea()
@@ -123,7 +123,7 @@ struct ProfileView: View {
                                 .foregroundColor(.white)
                                 .padding(.bottom)
                             
-                            ProfileTabView(selection: $selectedTab, geometry: geometry)
+                            ProfileTabView(selection: $selectedTab)
                         } else {
                             Text("Guest")
                                 .font(.system(size: 32, weight: .bold))
@@ -215,7 +215,6 @@ struct ProfileView: View {
                     }
                     .tint(.salmon)
                 }
-            }
         }
     }
 }
@@ -249,7 +248,6 @@ struct FriendRow: View {
 struct TabButton: View {
     let text: String
     let isSelected: Bool
-    let geometry: GeometryProxy
     let action: () -> Void
     
     var body: some View {
@@ -257,7 +255,7 @@ struct TabButton: View {
             Text(text)
                 .font(.system(size: 16, weight: .medium))
                 .foregroundColor(isSelected ? .white : .gray)
-                .frame(width: geometry.size.width / 4, height: 40)
+                .padding(.vertical, 10)
                 .cornerRadius(25)
                 .contentShape(RoundedRectangle(cornerRadius: 25)) // Increases hit area for taps
         }

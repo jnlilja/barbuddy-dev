@@ -13,13 +13,13 @@ struct HomeView: View {
     
     var body: some View {
         TabView(selection: $selectedTab) {
-            Tab("Swipe", systemImage: "person.fill.checkmark.and.xmark", value: 0) {
-                SwipeView()
-            }
-            
-            Tab("Messages", systemImage: "message.fill", value: 1) {
-                MessagesView()
-            }
+//            Tab("Swipe", systemImage: "person.fill.checkmark.and.xmark", value: 0) {
+//                SwipeView()
+//            }
+//            
+//            Tab("Messages", systemImage: "message.fill", value: 1) {
+//                MessagesView()
+//            }
             
             Tab("Map", systemImage: "map.fill", value: 2) {
                 MapView()
@@ -27,9 +27,9 @@ struct HomeView: View {
                     .toolbarBackground(.visible, for: .tabBar)
             }
             
-            Tab("Profile", systemImage: "person.circle.fill", value: 3) {
-                ProfileView()
-            }
+//            Tab("Profile", systemImage: "person.circle.fill", value: 3) {
+//                ProfileView()
+//            }
         }
         .environment(mapViewModel)
         .tint(.salmon)

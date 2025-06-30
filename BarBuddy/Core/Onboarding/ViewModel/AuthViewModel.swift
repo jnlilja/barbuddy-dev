@@ -2,7 +2,7 @@
 //  AuthViewModel.swift
 //  BarBuddy
 //
-//  Revised 2025‑04‑16 – Async/await Firebase Auth + REST profile integration.
+//
 //
 
 import Foundation
@@ -180,6 +180,7 @@ final class AuthViewModel: ObservableObject {
         }
     }
     
+    // Only used for Apple sign in since it's required to generate a nonce
     private func randomNonceString(length: Int = 32) -> String {
         precondition(length > 0)
         var randomBytes = [UInt8](repeating: 0, count: length)
@@ -201,6 +202,7 @@ final class AuthViewModel: ObservableObject {
         return String(nonce)
     }
 
+    // Encrypt random generated nonce for Apple sign in
     private func sha256(_ input: String) -> String {
         let inputData = Data(input.utf8)
         let hashedData = SHA256.hash(data: inputData)
@@ -335,6 +337,31 @@ final class AuthViewModel: ObservableObject {
             showingAlert = true
         } catch {
             errorMessage = "Unexpected error occurred while linking accounts."
+            showingAlert = true
+        }
+    }
+    
+    func changePassword(oldPassword: String, newPassword: String) async {
+        guard let user = authUser, let email = user.email else {
+            return
+        }
+        
+        do {
+            let credential = EmailAuthProvider.credential(withEmail: email, password: oldPassword)
+            try await user.reauthenticate(with: credential)
+            try await user.updatePassword(to: newPassword)
+        } catch {
+            print(error.localizedDescription)
+            errorMessage = "Unexpected error occurred while changing password."
+            showingAlert = true
+        }
+    }
+    
+    func sendPasswordResetEmail(email: String) async {
+        do {
+            try await Auth.auth().sendPasswordReset(withEmail: email)
+        } catch {
+            errorMessage = "Unexpected error occurred while sending password reset email."
             showingAlert = true
         }
     }

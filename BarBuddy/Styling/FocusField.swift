@@ -6,5 +6,5 @@
 //
 import Foundation
 enum FocusField {
-    case email, password, confirmPassword
+    case email, password, firstName, lastName, confirmPassword
 }
