@@ -26,12 +26,12 @@ class BarStatusSerializer(serializers.ModelSerializer):
 
     def get_crowd_size(self, obj):
         if obj.last_updated and timezone.now() - obj.last_updated > timedelta(hours=5):
-            return "N/A"
+            return "Low"
         return obj.crowd_size
 
     def get_wait_time(self, obj):
         if obj.last_updated and timezone.now() - obj.last_updated > timedelta(hours=5):
-            return "N/A"
+            return "<5 min"
         return obj.wait_time
 
 
