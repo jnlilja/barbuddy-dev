@@ -18,45 +18,40 @@ struct SignUpView: View {
     var body: some View {
         @Bindable var viewModel = viewModel
         
-        GeometryReader { proxy in
-            ZStack {
-                Color.darkBlue.ignoresSafeArea()
+        ZStack {
+            Color.darkBlue
+                .ignoresSafeArea()
+                .onTapGesture {
+                    focusedField = nil
+                }
+            GeometryReader { proxy in
                 VStack(spacing: 25) {
-                    VStack {
-                        Text("Let's get started!")
-                            .font(.largeTitle)
-                            .bold()
-                            .foregroundColor(.white)
-                    }
+                    
+                    Spacer()
+                    
+                    Text("Let's get started!")
+                        .font(.largeTitle)
+                        .bold()
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.leading)
                     
                     // Email
                     SignUpTextFieldView(prompt: "Email", text: $viewModel.email, geometry: proxy)
                         .focused($focusedField, equals: .email)
+                        .autocapitalization(.none)
+                        .keyboardType(.emailAddress)
+                        .submitLabel(.next)
                     
-                    // Name
-                    SignUpTextFieldView(prompt: "First Name", text: $viewModel.firstName, geometry: proxy)
-                        .focused($focusedField, equals: .email)
-                    
-                    SignUpTextFieldView(prompt: "Last Name", text: $viewModel.lastName, geometry: proxy)
-                        .focused($focusedField, equals: .email)
-                        
                     // Password
                     SignUpTextFieldView(prompt: "Password", text: $viewModel.password, geometry: proxy, isPassword: true)
                         .focused($focusedField, equals: .password)
+                        .submitLabel(.next)
                     
                     // Confirm Password
                     SignUpTextFieldView(prompt: "Confirm Password", text: $viewModel.confirmPassword, geometry: proxy, isPassword: true)
                         .focused($focusedField, equals: .confirmPassword)
-                    
-                    Text(
-                        "Password must be at least 8 characters with a number and special character"
-                    )
-                    .font(.caption)
-                    .foregroundColor(.neonPink)
-                    .multilineTextAlignment(.center)
-                    .opacity(!viewModel.isValidPassword ? 1 : 0)
-                    
-                    Spacer()
+                        .submitLabel(.done)
                     
                     // ───────── Sign‑up button
                     Button {
@@ -69,8 +64,11 @@ struct SignUpView: View {
                             .frame(width: 300, height: 50)
                             .background(colorScheme == .dark ? .nude : .darkPurple)
                             .cornerRadius(10)
+                            .padding(.top, 30)
+
                     }
-                    .padding(.top, 20)
+                    
+                    Spacer()
                 }
                 .onSubmit {
                     if focusedField == .email {
@@ -85,8 +83,6 @@ struct SignUpView: View {
                         path.append(SignUpNavigation.ageVerification)
                     }
                 }
-                .padding()
-                
                 .alert("Validation Error", isPresented: $viewModel.showingAlert) {
                     Button("OK", role: .cancel) {}
                 } message: {

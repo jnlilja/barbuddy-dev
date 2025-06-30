@@ -16,31 +16,23 @@ struct SignUpTextFieldView: View {
     var body: some View {
         VStack(alignment: .leading) {
             // ───────── Email
-            Text(prompt)
-                .font(.headline)
-                .foregroundStyle(.white)
             if let password = isPassword, password {
-                SecureField("", text: $text)
+                SecureField("", text: $text, prompt: Text(prompt).foregroundStyle(colorScheme == .dark ? .nude : .darkBlue))
                     .padding()
                     .frame(width: geometry.size.width / 1.1, height: 50)
-                    .background(colorScheme == .dark ? .darkBlue : Color.white)
+                    .background(colorScheme == .dark ? .darkBlue : .white)
                     .cornerRadius(10)
-                    .autocapitalization(.none)
-                    .keyboardType(.emailAddress)
-                    .submitLabel(.next)
+                    .overlay(RoundedRectangle(cornerRadius: 10)
+                        .stroke(.darkPurple, lineWidth: 1))
                     
             } else {
-                TextField(
-                    "",
-                    text: $text
-                )
+                TextField("", text: $text, prompt: Text(prompt).foregroundStyle(colorScheme == .dark ? .nude : .darkBlue))
                 .padding()
                 .frame(width: geometry.size.width / 1.1, height: 50)
-                .background(colorScheme == .dark ? .darkBlue : Color.white)
+                .background(colorScheme == .dark ? .darkBlue : .white)
                 .cornerRadius(10)
-                .autocapitalization(.none)
-                .keyboardType(.emailAddress)
-                .submitLabel(.next)
+                .overlay(RoundedRectangle(cornerRadius: 10)
+                    .stroke(.darkPurple, lineWidth: 1))
             }
         }
     }
